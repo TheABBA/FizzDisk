@@ -688,12 +688,14 @@ class FizzDiskApp(ctk.CTk):
         t0 = mt.group(1).strip() if mt else initial
         frame = ctk.CTkFrame(dlg, corner_radius=14)
         frame.pack(fill="both", expand=True, padx=12, pady=12)
-        ctk.CTkLabel(frame, text="Enter the movie title — it searches as you type:",
-                     font=("Segoe UI", 10, "bold")).grid(row=0, column=0, columnspan=3, sticky="w", pady=(4, 8))
+        ctk.CTkLabel(frame, text="Sorry we couldn't match your disk.\n"
+                                "Enter the Title and see if we can find it.",
+                     font=("Segoe UI", 10, "bold"), justify="left"
+                     ).grid(row=0, column=0, columnspan=3, sticky="w", pady=(4, 8))
         ctk.CTkLabel(frame, text="Title:").grid(row=1, column=0, sticky="e", pady=2)
-        var_title = tk.StringVar(value=t0)
-        t = ctk.CTkEntry(frame, width=320, corner_radius=8, textvariable=var_title)
+        t = ctk.CTkEntry(frame, width=300, corner_radius=8)
         t.grid(row=1, column=1, sticky="w", padx=6, pady=2)
+        t.insert(0, t0)
         ctk.CTkLabel(frame, text="Year:").grid(row=2, column=0, sticky="e", pady=2)
         y = ctk.CTkEntry(frame, width=80, corner_radius=8)
         y.grid(row=2, column=1, sticky="w", padx=6, pady=2)
@@ -703,72 +705,52 @@ class FizzDiskApp(ctk.CTk):
         status.grid(row=3, column=0, columnspan=3, sticky="w", padx=6, pady=(4, 0))
         res = {"v": None}
 
-        state = {"open": True, "last_q": t0}
+        state = {"open": True}
         cancel = threading.Event()
-        deb = {"id": None}
 
-        def _norm(s):
-            return re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
-
-        def safe(fn):
-            """Run fn on the main thread; drop it if the dialog has been closed."""
-            def run():
-                if state["open"]:
-                    try:
-                        fn()
-                    except Exception:
-                        pass
-            self.after(0, run)
-
-        def do_search(q):
-            if not (q or "").strip():
-                safe(lambda: status.configure(text=""))
-                return
+        def set_fields(title, year=None):
             try:
-                cands = movie.search_movies(q)
-            except Exception:  # noqa: BLE001
-                safe(lambda: status.configure(text="Search failed", text_color="#ef4444"))
-                return
-            if cancel.is_set() or not state["open"]:
-                return
-            best = cands[0] if cands else None
-            if not best:
-                safe(lambda: status.configure(text="No match yet — keep typing or Save as-is",
-                                              text_color="#f59e0b"))
-                return
-            best_title = (best.get("title") or "").strip()
-            best_year = best.get("year")
-
-            def apply():
-                if not state["open"]:
-                    return
-                # Normalize the title only when the typed text is recognisably the
-                # same movie (avoids clobbering input). The year stays as typed.
-                if _norm(q) == _norm(best_title) and best_title:
-                    t.delete(0, "end")
-                    t.insert(0, best_title)
-                status.configure(text="Found: %s (%s) — type the year or leave blank" % (best_title, best_year),
-                                 text_color="#16a34a")
-            safe(apply)
+                t.delete(0, "end")
+                t.insert(0, title or "")
+            except Exception:
+                pass
+            try:
+                if year:
+                    y.delete(0, "end")
+                    y.insert(0, str(year))
+            except Exception:
+                pass
 
         def search_again():
             if not state["open"]:
                 return
             q = t.get().strip()
             status.configure(text="Searching…", text_color="#3b82f6")
-            threading.Thread(target=do_search, args=(q,), daemon=True).start()
 
-        def on_key(*_a):
-            q = var_title.get().strip()
-            if q == state.get("last_q"):
-                return
-            state["last_q"] = q
-            if deb["id"] is not None:
+            def work():
                 try:
-                    self.after_cancel(deb["id"])
-                except Exception:
-                    pass
-            deb["id"] = self.after(500, lambda: (deb.__setitem__("id", None), search_again()))
+                    cands = movie.search_movies(q)
+                except Exception:  # noqa: BLE001
+                    cands = []
+
+                def show():
+                    if not state["open"]:
+                        return
+                    if cands:
+                        # Reopen the "Which movie?" chooser with the new results so
+                        # the user can pick the right one; apply the pick if chosen.
+                        picked = self._pick_movie(cands)
+                        if isinstance(picked, dict):
+                            set_fields(picked.get("title"), picked.get("year"))
+                            status.configure(text="", text_color="#3b82f6")
+                        else:
+                            status.configure(text="Type the title and year, then Save (year is optional).",
+                                             text_color="#f59e0b")
+                    else:
+                        status.configure(text="No match found — enter the title and Save (year is optional).",
+                                         text_color="#f59e0b")
+                self.after(0, show)
+            threading.Thread(target=work, daemon=True).start()
 
         def ok():
             val = t.get().strip() or (self.movie_info["title"] if self.movie_info else "")
@@ -789,21 +771,17 @@ class FizzDiskApp(ctk.CTk):
             state["open"] = False
             dlg.destroy()
 
-        t.bind("<KeyRelease>", on_key)
-        var_title.trace_add("write", on_key)
         btns = ctk.CTkFrame(frame, fg_color="transparent")
-        btns.grid(row=4, column=1, columnspan=2, sticky="e", pady=(10, 4))
+        btns.grid(row=4, column=0, columnspan=3, pady=(12, 4))     # centered across the form
         ctk.CTkButton(btns, text="Search Again", corner_radius=10, command=search_again,
-                      fg_color="transparent", border_width=1).pack(side="left")
-        ctk.CTkButton(btns, text="Save", corner_radius=10, command=ok).pack(side="left", padx=8)
+                      fg_color="transparent", border_width=1).pack(side="left", padx=4)
+        ctk.CTkButton(btns, text="Save", corner_radius=10, command=ok).pack(side="left", padx=4)
         ctk.CTkButton(btns, text="Cancel", corner_radius=10,
-                      fg_color="transparent", border_width=1, command=close).pack(side="left")
+                      fg_color="transparent", border_width=1, command=close).pack(side="left", padx=4)
         dlg.bind("<Return>", lambda e: ok())
         dlg.bind("<Escape>", lambda e: close())
         t.focus_set()
         t.select_range(0, "end")
-        if t0:                                                # prefill search, if any
-            self.after(200, search_again)
         self.wait_window(dlg)
         return res["v"]
 

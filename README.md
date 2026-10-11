@@ -40,6 +40,12 @@ open, but it is never required.
   and saved as `<Output>/<Artist>/<Album>/NN - Track Title.<ext>`; an existing
   artist folder is reused and the album merged into it. No online account or
   API key required.
+- **Trial & licensing** — the app offers **50 trial backups**; once they're
+  used a **product key** is required for unlimited backups and lifetime
+  updates. The key is self-validating (offline, HMAC-signed), so no server is
+  needed. Open **Settings** via the **gear icon** (left of the light/dark
+  toggle) to see trial status, activate a key, and set a TheMovieDB API key.
+  Generate a key with `python -m fizzdisk.license gen`.
 
 The whole thing is driven by a **GUI** (tkinter/CustomTkinter). A small **CLI**
 is also provided for scripting.

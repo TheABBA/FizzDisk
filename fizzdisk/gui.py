@@ -303,21 +303,6 @@ class FizzDiskApp(ctk.CTk):
         self.var_eta.set("Scanning\u2026")
         self._set_status("Scanning\u2026")
         self.btn_scan.configure(state="disabled")
-        # Swap out of any prior CD mode right away: a fresh source is assumed
-        # to be video until the scan says otherwise (_scan_done re-enters CD
-        # mode if the disc really is an audio CD). This also clears stale CD /
-        # movie state so an inserted DVD prompts for identification again.
-        self.cd_mode = False
-        self.cd_meta = None
-        self._cd_artist = ""
-        self._cd_album = ""
-        self._cd_release_mbid = ""
-        self.movie_candidates = []
-        self.movie_info = None
-        try:
-            self._set_cd_mode(False)
-        except Exception:
-            traceback.print_exc()
         threading.Thread(target=self._scan_worker, args=(src,), daemon=True).start()
 
     def _scan_worker(self, src):
@@ -337,6 +322,14 @@ class FizzDiskApp(ctk.CTk):
         self.cd_mode = (source_kind == "cd")
         self.cd_meta = meta or None
         self._set_cd_mode(self.cd_mode)
+        if not self.cd_mode:
+            # a video/other disc: drop any stale CD artwork/title and movie
+            # candidates from a previous scan so identification starts fresh
+            self._cd_artist = ""
+            self._cd_album = ""
+            self._cd_release_mbid = ""
+            self.movie_candidates = []
+            self.movie_info = None
         if self.cd_mode:
             # a music CD: default-select every track
             self.selected = {t.index for t in titles}

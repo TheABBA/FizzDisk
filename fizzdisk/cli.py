@@ -71,14 +71,15 @@ def cmd_rip(args):
     fmt = args.format or "flac"
     selected = {args.track} if args.track is not None else None
     out = args.out or "."
-    print(f"Ripping CD ({len(res.titles)} tracks) -> {out}/{artist}/{album} [{fmt}]")
+    dest = os.path.join(out, ffutil.safe_name(artist), ffutil.safe_name(album))
+    print(f"Ripping CD ({len(res.titles)} tracks) -> {dest} [{fmt}]")
 
     def _prog(f):
         print(f"\r   {int(f * 100)}%", end="", flush=True)
 
     try:
         produced = engine.rip_cd(
-            engine._cd_letter(args.path), res.titles, out, fmt=fmt,
+            engine._cd_letter(args.path), res.titles, dest, fmt=fmt,
             artist=artist, album=album,
             release_mbid=meta.get("release_mbid"),
             selected=selected, progress_cb=_prog, stop_event=None,

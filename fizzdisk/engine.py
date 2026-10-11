@@ -214,17 +214,21 @@ def rip_cd(letter: str, cd_titles: List[Title], out_root: str, fmt: str = "flac"
            artist: str = "Unknown Artist", album: str = "Unknown Album",
            release_mbid: Optional[str] = None, selected: Optional[set] = None,
            progress_cb: Optional[Callable[[float], None]] = None,
-           stop_event: Optional[threading.Event] = None) -> List[str]:
-    """Rip selected CD audio tracks to FLAC/MP3 under <out>/<Artist>/<Album>/.
+           stop_event: Optional[threading.Event] = None,
+           formats: Optional[list] = None) -> List[str]:
+    """Rip selected CD audio tracks to FLAC/MP3 directly into `out_root`.
 
-    Writes cover.jpg for the album and returns the list of produced file paths.
-    The artist folder is reused if it already exists (album is merged into it).
+    `out_root` is the exact album folder (e.g. <Music>/<Artist>/<Album>) -- the
+    caller embeds Artist/Album. Writes cover.jpg for the album and returns the
+    list of produced file paths. `formats` may be a list to produce both FLAC
+    and MP3 (one of each requested format per selected track).
     """
     import tempfile
-    album_dir = os.path.join(out_root, ffutil.safe_name(artist),
-                             ffutil.safe_name(album))
+    album_dir = out_root
     os.makedirs(album_dir, exist_ok=True)
-    ext = ".flac" if fmt == "flac" else ".mp3"
+    fmts = [f.lower() for f in (list(formats) if formats else [fmt or "flac"])]
+    if not fmts:
+        fmts = ["flac"]
     cover_path = os.path.join(album_dir, "cover.jpg")
     if release_mbid:
         try:
@@ -249,20 +253,25 @@ def rip_cd(letter: str, cd_titles: List[Title], out_root: str, fmt: str = "flac"
             continue
         num = int(title.info.get("cd_number") or track.get("track") or 0)
         clean = title.info.get("cd_title") or ffutil.safe_name(title.name)
-        out_path = os.path.join(album_dir, ffutil.safe_name(title.name) + ext)
         meta = {"title": clean, "artist": artist, "album": album,
                 "track": f"{num:02d}" if num else num}
         wav = tempfile.mktemp(suffix=".wav", prefix="fizzdisk_")
         try:
             _emit(i, 0.0)
             cdda.rip_track_to_wav(letter, track, wav, progress_cb=lambda f, i=i: _emit(i, f))
-            rc = ffutil.encode_audio(wav, out_path, fmt=fmt,
-                                     progress_cb=lambda f, i=i: _emit(i, f),
-                                     duration=title.duration or 0.0,
-                                     meta=meta, cover=cover_path)
-            if rc != 0:
-                raise RuntimeError(f"Encoding failed (rc={rc}) for {title.name}")
-            produced.append(out_path)
+            for j, f in enumerate(fmts):
+                ext = ".flac" if f == "flac" else ".mp3"
+                out_path = os.path.join(album_dir, ffutil.safe_name(title.name) + ext)
+                # scale per-format encode progress into this track's share
+                def cb(frac, i=i, j=j, n=len(fmts)):
+                    _emit(i, (j + max(0.0, min(1.0, frac))) / n)
+                rc = ffutil.encode_audio(wav, out_path, fmt=f,
+                                         progress_cb=cb,
+                                         duration=title.duration or 0.0,
+                                         meta=meta, cover=cover_path)
+                if rc != 0:
+                    raise RuntimeError(f"Encoding failed (rc={rc}) for {title.name} [{f}]")
+                produced.append(out_path)
         finally:
             try:
                 os.remove(wav)

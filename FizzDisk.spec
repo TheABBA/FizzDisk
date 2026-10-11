@@ -1,6 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 from PyInstaller.utils.hooks import collect_all
+import os
+
+# The build script (build.py) writes version_info.txt with the Windows version
+# resource (file/product version, company, description); if absent we build
+# without one. UPX is OFF -- compressed bootloaders/payloads are a common
+# antivirus false-positive source, and UPX isn't installed on this build box.
+_VERSION_FILE = "version_info.txt" if os.path.exists("version_info.txt") else None
 
 # bundle customtkinter (widgets) and pywinstyles (frosted-glass/Mica) fully
 ctk_datas, ctk_bins, ctk_hidden = collect_all('customtkinter')
@@ -45,7 +52,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     console=False,
     disable_windowed_traceback=False,
@@ -53,4 +60,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    version=_VERSION_FILE,
 )

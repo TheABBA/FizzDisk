@@ -37,6 +37,7 @@ except ImportError:  # pillow optional: poster preview just won't show
 
 from . import engine, ffutil, bdlib, movie
 from . import license as lic
+from .version import APP_NAME as _APP_NAME, __version__ as _APP_VERSION
 from .model import Title
 
 # subtle per-window theming for the few native tk widgets kept (log text box)
@@ -251,8 +252,12 @@ class FizzDiskApp(ctk.CTk):
                 pywinstyles.apply_style(self, "mica")
         except Exception:
             pass
+        icon_fg = "#dfe3ea" if dark else "#23272e"
         if hasattr(self, "btn_theme"):
-            self.btn_theme.configure(text="\u2600\ufe0f" if dark else "\U0001F319")
+            self.btn_theme.configure(text="\u2600\ufe0f" if dark else "\U0001F319",
+                                     text_color=icon_fg)
+        if hasattr(self, "btn_gear"):
+            self.btn_gear.configure(text_color=icon_fg)
 
     def _toggle_theme(self):
         if ctk is None:
@@ -662,11 +667,12 @@ class FizzDiskApp(ctk.CTk):
                                  text_color="#8b949e", font=("Segoe UI", 9))
             thumb.pack(side="left", padx=(2, 8), pady=2)
             thumb.bind("<Button-1>", lambda e, n=c["name"]: _select(n))
-            rb = ctk.CTkRadioButton(row, text=c["name"], variable=sel, value=c["name"],
-                                    corner_radius=8, fg_color="#3b82f6",
-                                    radiobutton_width=13, radiobutton_height=13, width=16,
-                                    command=lambda n=c["name"]: _select(n))
-            rb.pack(side="left", fill="x", expand=True, padx=(0, 4), pady=2)
+            cb = ctk.CTkCheckBox(row, text=c["name"], variable=sel,
+                                 onvalue=c["name"], offvalue="",
+                                 corner_radius=8, checkbox_width=13,
+                                 checkbox_height=13, width=16,
+                                 command=lambda n=c["name"]: _select(n))
+            cb.pack(side="left", fill="x", expand=True, padx=(0, 4), pady=2)
             self._start_thumb_load(c, thumb, _tw, _th, 60, 86)
 
         res = {"v": None}
@@ -681,7 +687,7 @@ class FizzDiskApp(ctk.CTk):
         btns = ctk.CTkFrame(frame, fg_color="transparent")
         btns.pack(fill="x", padx=12, pady=10)
         ctk.CTkButton(btns, text="Use this one", corner_radius=10, command=use).pack(side="left")
-        ctk.CTkButton(btns, text="None of these \u2014 type it", corner_radius=10,
+        ctk.CTkButton(btns, text="Let me type it in", corner_radius=10,
                       fg_color="transparent", border_width=1, command=manual).pack(side="left", padx=8)
         dlg.bind("<Escape>", lambda e: dlg.destroy())
         self.wait_window(dlg)
@@ -859,6 +865,10 @@ class FizzDiskApp(ctk.CTk):
                       command=dlg.destroy).pack(side="left")
         ctk.CTkLabel(card2, textvariable=status, text_color="#3b82f6", anchor="w").pack(
             anchor="w", padx=12, pady=(6, 10))
+
+        # app version footer
+        ctk.CTkLabel(sc, text=f"{_APP_NAME} v{_APP_VERSION}",
+                     text_color="gray", anchor="w").pack(anchor="w", padx=8, pady=(2, 4))
 
     # ------------------------------------------------------------ movie popups
     def _confirm_movie(self, name: str) -> bool:

@@ -174,13 +174,13 @@ class FizzDiskApp(ctk.CTk):
                                        checkbox_height=13, width=17,
                                        variable=self.var_cd_flac,
                                        command=self._on_cd_formats)
-        self.cb_flac.pack(side="left")
+        self.cb_flac.pack(side="top", anchor="w")
         self.cb_mp3 = ctk.CTkCheckBox(self._cd_fmtrow, text="MP3 Compression",
                                       corner_radius=8, checkbox_width=13,
                                       checkbox_height=13, width=17,
                                       variable=self.var_cd_mp3,
                                       command=self._on_cd_formats)
-        self.cb_mp3.pack(side="left", padx=12)
+        self.cb_mp3.pack(side="top", anchor="w")
 
         self.var_backup = tk.BooleanVar(value=False)
         self.cb_backup = ctk.CTkCheckBox(out_box, text="Raw Backup Only (Copy AACS/BDMV)",
@@ -303,6 +303,21 @@ class FizzDiskApp(ctk.CTk):
         self.var_eta.set("Scanning\u2026")
         self._set_status("Scanning\u2026")
         self.btn_scan.configure(state="disabled")
+        # Swap out of any prior CD mode right away: a fresh source is assumed
+        # to be video until the scan says otherwise (_scan_done re-enters CD
+        # mode if the disc really is an audio CD). This also clears stale CD /
+        # movie state so an inserted DVD prompts for identification again.
+        self.cd_mode = False
+        self.cd_meta = None
+        self._cd_artist = ""
+        self._cd_album = ""
+        self._cd_release_mbid = ""
+        self.movie_candidates = []
+        self.movie_info = None
+        try:
+            self._set_cd_mode(False)
+        except Exception:
+            traceback.print_exc()
         threading.Thread(target=self._scan_worker, args=(src,), daemon=True).start()
 
     def _scan_worker(self, src):

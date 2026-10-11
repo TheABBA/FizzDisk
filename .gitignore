@@ -6,3 +6,7 @@ dist/
 
 # CD-rip sample output (Desktop/FizzDisk)
 Dave Matthews Band/
+
+# generated build/signing artifacts
+version_info.txt
+signing_cert.pfx

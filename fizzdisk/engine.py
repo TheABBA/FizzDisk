@@ -205,7 +205,7 @@ def scan_cd(src: str):
                       source_kind="cd",
                       size_bytes=(t.get("sectors") or 0) * cdda.CDDA_SECTOR)
         title.is_main = (len(titles) == 0)
-        title.info = {"cd_track": t, "cd_number": num}
+        title.info = {"cd_track": t, "cd_number": num, "cd_title": raw_title}
         titles.append(title)
     return titles, meta
 
@@ -225,12 +225,14 @@ def rip_cd(letter: str, cd_titles: List[Title], out_root: str, fmt: str = "flac"
                              ffutil.safe_name(album))
     os.makedirs(album_dir, exist_ok=True)
     ext = ".flac" if fmt == "flac" else ".mp3"
+    cover_path = os.path.join(album_dir, "cover.jpg")
     if release_mbid:
         try:
-            musicdisc.download_cover(release_mbid, os.path.join(album_dir, "cover.jpg"),
-                                     size="500")
+            musicdisc.download_cover(release_mbid, cover_path, size="500")
         except Exception:  # noqa: BLE001
             pass
+    if not Path(cover_path).exists():
+        cover_path = None
     produced: List[str] = []
     jobs = [t for t in cd_titles if selected is None or t.index in selected]
     total = max(1, len(jobs))
@@ -245,14 +247,19 @@ def rip_cd(letter: str, cd_titles: List[Title], out_root: str, fmt: str = "flac"
         track = title.info.get("cd_track")
         if not track:
             continue
+        num = int(title.info.get("cd_number") or track.get("track") or 0)
+        clean = title.info.get("cd_title") or ffutil.safe_name(title.name)
         out_path = os.path.join(album_dir, ffutil.safe_name(title.name) + ext)
+        meta = {"title": clean, "artist": artist, "album": album,
+                "track": f"{num:02d}" if num else num}
         wav = tempfile.mktemp(suffix=".wav", prefix="fizzdisk_")
         try:
             _emit(i, 0.0)
             cdda.rip_track_to_wav(letter, track, wav, progress_cb=lambda f, i=i: _emit(i, f))
             rc = ffutil.encode_audio(wav, out_path, fmt=fmt,
                                      progress_cb=lambda f, i=i: _emit(i, f),
-                                     duration=title.duration or 0.0)
+                                     duration=title.duration or 0.0,
+                                     meta=meta, cover=cover_path)
             if rc != 0:
                 raise RuntimeError(f"Encoding failed (rc={rc}) for {title.name}")
             produced.append(out_path)

@@ -33,12 +33,13 @@ open, but it is never required.
 - **Audio CD ripping** — a music CD is detected automatically (via the drive's
   audio tracks), identified by **MusicBrainz Disc-ID** (with a fuzzy TOC +
   duration fallback), and its cover art is fetched from the **Cover Art
-  Archive** (saved as `cover.jpg`). Tracks are ripped to **FLAC** (default) or
-  **MP3** (radio-button choice) and saved as
-  `<Output>/<Artist>/<Album>/NN - Track Title.<ext>`; an existing artist folder
-  is reused and the album is merged into it. The CD layer uses real Windows
-  CD-ROM IOCTLs (raw 2352-byte sector reads) and the bundled `ffmpeg.exe` for
-  encoding — no extra binaries, no online account/keys required.
+  Archive** (saved as `cover.jpg`). Tracks are ripped with **paranoia error
+  correction** using the bundled `cd-paranoia` (libcdio-paranoia), encoded with
+  the bundled `ffmpeg.exe` to **FLAC** (default) or **MP3** (radio-button
+  choice), tagged (title/artist/album/track) with the **cover art embedded**,
+  and saved as `<Output>/<Artist>/<Album>/NN - Track Title.<ext>`; an existing
+  artist folder is reused and the album merged into it. No online account or
+  API key required.
 
 The whole thing is driven by a **GUI** (tkinter/CustomTkinter). A small **CLI**
 is also provided for scripting.

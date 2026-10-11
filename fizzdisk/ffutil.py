@@ -357,12 +357,14 @@ def validate_mkv(path: str) -> dict:
 
 
 def encode_audio(input_wav: str, output_path: str, fmt: str = "flac",
-                progress_cb: Optional[Callable[[float], None]] = None,
-                duration: float = 0.0, bitrate: str = "320k") -> int:
+                 progress_cb: Optional[Callable[[float], None]] = None,
+                 duration: float = 0.0, bitrate: str = "320k",
+                 meta: Optional[dict] = None, cover: Optional[str] = None) -> int:
     """Encode a WAV to FLAC or MP3 with the bundled ffmpeg. Returns rc.
 
-    Supports CD-audio rips. Progress is reported as 0.0..1.0 from the ffmpeg
-    time= counter (relative to `duration`, if known).
+    Optionally writes metadata tags (`meta`: title/artist/album/track/date)
+    and embeds cover art (`cover`: path to an image) as an attached picture.
+    If cover embedding fails (unsupported build) it retries without it.
     """
     fmt = (fmt or "flac").lower()
     if fmt == "flac":
@@ -371,27 +373,45 @@ def encode_audio(input_wav: str, output_path: str, fmt: str = "flac",
         args = ["-c:a", "libmp3lame", "-b:a", bitrate or "320k"]
     else:
         raise ValueError("Unsupported encode format: %s" % fmt)
-    cmd = [FFMPEG, "-y", "-hide_banner", "-nostdin", "-loglevel", "info",
-           "-i", _native(input_wav), *args, _native(output_path)]
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            text=True, creationflags=_NO_WINDOW)
-    set_active_proc(proc)
-    last_time = 0.0
-    try:
-        for line in proc.stderr:
-            line = line.strip()
-            if "time=" in line:
-                m = re.search(r"time=(\d+):(\d+):(\d+)\.(\d+)", line)
-                if m:
-                    t = (int(m.group(1)) * 3600 + int(m.group(2)) * 60
-                         + int(m.group(3)) + float(m.group(4)) / 10)
-                    if progress_cb and t != last_time:
-                        last_time = t
-                        if duration and duration > 0:
-                            progress_cb(max(0.0, min(1.0, t / duration)))
-        rc = proc.wait()
-    finally:
-        set_active_proc(None)
+
+    def _run(with_cover: bool) -> int:
+        cmd = [FFMPEG, "-y", "-hide_banner", "-nostdin", "-loglevel", "info",
+               "-i", _native(input_wav)]
+        if with_cover and cover:
+            cmd += ["-i", _native(cover)]
+        cmd += args
+        if with_cover and cover:
+            cmd += ["-map", "0:a", "-map", "1:v",
+                    "-c:v", "mjpeg", "-disposition:v:0", "attached_pic"]
+        for k, v in (meta or {}).items():
+            if v:
+                cmd += ["-metadata", f"{k}={v}"]
+        cmd += [_native(output_path)]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                text=True, creationflags=_NO_WINDOW)
+        set_active_proc(proc)
+        last_time = 0.0
+        try:
+            for line in proc.stderr:
+                line = line.strip()
+                if "time=" in line:
+                    m = re.search(r"time=(\d+):(\d+):(\d+)\.(\d+)", line)
+                    if m:
+                        t = (int(m.group(1)) * 3600 + int(m.group(2)) * 60
+                             + int(m.group(3)) + float(m.group(4)) / 10)
+                        if progress_cb and t != last_time:
+                            last_time = t
+                            if duration and duration > 0:
+                                progress_cb(max(0.0, min(1.0, t / duration)))
+            rc = proc.wait()
+        finally:
+            set_active_proc(None)
+        return rc
+
+    rc = _run(with_cover=bool(cover))
+    if rc != 0 and cover:
+        # cover embedding unsupported -> retry with tags only
+        rc = _run(with_cover=False)
     return rc
 
 

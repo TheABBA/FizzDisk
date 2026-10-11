@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Audio-CD (CD-DA) detection, Table-of-Contents read, and raw-sector rip.
+"""Audio-CD (CD-DA) detection, Table-of-Contents read, and error-corrected rip.
 
-Reads the disc's TOC and raw 2352-byte CD-DA audio sectors using the Windows
-CD-ROM device API (``IOCTL_CDROM_READ_TOC`` + ``IOCTL_CDROM_RAW_READ``). This
-is a clean-room implementation -- no libcdio / cdparanoia binary needed; the
-app is fully self-contained and uses only the bundled ffmpeg for encoding.
-
-On systems where the raw device node cannot be opened (e.g. a virtual optical
-drive), it falls back to the WinMM MCI interface (``mciSendString``) so the TOC
-(and therefore metadata) is still available; the raw audio read requires the
-device node and reports a clear error if it cannot be opened.
+Reads the disc's TOC (Windows CD-ROM device API ``IOCTL_CDROM_READ_TOC``, with
+a WinMM MCI ``mciSendString`` fallback) and rips each audio track by shelling
+out to the **bundled cd-paranoia** (libcdio-paranoia) for parity / jitter-
+corrected reads -- the same error-correction real audio-rippers use. If the
+helper is unavailable it falls back to a raw ``IOCTL_CDROM_RAW_READ`` read (no
+error correction). Encoding is done by the bundled ffmpeg; this module deals
+only with the disc itself.
 """
 from __future__ import annotations
 
@@ -18,7 +16,7 @@ import os
 import re
 import struct
 from ctypes import (POINTER, Structure, Union, byref, c_byte, c_uint, c_uint16,
-                    c_uint32, c_uint8, c_void_p, c_wchar_p)
+                    c_uint32, c_uint8, c_void_p, c_wchar_p, c_longlong, c_int32)
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -34,11 +32,11 @@ _FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
 _INVALID = c_void_p(-1).value
 
 # ntddcdrm.h
-IOCTL_CDROM_READ_TOC = 0x00024008
-IOCTL_CDROM_RAW_READ = 0x00024038
+IOCTL_CDROM_READ_TOC = 0x00024000
+IOCTL_CDROM_RAW_READ = 0x0002403E   # CTL_CODE(CDROM, 0x000F, METHOD_OUT_DIRECT, FILE_READ_ACCESS)
 
-CDROM_AUDIO_TRACK = 1
-CDROM_READ_RAW = 0
+# TRACK_MODE_TYPE (ntddcdrm.h): YellowMode2=0, XAForm2=1, CDDA=2
+CDDA_TRACK_MODE = 2
 CDDA_SECTOR = 2352          # raw CD-DA sector = 16-bit stereo @ 44.1 kHz
 CDDA_SAMPLE_RATE = 44100
 
@@ -59,11 +57,14 @@ class _CDROM_TOC(Structure):
                 ("LastTrack", c_uint8), ("TrackData", _TRACK_DATA * 100)]
 
 
-class _RAW_READ(Structure):
-    """CDROM_RAW_READ_PARAMETERS (ntddcdrm.h)."""
-    _fields_ = [("TrackMode", c_uint32), ("SectorCount", c_uint8),
-                ("ReadMode", c_uint8), ("Reserved", c_uint8),
-                ("StartSector", c_uint32), ("TransferSize", c_uint32)]
+class _LARGE_INTEGER(Union):
+    _fields_ = [("QuadPart", c_longlong), ("LowPart", c_uint32), ("HighPart", c_int32)]
+
+
+class _RAW_READ_INFO(Structure):
+    """RAW_READ_INFO (ntddcdrm.h) -- in buffer for IOCTL_CDROM_RAW_READ."""
+    _fields_ = [("DiskOffset", _LARGE_INTEGER), ("SectorCount", c_uint32),
+                ("TrackMode", c_int32)]
 
 
 class _SCSI_PASS_THROUGH_DIRECT(Structure):
@@ -303,14 +304,16 @@ def scan_toc(letter: str) -> List[dict]:
 
 # --------------------------------------------------------------------------- raw rip
 def _read_sectors_ioctl(h, start_lba: int, count: int) -> bytes:
-    """Read `count` raw CD-DA sectors (2352 bytes each) from the drive."""
+    """Read `count` raw CD-DA sectors (2352 bytes each) via IOCTL_CDROM_RAW_READ.
+
+    Error-correction is NOT done here; use the cd-paranoia helper for that.
+    This is a fallback for drives/cases where the helper is unavailable.
+    """
     buf = (c_uint8 * (CDDA_SECTOR * count))()
-    params = _RAW_READ()
-    params.TrackMode = CDROM_AUDIO_TRACK
+    params = _RAW_READ_INFO()
+    params.DiskOffset.QuadPart = start_lba * CDDA_SECTOR   # byte offset on disc
     params.SectorCount = count
-    params.ReadMode = CDROM_READ_RAW
-    params.StartSector = start_lba
-    params.TransferSize = CDDA_SECTOR * count
+    params.TrackMode = CDDA_TRACK_MODE                     # 2 = CDDA
     got = c_uint32(0)
     ok = k32.DeviceIoControl(c_void_p(h), IOCTL_CDROM_RAW_READ, byref(params),
                              ctypes.sizeof(params), buf, CDDA_SECTOR * count,
@@ -365,17 +368,48 @@ def _read_sectors_scsi(h, start_lba: int, count: int) -> bytes:
     return bytes(out)
 
 
+def _cdparanoia_path() -> str:
+    """Return the path to the bundled cd-paranoia.exe (libcdio-paranoia), or ''."""
+    try:
+        from . import ffutil
+        p = ffutil.find_tool("cd-paranoia")
+        if p and Path(p).exists():
+            return p
+    except Exception:  # noqa: BLE001
+        pass
+    return ""
+
+
 def rip_track_to_wav(letter: str, track: dict, out_wav: str,
                      progress_cb=None) -> str:
-    """Read one audio track's raw sectors and write a 44.1k/16-bit WAV.
+    """Rip one audio track to a 44.1k/16-bit WAV, **error-corrected**.
 
-    Returns the WAV path. `track` must carry 'lba' and 'sectors'; only the
-    audio (CD-DA) frames are written -- the Windows raw-read already yields
-    clean 2352-byte PCM sectors, so no error correction is needed (paranoia
-    mode is out of scope for a 'small but powerful' ripper).
+    Uses the bundled cd-paranoia (libcdio-paranoia) for parity / jitter-corrected
+    reads. If that helper is unavailable it falls back to a raw IOCTL read (no
+    error correction). `track` must carry 'track' (number) and 'is_audio'.
     """
     if not track.get("is_audio"):
         raise ValueError("Track is not an audio track")
+    tool = _cdparanoia_path()
+    if tool:
+        import subprocess
+        creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        device = f"{str(letter).strip(': ').upper()}:"
+        # cd-paranoia [-d device] [-w] track# outfile  -> error-corrected WAV
+        cmd = [tool, "-d", device, "-w", str(int(track["track"])), out_wav]
+        r = subprocess.run(cmd, capture_output=True, creationflags=creationflags)
+        if r.returncode != 0:
+            err = (r.stderr or r.stdout or "").strip()[-220:]
+            raise OSError(r.returncode, f"cd-paranoia failed: {err}")
+        if progress_cb:
+            progress_cb(1.0)
+        return out_wav
+    return _rip_track_to_wav_ioctl(letter, track, out_wav, progress_cb)
+
+
+def _rip_track_to_wav_ioctl(letter: str, track: dict, out_wav: str,
+                            progress_cb=None) -> str:
+    """No-error-correction raw-sector read (fallback when cd-paranoia is absent)."""
     lba = int(track["lba"])
     sectors = int(track["sectors"])
     if sectors <= 0:

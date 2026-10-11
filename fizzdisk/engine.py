@@ -24,7 +24,7 @@ from pathlib import Path
 _NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 from typing import Callable, List, Optional
 
-from . import bdlib, bdscan, dvdscan, ffutil
+from . import bdlib, bdscan, cdda, dvdscan, ffutil, musicdisc
 from .model import ScanResult, Title, Stream
 
 _RIP_ENV = ("FIZZDISK_RIP", "FIZZDISK_BACKEND", "MAKEMKVCON")  # last two are legacy aliases
@@ -88,9 +88,26 @@ def _has(root: str, *sub) -> bool:
 
 
 def detect_source(src: str) -> str:
-    """Return 'file'|'dvd'|'bd'|'disc'|'iso' for a source path."""
+    """Return 'file'|'dvd'|'bd'|'disc'|'iso'|'cd' for a source path."""
     if not src:
         return ""
+    # drive letter first (D:, D:\ ...) -- a bare drive letter is a directory,
+    # so it must be classified before the generic is_dir() branch below
+    m = re.match(r"^([A-Za-z]):[\\/]?$", src.strip())
+    if m:
+        letter = m.group(1).upper()
+        root = f"{letter}:\\"
+        # a drive with audio tracks and no video folders is an audio CD
+        try:
+            if cdda.detect_audio_cd(letter):
+                return "cd"
+        except Exception:
+            pass
+        if _has(root, "BDMV"):
+            return "bd"
+        if _has(root, "VIDEO_TS"):
+            return "dvd"
+        return "disc"
     path = Path(src)
     # directory scan
     if path.is_dir():
@@ -99,15 +116,6 @@ def detect_source(src: str) -> str:
         if (path / "BDMV" / "PLAYLIST").exists() or (path / "PLAYLIST").exists():
             return "bd"
         return "dvd" if (path / "BDMV").exists() else "file"
-    # drive letter
-    m = re.match(r"^([A-Za-z]):[\\/]?$", src.strip())
-    if m:
-        root = f"{m.group(1)}:\\"
-        if _has(root, "BDMV"):
-            return "bd"
-        if _has(root, "VIDEO_TS"):
-            return "dvd"
-        return "disc"
     # file
     low = src.lower()
     if low.endswith(".iso"):
@@ -149,16 +157,111 @@ def scan_source(src: str, mounted_iso: bool = False) -> ScanResult:
     if kind == "dvd":
         titles = dvdscan.scan_dvd_folder(src)
         info = f"DVD: {len(titles)} title(s)"
+        meta = None
     elif kind in ("bd", "disc"):
         titles = _scan_disc(src)
         info = f"Disc: {len(titles)} title(s)"
+        meta = None
+    elif kind == "cd":
+        titles, meta = scan_cd(src)
+        info = f"Audio CD: {len(titles)} track(s)"
     elif kind == "iso":
         titles, _mountpt = _scan_iso(src)
         info = f"ISO: {len(titles)} title(s)"
+        meta = None
     else:
         titles = _scan_file(src)
         info = f"File: {len(titles)} title(s)"
-    return ScanResult(titles=titles, source=src, source_kind=kind, info=info)
+        meta = None
+    res = ScanResult(titles=titles, source=src, source_kind=kind, info=info)
+    res.meta = meta
+    return res
+
+
+def _cd_letter(src: str) -> str:
+    m = re.match(r"^([A-Za-z]):", src.strip())
+    if m:
+        return m.group(1).upper()
+    s = (src or "").strip().rstrip(":\\/")
+    return s[:1].upper() if s else "D"
+
+
+def scan_cd(src: str):
+    """Scan an audio CD. Returns (titles, meta); one Title per audio track."""
+    letter = _cd_letter(src)
+    tracks = cdda.scan_toc(letter)
+    meta = musicdisc.identify_disc(tracks) or {}
+    title_by_pos = {t.get("position"): t.get("title")
+                    for t in (meta.get("tracks") or [])}
+    titles: List[Title] = []
+    for t in tracks:
+        if not t.get("track") or not t.get("is_audio"):
+            continue
+        num = int(t["track"])
+        raw_title = title_by_pos.get(num) or f"Track {num:02d}"
+        name = f"{num:02d} - {raw_title}"
+        title = Title(index=len(titles), name=name, clips=[],
+                      duration=round((t.get("sectors") or 0) / 75.0, 3),
+                      source_kind="cd",
+                      size_bytes=(t.get("sectors") or 0) * cdda.CDDA_SECTOR)
+        title.is_main = (len(titles) == 0)
+        title.info = {"cd_track": t, "cd_number": num}
+        titles.append(title)
+    return titles, meta
+
+
+def rip_cd(letter: str, cd_titles: List[Title], out_root: str, fmt: str = "flac",
+           artist: str = "Unknown Artist", album: str = "Unknown Album",
+           release_mbid: Optional[str] = None, selected: Optional[set] = None,
+           progress_cb: Optional[Callable[[float], None]] = None,
+           stop_event: Optional[threading.Event] = None) -> List[str]:
+    """Rip selected CD audio tracks to FLAC/MP3 under <out>/<Artist>/<Album>/.
+
+    Writes cover.jpg for the album and returns the list of produced file paths.
+    The artist folder is reused if it already exists (album is merged into it).
+    """
+    import tempfile
+    album_dir = os.path.join(out_root, ffutil.safe_name(artist),
+                             ffutil.safe_name(album))
+    os.makedirs(album_dir, exist_ok=True)
+    ext = ".flac" if fmt == "flac" else ".mp3"
+    if release_mbid:
+        try:
+            musicdisc.download_cover(release_mbid, os.path.join(album_dir, "cover.jpg"),
+                                     size="500")
+        except Exception:  # noqa: BLE001
+            pass
+    produced: List[str] = []
+    jobs = [t for t in cd_titles if selected is None or t.index in selected]
+    total = max(1, len(jobs))
+
+    def _emit(i: int, f: float):
+        if progress_cb:
+            progress_cb(max(0.0, min(1.0, (i + max(0.0, min(1.0, f))) / total)))
+
+    for i, title in enumerate(jobs):
+        if stop_event and stop_event.is_set():
+            break
+        track = title.info.get("cd_track")
+        if not track:
+            continue
+        out_path = os.path.join(album_dir, ffutil.safe_name(title.name) + ext)
+        wav = tempfile.mktemp(suffix=".wav", prefix="fizzdisk_")
+        try:
+            _emit(i, 0.0)
+            cdda.rip_track_to_wav(letter, track, wav, progress_cb=lambda f, i=i: _emit(i, f))
+            rc = ffutil.encode_audio(wav, out_path, fmt=fmt,
+                                     progress_cb=lambda f, i=i: _emit(i, f),
+                                     duration=title.duration or 0.0)
+            if rc != 0:
+                raise RuntimeError(f"Encoding failed (rc={rc}) for {title.name}")
+            produced.append(out_path)
+        finally:
+            try:
+                os.remove(wav)
+            except OSError:
+                pass
+    return produced
 
 
 def _scan_iso(src: str):

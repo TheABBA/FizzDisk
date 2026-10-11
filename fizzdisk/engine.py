@@ -295,9 +295,33 @@ def _scan_iso(src: str):
     return titles, mount
 
 
+_MEDIA_EXT = {".m2ts", ".mts", ".vob", ".mkv", ".mp4", ".m4v", ".mov", ".avi",
+              ".ts", ".mpg", ".mpeg", ".wmv", ".flv", ".rmvb", ".webm"}
+
+
+def _media_files(base) -> list:
+    try:
+        return [str(f) for f in sorted(Path(base).iterdir())
+                if f.is_file() and f.suffix.lower() in _MEDIA_EXT]
+    except Exception:  # noqa: BLE001
+        return []
+
+
 def _scan_file(path: str) -> List[Title]:
-    info = ffutil.scan_streams([path])
-    title = Title(index=0, name=Path(path).stem, clips=[ffutil.Clip(files=[path])],
+    """Scan a media file (or a directory of media files)."""
+    p = Path(path)
+    media = _media_files(p) if p.is_dir() else None
+    if media is not None and not media:
+        # a directory with no playable media (e.g. an empty drive root)
+        return []
+    if media is not None:
+        files = media
+        name = p.name or "disc"
+    else:
+        files = [path]
+        name = Path(path).stem
+    info = ffutil.scan_streams(files)
+    title = Title(index=0, name=name, clips=[ffutil.Clip(files=files)],
                   duration=info.get("duration", 0.0), source_kind="file", is_main=True)
     for s in info.get("streams", []):
         if s.codec_type == "video" and title.video is None:

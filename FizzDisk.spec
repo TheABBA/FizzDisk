@@ -33,29 +33,24 @@ a = Analysis(
 )
 pyz = PYZ(a.pure)
 
+# Onefile: pass the binaries/data straight into the exe (exclude_binaries=False),
+# so the user only gets a single FizzDisk.exe with no _internal folder.
 exe = EXE(
     pyz,
     a.scripts,
+    a.binaries,
+    a.datas,
     [],
-    exclude_binaries=True,
     name='FizzDisk',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
+    upx_exclude=[],
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-)
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name='FizzDisk',
 )

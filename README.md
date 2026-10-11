@@ -81,8 +81,10 @@ python -m fizzdisk "D:\"
 ```
 
 ### Packaged app
-If a bundled build exists in `dist\`, run **`dist\FizzDisk\FizzDisk.exe`** —
-a self-contained, double-clickable application with ffmpeg included.
+If a bundled build exists in `dist\`, run **`dist\FizzDisk.exe`** — a single,
+self-contained, double-clickable executable with ffmpeg, libbluray/libaacs and
+libcdio-paranoia all embedded (no DLLs or `_internal` folder to manage). Every
+bundled tool is extracted to a private temp dir at run time.
 
 ### CLI (scripting)
 ```

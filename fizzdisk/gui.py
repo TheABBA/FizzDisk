@@ -708,19 +708,6 @@ class FizzDiskApp(ctk.CTk):
         state = {"open": True}
         cancel = threading.Event()
 
-        def set_fields(title, year=None):
-            try:
-                t.delete(0, "end")
-                t.insert(0, title or "")
-            except Exception:
-                pass
-            try:
-                if year:
-                    y.delete(0, "end")
-                    y.insert(0, str(year))
-            except Exception:
-                pass
-
         def search_again():
             if not state["open"]:
                 return
@@ -738,11 +725,17 @@ class FizzDiskApp(ctk.CTk):
                         return
                     if cands:
                         # Reopen the "Which movie?" chooser with the new results so
-                        # the user can pick the right one; apply the pick if chosen.
+                        # the user can pick the right one; choosing applies it to the
+                        # main app (File Name field) and closes this dialog.
                         picked = self._pick_movie(cands)
                         if isinstance(picked, dict):
-                            set_fields(picked.get("title"), picked.get("year"))
-                            status.configure(text="", text_color="#3b82f6")
+                            res["v"] = picked.get("name") or (
+                                "%s (%s)" % (picked.get("title"), picked.get("year"))
+                                if picked.get("title") else None)
+                            self.movie_info = picked     # so the poster can resolve later
+                            cancel.set()
+                            state["open"] = False
+                            dlg.destroy()
                         else:
                             status.configure(text="Type the title and year, then Save (year is optional).",
                                              text_color="#f59e0b")

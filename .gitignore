@@ -3,3 +3,6 @@ __pycache__/
 build/
 dist/
 *.zip
+
+# CD-rip sample output (Desktop/FizzDisk)
+Dave Matthews Band/

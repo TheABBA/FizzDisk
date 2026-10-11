@@ -119,8 +119,9 @@ class FizzDiskApp(ctk.CTk):
         left.grid(row=0, column=0, sticky="nsew", padx=(0, 6), pady=6)
         left.grid_rowconfigure(1, weight=1)
         left.grid_columnconfigure(0, weight=1)
-        ctk.CTkLabel(left, text="Titles (click a row to select & view)",
-                     anchor="w", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="ew", padx=8, pady=(3, 1))
+        self._titles_label = ctk.CTkLabel(left, text="Titles (click a row to select & view)",
+                                          anchor="w", font=("Segoe UI", 9, "bold"))
+        self._titles_label.grid(row=0, column=0, sticky="ew", padx=8, pady=(3, 1))
         self.tree = ctk.CTkScrollableFrame(left, corner_radius=8, fg_color="transparent", height=150)
         self.tree._scrollbar.configure(height=60)
         self.tree.grid(row=1, column=0, sticky="nsew", padx=4, pady=2)
@@ -141,8 +142,8 @@ class FizzDiskApp(ctk.CTk):
         detail.grid(row=0, column=0, sticky="nsew", padx=6, pady=(6, 4))
         detail.grid_rowconfigure(1, weight=1)
         detail.grid_columnconfigure(0, weight=1)
-        ctk.CTkLabel(detail, text="Streams (selected title)", anchor="w", font=("Segoe UI", 9, "bold")).grid(
-            row=0, column=0, sticky="ew", padx=8, pady=(3, 1))
+        self._streams_label = ctk.CTkLabel(detail, text="Streams (selected title)", anchor="w", font=("Segoe UI", 9, "bold"))
+        self._streams_label.grid(row=0, column=0, sticky="ew", padx=8, pady=(3, 1))
         self.stream_frame = ctk.CTkScrollableFrame(detail, corner_radius=8, fg_color="transparent", height=150)
         self.stream_frame._scrollbar.configure(height=60)
         self.stream_frame.grid(row=1, column=0, sticky="nsew", padx=6, pady=(0, 6))
@@ -157,26 +158,29 @@ class FizzDiskApp(ctk.CTk):
         self.var_out = tk.StringVar(value=self.output_dir)
         ctk.CTkEntry(out_box, textvariable=self.var_out, corner_radius=8).grid(row=1, column=1, sticky="ew", padx=2, pady=1)
         ctk.CTkButton(out_box, text="\u2026", width=38, corner_radius=8, command=self.browse_out).grid(row=1, column=2, padx=(4, 8), pady=1)
-        ctk.CTkLabel(out_box, text="File name:", anchor="w").grid(row=2, column=0, sticky="w", padx=(8, 2), pady=1)
+        self._file_label = ctk.CTkLabel(out_box, text="File name:", anchor="w")
+        self._file_label.grid(row=2, column=0, sticky="w", padx=(8, 2), pady=1)
         self.var_tmpl = tk.StringVar(value="{name}.mkv")
-        ctk.CTkEntry(out_box, textvariable=self.var_tmpl, corner_radius=8).grid(row=2, column=1, sticky="ew", padx=2, pady=1)
+        self._file_entry = ctk.CTkEntry(out_box, textvariable=self.var_tmpl, corner_radius=8)
+        self._file_entry.grid(row=2, column=1, sticky="ew", padx=2, pady=1)
 
-        # CD output format (default FLAC, optional MP3) — only shown for audio CDs
+        # CD output compression toggles (independent -- may pick both) -- CD only
         self._cd_fmtrow = ctk.CTkFrame(out_box, fg_color="transparent")
         self._cd_fmtrow.grid(row=3, column=0, columnspan=3, sticky="w", padx=8, pady=(2, 1))
-        self.var_cd_format = tk.StringVar(value="flac")
-        self.rb_flac = ctk.CTkRadioButton(self._cd_fmtrow, text="Output to FLAC",
-                                          variable=self.var_cd_format, value="flac",
-                                          corner_radius=8, radiobutton_width=13,
-                                          radiobutton_height=13, width=17,
-                                          command=lambda: self._on_cd_format("flac"))
-        self.rb_flac.pack(side="left")
-        self.rb_mp3 = ctk.CTkRadioButton(self._cd_fmtrow, text="Output to MP3",
-                                         variable=self.var_cd_format, value="mp3",
-                                         corner_radius=8, radiobutton_width=13,
-                                         radiobutton_height=13, width=17,
-                                         command=lambda: self._on_cd_format("mp3"))
-        self.rb_mp3.pack(side="left", padx=12)
+        self.var_cd_flac = tk.BooleanVar(value=True)   # FLAC on by default
+        self.var_cd_mp3 = tk.BooleanVar(value=False)
+        self.cb_flac = ctk.CTkCheckBox(self._cd_fmtrow, text="FLAC Compression",
+                                       corner_radius=8, checkbox_width=13,
+                                       checkbox_height=13, width=17,
+                                       variable=self.var_cd_flac,
+                                       command=self._on_cd_formats)
+        self.cb_flac.pack(side="left")
+        self.cb_mp3 = ctk.CTkCheckBox(self._cd_fmtrow, text="MP3 Compression",
+                                      corner_radius=8, checkbox_width=13,
+                                      checkbox_height=13, width=17,
+                                      variable=self.var_cd_mp3,
+                                      command=self._on_cd_formats)
+        self.cb_mp3.pack(side="left", padx=12)
 
         self.var_backup = tk.BooleanVar(value=False)
         ctk.CTkCheckBox(out_box, text="Raw Backup Only (Copy AACS/BDMV)", corner_radius=8,
@@ -361,14 +365,41 @@ class FizzDiskApp(ctk.CTk):
                     self._cd_fmtrow.grid()
                 else:
                     self._cd_fmtrow.grid_remove()
+            # the File-name template is irrelevant for CD tracks (auto-named)
+            if getattr(self, "_file_entry", None) is not None:
+                if on:
+                    self._file_label.grid_remove()
+                    self._file_entry.grid_remove()
+                else:
+                    self._file_label.grid()
+                    self._file_entry.grid()
+            # retitle the panes for a CD
+            if getattr(self, "_titles_label", None) is not None:
+                self._titles_label.configure(
+                    text="Tracks (click a row to select & view)" if on
+                    else "Titles (click a row to select & view)")
+            if getattr(self, "_streams_label", None) is not None:
+                self._streams_label.configure(text="Album info" if on
+                                              else "Streams (selected title)")
         except Exception:
             pass
 
-    def _on_cd_format(self, fmt):
+    def _on_cd_formats(self):
         try:
-            self.var_eta.set(f"Ripping to {fmt.upper()} \u2014 select tracks, then Start")
+            fmts = self._selected_cd_formats()
+            label = " + ".join(f.upper() for f in fmts) or "FLAC"
+            self.var_eta.set(f"Ripping to {label} \u2014 select tracks, then Start")
         except Exception:
             pass
+
+    def _selected_cd_formats(self) -> list:
+        """Return the chosen compression format(s); at least ['flac']."""
+        fmts = []
+        if self.var_cd_flac.get():
+            fmts.append("flac")
+        if self.var_cd_mp3.get():
+            fmts.append("mp3")
+        return fmts or ["flac"]
 
     def _confirm_cd_album(self):
         """Confirm (or edit) the Artist/Album identified for the CD, via a popup."""
@@ -411,8 +442,21 @@ class FizzDiskApp(ctk.CTk):
         self.wait_window(dlg)
         if res["v"] == "change":
             self._edit_cd_album()
-        elif res["v"]:
+        self._prefill_cd_folder()
+        self._show_cd_album()
+        if res["v"]:
             self.log(f"CD identified: {self._cd_artist} \u2014 {self._cd_album}")
+
+    def _prefill_cd_folder(self):
+        """Pre-fill the output Folder to ~/Music/<Artist>/<Album>."""
+        try:
+            base = Path.home() / "Music"
+            folder = os.path.join(str(base),
+                                  ffutil.safe_name(self._cd_artist or "Unknown Artist"),
+                                  ffutil.safe_name(self._cd_album or "Unknown Album"))
+            self.var_out.set(folder)
+        except Exception:
+            pass
 
     def _edit_cd_album(self):
         dlg = ctk.CTkToplevel(self)
@@ -942,6 +986,11 @@ class FizzDiskApp(ctk.CTk):
 
     def _row_text(self, t, src=""):
         mark = "\u2611" if t.index in self.selected else "\u2610"
+        if self.cd_mode:
+            num = t.info.get("cd_number")
+            title = t.info.get("cd_title") or t.name
+            num = f"#{int(num):02d}" if num else "#--"
+            return f"{mark}  {num}    {title}    {t.nice_duration}"
         base = f"{mark}  {t.name}    {t.nice_duration}    {self._fmt_size(t.size_bytes)}"
         return f"{base}    {src}" if src else base
 
@@ -1028,6 +1077,54 @@ class FizzDiskApp(ctk.CTk):
             else:
                 self.sub_sel.discard(i)
 
+    def _show_cd_album(self):
+        """Streams pane becomes album info + a small cover-art thumbnail."""
+        self._clear_streams()
+        meta = self.cd_meta or {}
+        r = 0
+        ctk.CTkLabel(self.stream_frame, text="Album", font=("Segoe UI", 10, "bold"),
+                     anchor="w").grid(row=r, column=0, sticky="nw", padx=4, pady=(2, 2))
+        r += 1
+        rows = [
+            ("Artist", self._cd_artist or "Unknown Artist"),
+            ("Title", self._cd_album or "Unknown Album"),
+            ("Year", meta.get("year") or ""),
+            ("Tracks", str(len(self.titles))),
+        ]
+        for k, v in rows:
+            if v:
+                ctk.CTkLabel(self.stream_frame, text=f"{k}: {v}", anchor="w").grid(
+                    row=r, column=0, sticky="w", padx=10)
+                r += 1
+        try:
+            from . import musicdisc as _md
+            out_dir = self.var_out.get().strip() or str(Path.home() / "Music")
+            os.makedirs(out_dir, exist_ok=True)
+            cov = os.path.join(out_dir, "cover.jpg")
+            if self._cd_release_mbid and not os.path.exists(cov):
+                try:
+                    _md.download_cover(self._cd_release_mbid, cov, size="500")
+                except Exception:
+                    pass
+            if HAS_PIL and os.path.exists(cov):
+                try:
+                    img = Image.open(cov)
+                    img.thumbnail((180, 180), Image.LANCZOS)
+                    if img.mode not in ("RGB", "RGBA"):
+                        img = img.convert("RGB")
+                    cimg = ctk.CTkImage(light_image=img, dark_image=img,
+                                        size=img.size)
+                    lbl = ctk.CTkLabel(self.stream_frame, image=cimg, text="")
+                    lbl.image = cimg
+                    lbl.grid(row=r, column=0, sticky="w", padx=10, pady=6)
+                except Exception:
+                    pass
+            elif not os.path.exists(cov):
+                ctk.CTkLabel(self.stream_frame, text="(cover art unavailable)",
+                             text_color="gray").grid(row=r, column=0, sticky="w", padx=10)
+        except Exception:
+            pass
+
     # -------------------------------------------------------------- ripping
     def on_make(self):
         if not self.var_out.get().strip():
@@ -1041,14 +1138,16 @@ class FizzDiskApp(ctk.CTk):
                 return
             if not self._cd_artist or not self._cd_album:
                 self._confirm_cd_album()
-            fmt = self.var_cd_format.get() or "flac"
+                self._prefill_cd_folder()
+            fmts = self._selected_cd_formats()
+            label = " + ".join(f.upper() for f in fmts)
             self._stopping.clear()
             self.btn_make.configure(state="disabled")
             self.btn_stop.configure(state="normal")
             self.progress.set(0.0)
             self.var_eta.set("Preparing\u2026")
-            self.log(f"Ripping CD to {fmt.upper()} into {self.var_out.get()} ...")
-            threading.Thread(target=self._rip_cd_worker, args=(jobs, fmt),
+            self.log(f"Ripping CD to {label} into {self.var_out.get()} ...")
+            threading.Thread(target=self._rip_cd_worker, args=(jobs, fmts),
                              daemon=True).start()
             return
         if not self._film_folder:
@@ -1074,10 +1173,11 @@ class FizzDiskApp(ctk.CTk):
         self._set_status("Stopping\u2026")
         ffutil.stop_active_proc()
 
-    def _rip_cd_worker(self, jobs, fmt):
+    def _rip_cd_worker(self, jobs, fmts=None):
         out_root = self.var_out.get().strip() or str(Path.home() / "Music")
         os.makedirs(out_root, exist_ok=True)
         letter = engine._cd_letter(self.source)
+        fmts = list(fmts) if fmts else ["flac"]
         # reuse the movie progress/ETA machinery by treating the album as ONE job
         self._prog_total = 1.0
         self._prog_base = 0.0
@@ -1086,7 +1186,8 @@ class FizzDiskApp(ctk.CTk):
         stopped = False
         try:
             produced = engine.rip_cd(
-                letter, self.titles, out_root, fmt=fmt,
+                letter, self.titles, out_root, fmt=fmts[0],
+                formats=fmts,
                 artist=self._cd_artist or "Unknown Artist",
                 album=self._cd_album or "Unknown Album",
                 release_mbid=self._cd_release_mbid or None,
@@ -1097,8 +1198,9 @@ class FizzDiskApp(ctk.CTk):
             if self._stopping.is_set():
                 stopped = True
             elif produced:
-                self.after(0, lambda p=produced: self.log(
-                    f"Ripped {len(p)} track(s) to {fmt.upper()} \u2014 {p[0]} ..."))
+                label = " + ".join(f.upper() for f in fmts)
+                self.after(0, lambda p=produced, lb=label: self.log(
+                    f"Ripped {len(p)} file(s) [{lb}] \u2014 {p[0]} ..."))
         except Exception as e:  # noqa: BLE001
             if not self._stopping.is_set():
                 self.after(0, lambda e=e: self.log(f"ERROR: {e}", err=True))

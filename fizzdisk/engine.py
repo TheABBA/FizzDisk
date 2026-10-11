@@ -97,16 +97,19 @@ def detect_source(src: str) -> str:
     if m:
         letter = m.group(1).upper()
         root = f"{letter}:\\"
-        # a drive with audio tracks and no video folders is an audio CD
+        # a video disc always has a VIDEO_TS/BDMV filesystem -- check those
+        # first so a DVD/BD is never mistaken for an audio CD (an MCI TOC read
+        # on a DVD can report a phantom "audio" track with 0 sectors).
+        if _has(root, "BDMV") or _has(root, "AACS"):
+            return "bd"
+        if _has(root, "VIDEO_TS"):
+            return "dvd"
+        # a pure audio CD has no video folders
         try:
             if cdda.detect_audio_cd(letter):
                 return "cd"
         except Exception:
             pass
-        if _has(root, "BDMV"):
-            return "bd"
-        if _has(root, "VIDEO_TS"):
-            return "dvd"
         return "disc"
     path = Path(src)
     # directory scan

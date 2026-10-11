@@ -91,3 +91,4 @@ class ScanResult:
     source_kind: str
     info: str = ""
     errors: List[str] = field(default_factory=list)
+    meta: Optional[dict] = None  # audio-CD album metadata (artist/album/tracks)

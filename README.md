@@ -3,7 +3,8 @@
 A **clean-room, open-source ripper** for Windows. It scans an optical disc, ISO
 image, or disc/image folder (DVD `VIDEO_TS`, Blu-ray `BDMV`), lists every title
 and its audio/subtitle tracks, and remuxes the selected titles into a single
-Matroska (`.mkv`) file — losslessly (stream copy) by default.
+Matroska (`.mkv`) file — losslessly (stream copy) by default. It also detects
+an **audio CD** and rips it to FLAC/MP3 with MusicBrainz metadata and cover art.
 
 FizzDisk is built entirely with free, open-source components and is **fully
 self-contained**: it does **not** require MakeMKV, Python, or a VC++ runtime on
@@ -29,6 +30,15 @@ open, but it is never required.
 - **AACS decryption** — protected Blu-ray discs are decrypted in-house by the
   bundled open-source decoder (libbluray + libaacs + libbdplus + keydb.cfg).
   Only if that fails does FizzDisk fall back to an external ripper.
+- **Audio CD ripping** — a music CD is detected automatically (via the drive's
+  audio tracks), identified by **MusicBrainz Disc-ID** (with a fuzzy TOC +
+  duration fallback), and its cover art is fetched from the **Cover Art
+  Archive** (saved as `cover.jpg`). Tracks are ripped to **FLAC** (default) or
+  **MP3** (radio-button choice) and saved as
+  `<Output>/<Artist>/<Album>/NN - Track Title.<ext>`; an existing artist folder
+  is reused and the album is merged into it. The CD layer uses real Windows
+  CD-ROM IOCTLs (raw 2352-byte sector reads) and the bundled `ffmpeg.exe` for
+  encoding — no extra binaries, no online account/keys required.
 
 The whole thing is driven by a **GUI** (tkinter/CustomTkinter). A small **CLI**
 is also provided for scripting.

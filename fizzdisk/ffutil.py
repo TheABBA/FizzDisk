@@ -354,3 +354,51 @@ def validate_mkv(path: str) -> dict:
     duration = _parse_time((data.get("format") or {}).get("duration"))
     streams = _streams_from_probe(data)
     return {"duration": duration or 0.0, "streams": streams, "ok": True}
+
+
+def encode_audio(input_wav: str, output_path: str, fmt: str = "flac",
+                progress_cb: Optional[Callable[[float], None]] = None,
+                duration: float = 0.0, bitrate: str = "320k") -> int:
+    """Encode a WAV to FLAC or MP3 with the bundled ffmpeg. Returns rc.
+
+    Supports CD-audio rips. Progress is reported as 0.0..1.0 from the ffmpeg
+    time= counter (relative to `duration`, if known).
+    """
+    fmt = (fmt or "flac").lower()
+    if fmt == "flac":
+        args = ["-c:a", "flac", "-compression_level", "8"]
+    elif fmt == "mp3":
+        args = ["-c:a", "libmp3lame", "-b:a", bitrate or "320k"]
+    else:
+        raise ValueError("Unsupported encode format: %s" % fmt)
+    cmd = [FFMPEG, "-y", "-hide_banner", "-nostdin", "-loglevel", "info",
+           "-i", _native(input_wav), *args, _native(output_path)]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            text=True, creationflags=_NO_WINDOW)
+    set_active_proc(proc)
+    last_time = 0.0
+    try:
+        for line in proc.stderr:
+            line = line.strip()
+            if "time=" in line:
+                m = re.search(r"time=(\d+):(\d+):(\d+)\.(\d+)", line)
+                if m:
+                    t = (int(m.group(1)) * 3600 + int(m.group(2)) * 60
+                         + int(m.group(3)) + float(m.group(4)) / 10)
+                    if progress_cb and t != last_time:
+                        last_time = t
+                        if duration and duration > 0:
+                            progress_cb(max(0.0, min(1.0, t / duration)))
+        rc = proc.wait()
+    finally:
+        set_active_proc(None)
+    return rc
+
+
+def safe_name(s: str) -> str:
+    """Sanitize a string for use as a file/folder name on Windows."""
+    import re as _re
+    bad = '<>:"/\\|?*'
+    out = "".join("_" if c in bad else c for c in (s or "")).strip()
+    out = _re.sub(r"[ \t]+", " ", out).strip(" ._")
+    return out or "unknown"

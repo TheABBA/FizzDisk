@@ -36,6 +36,7 @@ except ImportError:  # pillow optional: poster preview just won't show
     HAS_PIL = False
 
 from . import engine, ffutil, bdlib, movie
+from . import license as lic
 from .model import Title
 
 # subtle per-window theming for the few native tk widgets kept (log text box)
@@ -106,6 +107,12 @@ class FizzDiskApp(ctk.CTk):
                                        fg_color="transparent", border_width=1,
                                        command=self._toggle_theme)
         self.btn_theme.pack(side="right", padx=8)
+        # gear (settings) sits to the LEFT of the light/dark toggle; opens
+        # the trial/licensing + TMDb Settings popup
+        self.btn_gear = ctk.CTkButton(top, text="\u2699", width=42, corner_radius=10,
+                                      fg_color="transparent", border_width=1,
+                                      command=self._open_settings)
+        self.btn_gear.pack(side="right", padx=(0, 8))
 
         # ---- Main split ----
         body = ctk.CTkFrame(self, corner_radius=12)
@@ -757,42 +764,79 @@ class FizzDiskApp(ctk.CTk):
             self.log("poster preview: " + str(e))
 
     def _maybe_prompt_tmdb_key(self):
+        # First-run auto-prompt (only until a user key is set, once per session).
+        # The gear button can always open Settings directly instead.
         if self._prompted_tmdb:
             return
         self._prompted_tmdb = True
         if movie.has_user_key():
             return
+        self._open_settings()
+
+    def _open_settings(self):
+        """Settings popup: trial/licensing + TheMovieDB API key, in two cards."""
         dlg = ctk.CTkToplevel(self)
-        dlg.title("High-quality posters")
+        dlg.title("Settings")
         dlg.transient(self)
-        dlg.geometry("460x320")
-        dlg.resizable(False, False)
+        dlg.geometry("560x560")
+        dlg.resizable(True, True)
         body = ctk.CTkFrame(dlg, corner_radius=14)
         body.pack(fill="both", expand=True, padx=12, pady=12)
+        sc = ctk.CTkScrollableFrame(body, corner_radius=12)
+        sc.pack(fill="both", expand=True, padx=4, pady=4)
 
-        ctk.CTkLabel(body, text="TheMovieDB API key (recommended)", font=("Segoe UI", 12, "bold"),
-                     anchor="w").pack(anchor="w", padx=6, pady=(6, 2))
-        ctk.CTkLabel(body, text=(
+        # ---- Card 1: trial / product key ----
+        card1 = ctk.CTkFrame(sc, corner_radius=12, fg_color=("#f0f2f6", "#272a30"))
+        card1.pack(fill="x", anchor="w", padx=4, pady=(2, 10))
+        ctk.CTkLabel(card1, text="Trial & Registration", font=("Segoe UI", 12, "bold"),
+                     anchor="w").pack(anchor="w", padx=12, pady=(10, 2))
+        lic_status = tk.StringVar(value=lic.status_text())
+        ctk.CTkLabel(card1, textvariable=lic_status, wraplength=480, justify="left",
+                     anchor="w").pack(anchor="w", padx=12, pady=(0, 4))
+        prow = ctk.CTkFrame(card1, fg_color="transparent")
+        prow.pack(anchor="w", padx=12, pady=(4, 2))
+        ctk.CTkLabel(prow, text="Product key:", anchor="w").pack(side="left", padx=(0, 6))
+        pk = tk.StringVar(value=lic.format_key(lic._load().get("license_key", "")))
+        ctk.CTkEntry(prow, width=260, textvariable=pk,
+                     placeholder_text="FZFK-XXXX-XXXX-XXXX-XXXX").pack(side="left")
+        pk_status = tk.StringVar(value="")
+
+        def do_activate():
+            ok, msg = lic.activate(pk.get())
+            lic_status.set(lic.status_text())
+            pk_status.set(msg)
+            self.log("License: " + msg)
+
+        ctk.CTkButton(prow, text="Activate", width=90, corner_radius=10,
+                      command=do_activate).pack(side="left", padx=(8, 0))
+        ctk.CTkLabel(card1, textvariable=pk_status, text_color="#3b82f6",
+                     anchor="w").pack(anchor="w", padx=12, pady=(2, 10))
+
+        # ---- Card 2: TheMovieDB API key ----
+        card2 = ctk.CTkFrame(sc, corner_radius=12, fg_color=("#f0f2f6", "#272a30"))
+        card2.pack(fill="x", anchor="w", padx=4, pady=(2, 10))
+        ctk.CTkLabel(card2, text="TheMovieDB API key (recommended)", font=("Segoe UI", 12, "bold"),
+                     anchor="w").pack(anchor="w", padx=12, pady=(10, 2))
+        ctk.CTkLabel(card2, text=(
             "FizzDisk uses TheMovieDB to identify the movie title & year when a\n"
             "disc is scanned, and to download a sharp HD poster. It needs a free\n"
             "API key. We don't share one master key, so please grab your own\n"
             "(~1 minute) \u2014 each user having their own avoids usage limits.\n"
             "Without a key, FizzDisk falls back to Wikipedia: titles and years\n"
             "still work, but posters are smaller."),
-            justify="left", anchor="w", wraplength=400).pack(anchor="w", padx=6, pady=(0, 4))
+            justify="left", anchor="w", wraplength=470).pack(anchor="w", padx=12, pady=(0, 4))
 
         def open_key():
             webbrowser.open("https://www.themoviedb.org/settings/api")
 
-        ctk.CTkButton(body, text="Get a free API key \u2192", command=open_key,
-                      width=180).pack(anchor="w", padx=6, pady=(0, 6))
-
-        ctk.CTkLabel(body, text="Paste your API key:", anchor="w").pack(anchor="w", padx=6)
+        ctk.CTkButton(card2, text="Get a free API key \u2192", command=open_key,
+                      width=180).pack(anchor="w", padx=12, pady=(0, 6))
+        ctk.CTkLabel(card2, text="Paste your API key:", anchor="w").pack(anchor="w", padx=12)
         key = tk.StringVar(value=movie.tmdb_key())
-        entry = ctk.CTkEntry(body, width=380, textvariable=key,
-                             placeholder_text="e.g. 1a2b3c...").pack(anchor="w", padx=6, pady=(2, 8))
-
+        ctk.CTkEntry(card2, width=380, textvariable=key,
+                     placeholder_text="e.g. 1a2b3c...").pack(anchor="w", padx=12, pady=(2, 8))
         status = tk.StringVar(value="")
+
         def save():
             k = key.get().strip()
             if not k:
@@ -808,13 +852,13 @@ class FizzDiskApp(ctk.CTk):
                     self.log("TMDb key: write failed.")
             self.after(800, dlg.destroy)
 
-        row = ctk.CTkFrame(body, fg_color="transparent")
-        row.pack(anchor="w", padx=6)
-        ctk.CTkButton(row, text="Save", width=90, command=save).pack(side="left", padx=(0, 6))
+        row = ctk.CTkFrame(card2, fg_color="transparent")
+        row.pack(anchor="w", padx=12)
+        ctk.CTkButton(row, text="Save", width=90, corner_radius=10, command=save).pack(side="left", padx=(0, 6))
         ctk.CTkButton(row, text="Skip (use Wikipedia)", fg_color="transparent", border_width=1,
                       command=dlg.destroy).pack(side="left")
-        ctk.CTkLabel(body, textvariable=status, text_color="#3b82f6", anchor="w").pack(
-            anchor="w", padx=6, pady=(6, 0))
+        ctk.CTkLabel(card2, textvariable=status, text_color="#3b82f6", anchor="w").pack(
+            anchor="w", padx=12, pady=(6, 10))
 
     # ------------------------------------------------------------ movie popups
     def _confirm_movie(self, name: str) -> bool:
@@ -1154,6 +1198,16 @@ class FizzDiskApp(ctk.CTk):
             messagebox.showinfo("FizzDisk", "Choose an output folder.")
             return
         os.makedirs(self.var_out.get().strip(), exist_ok=True)
+        # 50-backup trial: block ripping once the limit is reached (no license)
+        if not lic.can_rip():
+            self.log("Trial limit reached \u2014 a product key unlocks unlimited backups.")
+            messagebox.showinfo(
+                "FizzDisk",
+                "You've used all 50 trial backups.\n\n"
+                "Enter a product key in Settings (the gear icon) to unlock "
+                "unlimited backups and lifetime updates.")
+            self._open_settings()
+            return
         if self.cd_mode:
             jobs = [t for t in self.titles if t.index in self.selected]
             if not jobs:
@@ -1221,6 +1275,7 @@ class FizzDiskApp(ctk.CTk):
             if self._stopping.is_set():
                 stopped = True
             elif produced:
+                lic.record_backup()          # one backup per disc ripped
                 label = " + ".join(f.upper() for f in fmts)
                 self.after(0, lambda p=produced, lb=label: self.log(
                     f"Ripped {len(p)} file(s) [{lb}] \u2014 {p[0]} ..."))
@@ -1238,6 +1293,7 @@ class FizzDiskApp(ctk.CTk):
         self._prog_base = 0.0
         self._rip_started = time.time()
         stopped = False
+        made = 0
         for i, t in enumerate(jobs):
             if self._stopping.is_set():
                 stopped = True
@@ -1256,6 +1312,9 @@ class FizzDiskApp(ctk.CTk):
             if was_stopped:
                 stopped = True
                 break
+            made += 1
+        if made and not stopped:
+            lic.record_backup()              # one backup per disc rip (Made MKV)
         self.after(0, lambda: self._rip_done(stopped))
 
     def _on_title_progress(self, frac):
@@ -1404,6 +1463,7 @@ class FizzDiskApp(ctk.CTk):
             except Exception:
                 pass
         self.progress.set(1.0)
+        lic.record_backup()      # a raw-disk backup also counts against the trial
         self.log("Backup complete.")
 
     # ---------------------------------------------------------------- misc

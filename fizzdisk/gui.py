@@ -686,7 +686,6 @@ class FizzDiskApp(ctk.CTk):
         dlg.grab_set()
         mt = re.match(r"^(.*?)\s*\((\d{4})\)\s*$", initial)
         t0 = mt.group(1).strip() if mt else initial
-        y0 = mt.group(2) if mt else ""
         frame = ctk.CTkFrame(dlg, corner_radius=14)
         frame.pack(fill="both", expand=True, padx=12, pady=12)
         ctk.CTkLabel(frame, text="Enter the movie title — it searches as you type:",
@@ -698,7 +697,6 @@ class FizzDiskApp(ctk.CTk):
         ctk.CTkLabel(frame, text="Year:").grid(row=2, column=0, sticky="e", pady=2)
         y = ctk.CTkEntry(frame, width=80, corner_radius=8)
         y.grid(row=2, column=1, sticky="w", padx=6, pady=2)
-        y.insert(0, y0)
         ctk.CTkLabel(frame, text="(Optional)", font=("Segoe UI", 9), text_color="gray"
                      ).grid(row=2, column=2, sticky="w", padx=(2, 0))
         status = ctk.CTkLabel(frame, text="", font=("Segoe UI", 9), text_color="#3b82f6", anchor="w")
@@ -744,15 +742,12 @@ class FizzDiskApp(ctk.CTk):
             def apply():
                 if not state["open"]:
                     return
-                # Always offer the release year; normalize the title only when the
-                # typed text is recognisably the same movie (avoids clobbering input).
-                if best_year and not y.get().strip():
-                    y.delete(0, "end")
-                    y.insert(0, str(best_year))
+                # Normalize the title only when the typed text is recognisably the
+                # same movie (avoids clobbering input). The year stays as typed.
                 if _norm(q) == _norm(best_title) and best_title:
                     t.delete(0, "end")
                     t.insert(0, best_title)
-                status.configure(text="Found: %s (%s)" % (best_title, best_year),
+                status.configure(text="Found: %s (%s) — type the year or leave blank" % (best_title, best_year),
                                  text_color="#16a34a")
             safe(apply)
 

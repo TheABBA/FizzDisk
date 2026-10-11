@@ -183,13 +183,17 @@ class FizzDiskApp(ctk.CTk):
         self.cb_mp3.pack(side="left", padx=12)
 
         self.var_backup = tk.BooleanVar(value=False)
-        ctk.CTkCheckBox(out_box, text="Raw Backup Only (Copy AACS/BDMV)", corner_radius=8,
-                        checkbox_width=13, checkbox_height=13, width=17,
-                        variable=self.var_backup).grid(row=4, column=0, columnspan=3, sticky="w", padx=8, pady=(2, 0))
+        self.cb_backup = ctk.CTkCheckBox(out_box, text="Raw Backup Only (Copy AACS/BDMV)",
+                                         corner_radius=8,
+                                         checkbox_width=13, checkbox_height=13, width=17,
+                                         variable=self.var_backup)
+        self.cb_backup.grid(row=4, column=0, columnspan=3, sticky="w", padx=8, pady=(2, 0))
         self.var_encode = tk.BooleanVar(value=False)   # checked = re-encode; default = lossless stream copy
-        ctk.CTkCheckBox(out_box, text="Compress MKV (H.264/x264/AAC)", corner_radius=8,
-                        checkbox_width=13, checkbox_height=13, width=17,
-                        variable=self.var_encode).grid(row=5, column=0, columnspan=3, sticky="w", padx=8, pady=(1, 2))
+        self.cb_encode = ctk.CTkCheckBox(out_box, text="Compress MKV (H.264/x264/AAC)",
+                                         corner_radius=8,
+                                         checkbox_width=13, checkbox_height=13, width=17,
+                                         variable=self.var_encode)
+        self.cb_encode.grid(row=5, column=0, columnspan=3, sticky="w", padx=8, pady=(1, 2))
 
         btnrow = ctk.CTkFrame(out_box, corner_radius=8, fg_color="transparent")
         btnrow.grid(row=6, column=0, columnspan=3, sticky="ew", padx=8, pady=2)
@@ -373,6 +377,14 @@ class FizzDiskApp(ctk.CTk):
                 else:
                     self._file_label.grid()
                     self._file_entry.grid()
+            # video-only options don't apply to a CD
+            if getattr(self, "cb_backup", None) is not None:
+                if on:
+                    self.cb_backup.grid_remove()
+                    self.cb_encode.grid_remove()
+                else:
+                    self.cb_backup.grid()
+                    self.cb_encode.grid()
             # retitle the panes for a CD
             if getattr(self, "_titles_label", None) is not None:
                 self._titles_label.configure(
@@ -1116,12 +1128,15 @@ class FizzDiskApp(ctk.CTk):
                                         size=img.size)
                     lbl = ctk.CTkLabel(self.stream_frame, image=cimg, text="")
                     lbl.image = cimg
-                    lbl.grid(row=r, column=0, sticky="w", padx=10, pady=6)
+                    # place cover art to the RIGHT of the text (column 1)
+                    lbl.grid(row=0, column=1, rowspan=max(1, r),
+                             sticky="ne", padx=(14, 8), pady=6)
                 except Exception:
                     pass
             elif not os.path.exists(cov):
                 ctk.CTkLabel(self.stream_frame, text="(cover art unavailable)",
-                             text_color="gray").grid(row=r, column=0, sticky="w", padx=10)
+                             text_color="gray").grid(row=0, column=1,
+                                                     sticky="ne", padx=14)
         except Exception:
             pass
 

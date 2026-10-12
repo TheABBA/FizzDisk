@@ -254,9 +254,10 @@ class FizzDiskApp(ctk.CTk):
         except Exception:
             pass
         icon_fg = "#dfe3ea" if dark else "#23272e"
+        theme_fg = "#f59e0b"        # yellow/orange for the sun & moon toggle
         if hasattr(self, "btn_theme"):
             self.btn_theme.configure(text="\u2600\ufe0f" if dark else "\U0001F319",
-                                     text_color=icon_fg)
+                                     text_color=theme_fg)
         if hasattr(self, "btn_gear"):
             self.btn_gear.configure(text_color=icon_fg)
 

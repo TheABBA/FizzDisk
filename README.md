@@ -7,10 +7,10 @@ Matroska (`.mkv`) file — losslessly (stream copy) by default. It also detects
 an **audio CD** and rips it to FLAC/MP3 with MusicBrainz metadata and cover art.
 
 FizzDisk is built entirely with free, open-source components and is **fully
-self-contained**: it does **not** require MakeMKV, Python, or a VC++ runtime on
-the target machine. A user-installed MakeMKV (`makemkvcon64.exe`) may be used
-*optionally* as a decryption fallback for a disc the bundled decoder cannot
-open, but it is never required.
+self-contained**: it does **not** require any other ripper, Python, or a VC++
+runtime on the target machine. A bundled console ripper (and, as a last
+resort, a user-installed one on PATH) may be used *optionally* as a decryption
+fallback for a disc the bundled decoder cannot open, but it is never required.
 
 ---
 
@@ -63,7 +63,7 @@ is also provided for scripting.
   bundled copy first, then the system PATH.
 - *(optional)* an external ripper — the app ships its own
   `bin\fizzdisk-rip.exe`, so none is required. A previously-installed
-  `makemkvcon64.exe` is still detected and used as a last resort for discs the
+  console ripper is still detected and used as a last resort for discs the
   bundled decoder cannot open.
 
 ---
@@ -234,5 +234,6 @@ minted on that page in the buyer's browser; nothing else is required on your
 side.
 
 ## License
-Open source. Uses ffmpeg (LGPL/GPL) and, optionally, a user-installed MakeMKV
-for AACS decryption as a last resort.
+Open source. Uses ffmpeg (LGPL/GPL); AACS decryption is handled by the bundled
+libbluray/libaacs/libbdplus stack, with a bundled console ripper as a last
+resort.

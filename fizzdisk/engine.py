@@ -4,9 +4,9 @@
 Backends:
   * ffmpeg/ffprobe (open-source) - every file, unencrypted DVD/BD, remux.
   * the bundled libbluray + libaacs + libbdplus stack - AACS-protected Blu-ray.
-  * an optional external ripper (fizzdisk-rip, or a user-installed makemkvcon64)
-    - only as a last resort for discs ffprobe cannot demux; auto-detected and
-    never required.
+  * an optional external ripper (fizzdisk-rip, or a user-installed console ripper)
+    - only as a last resort for discs the pipeline cannot demux; auto-detected
+    and never required.
 """
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ def _find_backend() -> Optional[str]:
       1. the bundled copy shipped with the app (``binizzdisk-rip.exe``);
       2. FIZZDISK_RIP / FIZZDISK_BACKEND / MAKEMKVCON env var (explicit path);
       3. ``fizzdisk-rip`` on PATH;
-      4. a previously-installed ``makemkvcon64`` on PATH (legacy MakeMKV);
+      4. a previously-installed ``makemkvcon64`` (legacy) on PATH;
       5. the legacy install location (Program Files\MakeMKV).
     Returns None ("no external backend") when none is found.
     """

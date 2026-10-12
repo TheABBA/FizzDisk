@@ -1,24 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""One-shot release build for FizzDisk.
+"""One-shot release build for FizzDisk (installed app).
 
 What it does:
   1. Reads the version from fizzdisk/version.py (bump it there before a release).
   2. Writes version_info.txt -- the Windows version resource (file/product
      version, company, description) that PyInstaller embeds into the exe.
-  3. Runs PyInstaller ONEFILE (all binaries/data embedded -> a single .exe).
-  4. Names the output dist/FizzDisk-<version>.exe.
-  5. If signtool is available and a certificate is supplied, code-signs it.
+  3. Runs PyInstaller ONEDIR -> dist/FizzDisk/ (a real installed-app layout,
+     so it starts fast with no per-launch temp extraction).
+  4. Packages that folder into a single Inno Setup installer
+     -> dist/FizzDiskSetup-<version>.exe. Running it installs FizzDisk into its
+     own directory (Program Files), creates Start Menu / Desktop shortcuts and
+     an uninstaller, and shows one UAC prompt ("run as admin").
+  5. Optionally code-signs the installer if a certificate is supplied.
 
 Certificate for signing (optional). Provide one of:
   * set the FIZZDISK_CERT env var to a path of a .pfx/.p12 certificate, or
   * drop a signing_cert.pfx (and optional signing_cert.pfx password via
     FIZZDISK_CERT_PASS) into this folder.
 If none is found the build still succeeds, it just isn't signed (an unsigned
-single-file exe will trigger a SmartScreen "first run" warning, but work fine).
+installer may show a SmartScreen "first run" warning, but works fine).
 
-Usage:  python build.py            # release build
-        python build.py --sign     # force signing attempt
+Usage:  python build.py            # build the installer
+        python build.py --sign     # force a signing attempt
 """
 
 import os
@@ -88,6 +92,21 @@ def find_signtool():
     return None
 
 
+def find_iscc():
+    st = shutil.which("iscc") or shutil.which("ISCC")
+    if st:
+        return st
+    cands = [
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Inno Setup 6" / "ISCC.exe",
+        Path("C:/Program Files (x86)/Inno Setup 6/ISCC.exe"),
+        Path("C:/Program Files/Inno Setup 6/ISCC.exe"),
+    ]
+    for c in cands:
+        if c.exists():
+            return str(c)
+    return None
+
+
 def find_cert():
     cert = os.environ.get("FIZZDISK_CERT", "")
     if cert and os.path.exists(cert):
@@ -118,7 +137,7 @@ def sign(exe, force=False):
 
 def main():
     version, app, desc = _read_version()
-    print(f"Building {app} v{version} (onefile)...")
+    print(f"Building {app} v{version} (onedir + Inno installer)...")
     write_version_resource(version, app, desc)
 
     # clean previous build output
@@ -133,18 +152,24 @@ def main():
         print("PyInstaller FAILED.")
         return r.returncode
 
-    src = HERE / "dist" / f"{app}.exe"
-    dst = HERE / "dist" / f"{app}-v{version}.exe"
-    if src.exists():
-        src.replace(dst)
+    iscc = find_iscc()
+    if not iscc:
+        print("ISCC (Inno Setup) not found \u2014 left the app in dist/FizzDisk/.")
+        return 0
 
-    force = "--sign" in sys.argv
-    sign(dst, force=force)
+    iss = HERE / "installer" / "FizzDisk.iss"
+    r = subprocess.run([iscc, f"/DVERSION={version}", str(iss)], cwd=str(HERE))
+    if r.returncode != 0:
+        print("Inno Setup FAILED.")
+        return r.returncode
 
-    print(f"\nDONE \u2014 {dst}")
-    print(f"  size: {dst.stat().st_size / (1024 * 1024):.1f} MB")
-    print(f"  (single file, no _internal folder. Verify/SmartScreen: "
-          f"signed={bool(find_cert() or force)}.")
+    setup = HERE / "dist" / f"FizzDiskSetup-{version}.exe"
+    if setup.exists():
+        sign(setup, force="--sign" in sys.argv)
+        print(f"\nDONE \u2014 {setup}")
+        print(f"  size: {setup.stat().st_size / (1024 * 1024):.1f} MB")
+        print("  Installs FizzDisk into its own folder (Program Files) with")
+        print("  Start Menu / Desktop shortcuts and an uninstaller (one UAC prompt).")
     return 0
 
 

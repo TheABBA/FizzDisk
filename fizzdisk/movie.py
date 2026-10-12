@@ -480,13 +480,28 @@ def _overlap(a: str, b: str) -> bool:
 
 
 def _sidecar_path() -> str:
-    """Path where a user's own TMDb key may live (next to app, else home)."""
+    """Per-user writable location for the user's own TMDb key.
+
+    Uses %LOCALAPPDATA%\\FizzDisk (writable) rather than next to the exe, so an
+    app installed under Program Files can still save the key without admin.
+    """
     import sys
-    if getattr(sys, "frozen", False):
-        base = os.path.dirname(sys.executable)
+    base = os.environ.get("LOCALAPPDATA") or ""
+    if base:
+        d = os.path.join(base, "FizzDisk")
+        try:
+            os.makedirs(d, exist_ok=True)
+        except Exception:
+            d = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) \
+                else os.path.dirname(os.path.abspath(__file__))
     else:
-        base = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base, "tmdb_api_key.txt")
+        d = os.path.join(os.path.expanduser("~"), ".fizzdisk")
+        try:
+            os.makedirs(d, exist_ok=True)
+        except Exception:
+            d = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) \
+                else os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(d, "tmdb_api_key.txt")
 
 
 def set_tmdb_key(key: str) -> Optional[str]:

@@ -42,10 +42,12 @@ open, but it is never required.
   API key required.
 - **Trial & licensing** — the app offers **50 trial backups**; once they're
   used a **product key** is required for unlimited backups and lifetime
-  updates. The key is self-validating (offline, HMAC-signed), so no server is
-  needed. Open **Settings** via the **gear icon** (left of the light/dark
-  toggle) to see trial status, activate a key, and set a TheMovieDB API key.
-  Generate a key with `python -m fizzdisk.license gen`.
+  updates. The key is self-validating (offline, HMAC-signed), and it's
+  server-enforced on a **one-user-one-device** basis: activating binds it to
+  your machine's fingerprint, so the same key can't be shared across PCs. Open
+  **Settings** via the **gear icon** (left of the light/dark toggle) to see
+  trial status, activate a key, release it ("Move to another machine?") and set
+  a TheMovieDB API key. Generate a key with `python -m fizzdisk.license gen`.
 
 The whole thing is driven by a **GUI** (tkinter/CustomTkinter). A small **CLI**
 is also provided for scripting.
@@ -183,6 +185,26 @@ files. The `fizzdisk` directory is root-owned, so writes need sudo (the scratch
 helpers `ssh35.py` / `upload35.py` in the Hermes cache handle this via
 `sudo -A tee` with an askpass helper). To update: edit `website/`, then run the
 upload script. To access the box: SSH as `Philspad@192.168.0.35`.
+
+### Activation API (one user, one device)
+
+`server/license_api.py` is a dependency-free stdlib HTTP service that enforces
+**one product key = one device at a time**. Endpoints (POST JSON, `{key,
+fingerprint}`):
+
+- `/activate` — bind a key to a machine fingerprint (fresh → `activated`; other
+  device → `active_elsewhere`; same device → `active`).
+- `/deactivate` — free the key (only the current owner's fingerprint can free it).
+- `/status` — report `{bound_to, activated_at}` or unbound.
+- `/health` — 200 if alive.
+
+Keys are validated with the same HMAC as `fizzdisk/license.py`; the store is a
+JSON map at `FIZZDISK_DATA` (default `./data/licenses.json`). It runs as the
+`fizzdisk-lic` container on server `.35` (Docker, host network, PORT 8130), and
+Caddy proxies `/api/license/*` → `127.0.0.1:8130`. The app computes a stable
+fingerprint (`machine_id()`), calls `/activate` on activation and `/deactivate`
+from **Settings → "Move to another machine?"**, and degrades gracefully to
+offline (the local key is accepted; the binding syncs when back online).
 
 ### Accepting payment
 

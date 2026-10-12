@@ -1,86 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Thank you — FizzDisk license</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thank you — your FizzDisk license</title>
+<meta name="description" content="Your payment went through. Copy your FizzDisk product key and activate it in Settings.">
 <link rel="icon" href="assets/fizzdisk.ico">
-<script src="config.js"></script>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/config.js"></script>
+<script src="assets/keygen.js"></script>
 <style>
-  :root{--blue:#3b82f6;--amber:#f59e0b;--ink:#0f172a;--muted:#64748b;--bg:#f8fafc;--card:#fff;--border:#e2e8f0}
-  *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
-  .wrap{max-width:620px;margin:0 auto;padding:40px 20px 80px;text-align:center}
-  h1{font-size:1.5rem;margin:10px 0 6px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px 26px;margin:20px 0;box-shadow:0 4px 18px rgba(15,23,42,.06)}
-  .keybox{font-family:ui-monospace,Consolas,monospace;font-size:1.35rem;font-weight:700;letter-spacing:.06em;
-          background:#eef2ff;color:#1d4ed8;border-radius:12px;padding:18px 12px;margin:16px 0;word-break:break-all}
-  .btn{display:inline-block;padding:12px 22px;border-radius:10px;font-weight:600;border:0;cursor:pointer;font-size:1rem}
-  .btn-copy{background:var(--blue);color:#fff}
-  .btn-more{background:transparent;border:1px solid var(--border);color:var(--ink)}
-  ol{text-align:left;max-width:440px;margin:12px auto 0}
-  .ok{font-size:.9rem;color:var(--muted)}
-  .copied{color:#16a34a;font-weight:600;margin-left:8px}
-  footer{color:var(--muted);font-size:.85rem;margin-top:30px}
+  .kw{max-width:620px;margin:0 auto;padding:44px 20px 80px;text-align:center}
+  .kw img{width:72px;height:72px}
+  .kw h1{font-size:1.7rem;font-weight:800;margin:12px 0 6px}
+  .kw-sub{color:var(--muted);margin:0 0 22px}
+  .keybox{font-family:var(--mono);font-size:1.35rem;font-weight:700;letter-spacing:.06em;
+    background:var(--panel-2);color:var(--accent-2);border:1px solid var(--border-2);
+    border-radius:14px;padding:20px 14px;margin:18px 0;word-break:break-all}
+  .kw-cta{display:flex;justify-content:center;gap:12px;align-items:center;margin-top:10px}
+  .copied{color:var(--ok);font-weight:600}
+  .kw h2{font-size:1.15rem;font-weight:700;margin:30px 0 4px}
+  .kw ol{text-align:left;max-width:440px;margin:14px auto 0;color:var(--muted);line-height:1.7}
+  .kw ol b{color:var(--text)}
+  .kw-tip{color:var(--muted-2);font-size:.9rem;margin-top:16px}
+  .kw-foot{color:var(--muted-2);font-size:.85rem;margin-top:34px}
+  .kw a{color:var(--accent-2)}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="kw">
+  <img src="assets/fizzdisk_icon.png" alt="FizzDisk">
   <h1>🎉 Thank you — your license is ready</h1>
-  <p class="ok">Your payment went through. Here is your <b>FizzDisk product key</b>:</p>
+  <p class="kw-sub">Your payment went through. Here is your <b>FizzDisk product key</b>:</p>
 
-  <div class="card">
+  <div class="card" style="padding:30px 24px">
     <div class="keybox" id="key">…</div>
-    <button class="btn btn-copy" id="copy">Copy key</button>
-    <span class="copied" id="copied"></span>
+    <div class="kw-cta">
+      <button class="btn btn-primary" id="copy">Copy key</button>
+      <span class="copied" id="copied"></span>
+    </div>
 
-    <h2 style="margin-top:26px">Activate it</h2>
+    <h2>Activate it</h2>
     <ol>
-      <li>Run FizzDisk and click the <b>gear icon</b> (top-right, near the moon) to open Settings.</li>
-      <li>In <b>Trial &amp; Registration</b>, paste the key and click <b>Activate</b>.</li>
-      <li>Unlimited backups and lifetime updates are unlocked.</li>
+      <li>Run FizzDisk and click the <b>gear icon</b> (top-right, next to the theme toggle) to open Settings.</li>
+      <li>In <b>Trial &amp; Registration</b>, paste your key and click <b>Activate</b>.</li>
+      <li>Unlimited backups and lifetime updates are unlocked instantly.</li>
     </ol>
-    <p class="ok" style="margin-top:16px">Tip: this key is also stored on your device's registry, so reinstalling won't ask for it again.</p>
+    <p class="kw-tip">Tip: your key is also stored on your device's registry, so reinstalling won't ask for it again.</p>
   </div>
 
-  <p class="ok">Lost the key? Write it down or <a id="mail" href="#">email it to yourself</a>.
-     A copy is also kept with your Stripe receipt.</p>
-
-  <footer>FizzDisk v<script>document.write(window.FIZZ_CONFIG.VERSION)</script></footer>
+  <p class="kw-tip">Lost the key? Write it down, or <a id="mail" href="#">email it to yourself</a>. A copy is also kept with your receipt.</p>
+  <p class="kw-foot">FizzDisk v<script>document.write((window.FIZZ_CONFIG&&window.FIZZ_CONFIG.VERSION)||"1.0.0")</script></p>
 </div>
 
-<script src="keygen.js"></script>
 <script>
-const keyEl = document.getElementById('key');
-let key = new URLSearchParams(location.hash.slice(1)).get('key');
+(function(){
+  var keyEl = document.getElementById('key');
+  var key = new URLSearchParams(location.hash.slice(1)).get('key');
 
-async function boot(){
-  if(!key){
-    key = await FizzKeyGen.generateFizzKey();
-    history.replaceState(null,'','#'+new URLSearchParams({key}).toString());
+  function boot(){
+    if(!key){
+      FizzKeyGen.generateFizzKey().then(function(k){
+        key = k;
+        history.replaceState(null,'','#'+new URLSearchParams({key:key}).toString());
+        keyEl.textContent = key;
+        keyEl.dataset.key = key;
+        setMail();
+      });
+      return;
+    }
+    keyEl.textContent = key;
+    keyEl.dataset.key = key;
+    setMail();
   }
-  keyEl.textContent = key;
-  keyEl.dataset.key = key;
-}
 
-document.getElementById('copy').addEventListener('click', async function(){
-  const k = keyEl.dataset.key || keyEl.textContent;
-  try{ await navigator.clipboard.writeText(k); }
-  catch(e){
-    const t=document.createElement('textarea'); t.value=k; document.body.appendChild(t); t.select();
-    document.execCommand('copy'); t.remove();
+  document.getElementById('copy').addEventListener('click', function(){
+    var k = keyEl.dataset.key || keyEl.textContent;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(k);
+    } else {
+      var t=document.createElement('textarea'); t.value=k; document.body.appendChild(t);
+      t.select(); document.execCommand('copy'); t.remove();
+    }
+    var c=document.getElementById('copied'); c.textContent='Copied!';
+    setTimeout(function(){ c.textContent=''; },1800);
+  });
+
+  function setMail(){
+    var k = keyEl.dataset.key || keyEl.textContent;
+    var subj = encodeURIComponent('FizzDisk product key');
+    var body = encodeURIComponent('Your FizzDisk key:\n\n'+k+'\n\nActivate: run FizzDisk -> gear icon (Settings) -> Trial & Registration -> paste key -> Activate.');
+    document.getElementById('mail').href = 'mailto:?subject='+subj+'&body='+body;
   }
-  const c=document.getElementById('copied'); c.textContent='Copied!'; setTimeout(()=>c.textContent='',1800);
-});
 
-function setMail(){
-  const k = keyEl.dataset.key || keyEl.textContent;
-  const subj = encodeURIComponent('FizzDisk product key');
-  const body = encodeURIComponent('Your FizzDisk key:\n\n'+k+'\n\nActivate: open FizzDisk -> gear icon (Settings) -> Trial & Registration -> paste key -> Activate.');
-  document.getElementById('mail').href = 'mailto:?subject='+subj+'&body='+body;
-}
-
-boot().then(setMail);
+  if (window.FizzKeyGen && window.FizzKeyGen.generateFizzKey) { boot(); }
+  else {
+    keyEl.textContent = 'Key generator failed to load — refresh.';
+  }
+})();
 </script>
 </body>
 </html>

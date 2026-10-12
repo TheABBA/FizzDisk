@@ -81,10 +81,12 @@ python -m fizzdisk "D:\"
 ```
 
 ### Packaged app
-If a bundled build exists in `dist\`, run **`dist\FizzDisk.exe`** — a single,
-self-contained, double-clickable executable with ffmpeg, libbluray/libaacs and
-libcdio-paranoia all embedded (no DLLs or `_internal` folder to manage). Every
-bundled tool is extracted to a private temp dir at run time.
+If a bundled build exists in `dist\`, run **`dist\FizzDiskSetup-<version>.exe`** —
+a single installer that puts FizzDisk into its own folder (Program Files),
+creates Start Menu / Desktop shortcuts and an uninstaller, and asks for admin
+(UAC) once during install. The installed app is a normal `onedir` layout with
+ffmpeg, libbluray/libaacs and libcdio-paranoia bundled, so it starts instantly
+(no per-launch temp extraction). Build it with `python build.py`.
 
 ### CLI (scripting)
 ```

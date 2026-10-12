@@ -27,7 +27,8 @@ a = Analysis(
  ('bin/libcdio_paranoia-2.dll', 'bin'), ('bin/libiconv-2.dll', 'bin'),
  ('bin/libwinpthread-1.dll', 'bin')]
             + ctk_bins + pws_bins,
-    datas=[('bin/keydb.cfg', 'bin'), ('bin/blues.jar', 'bin'), ('bin/appdata.tar', 'bin')]
+    datas=[('bin/keydb.cfg', 'bin'), ('bin/blues.jar', 'bin'), ('bin/appdata.tar', 'bin'),
+           ('assets/fizzdisk.ico', 'assets')]
            + ctk_datas + pws_datas,
     hiddenimports=['PIL', 'PIL.Image', 'PIL.ImageTk', 'PIL._tkinter_finder']
                   + ctk_hidden + pws_hidden,
@@ -53,6 +54,7 @@ exe = EXE(
     strip=False,
     upx=False,
     upx_exclude=[],
+    icon='assets/fizzdisk.ico',
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,

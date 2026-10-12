@@ -85,6 +85,7 @@ class FizzDiskApp(ctk.CTk):
         self._set_cd_mode(False)
         self.refresh_drives()
         self._apply_theme()
+        self._set_window_icon()
         self._prompted_tmdb = False
         self.after(250, self._maybe_prompt_tmdb_key)
         self.log("FizzDisk ready. Choose a source and click Scan.")
@@ -264,6 +265,18 @@ class FizzDiskApp(ctk.CTk):
             return
         ctk.set_appearance_mode("Light" if ctk.get_appearance_mode() == "Dark" else "Dark")
         self._apply_theme()
+
+    def _set_window_icon(self):
+        """Set the title-bar icon to the FizzDisk brand mark (assets/fizzdisk.ico)."""
+        try:
+            base = Path(__file__).resolve().parent.parent
+            cand = base / "assets" / "fizzdisk.ico"
+            if not cand.exists():
+                cand = base.parent / "assets" / "fizzdisk.ico"
+            if cand.exists():
+                self.iconbitmap(default=str(cand))
+        except Exception:
+            pass
 
     # ------------------------------------------------------------- drives
     def refresh_drives(self):

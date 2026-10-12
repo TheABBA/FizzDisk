@@ -75,6 +75,7 @@ class FizzDiskApp(ctk.CTk):
         self._cd_artist: str = ""
         self._cd_album: str = ""
         self._cd_release_mbid: str = ""
+        self._cd_release_group_mbid: str = ""
         self._cd_fmtrow = None
 
         if ctk is not None:
@@ -354,6 +355,7 @@ class FizzDiskApp(ctk.CTk):
             self._cd_artist = ""
             self._cd_album = ""
             self._cd_release_mbid = ""
+            self._cd_release_group_mbid = ""
             self.movie_candidates = []
             self.movie_info = None
         if self.cd_mode:
@@ -362,6 +364,7 @@ class FizzDiskApp(ctk.CTk):
             self._cd_artist = (meta or {}).get("artist") or ""
             self._cd_album = (meta or {}).get("album") or ""
             self._cd_release_mbid = (meta or {}).get("release_mbid") or ""
+            self._cd_release_group_mbid = (meta or {}).get("release_group_mbid") or ""
         elif titles:
             main = next((t for t in titles if t.is_main), None)
             if main is None:
@@ -1202,7 +1205,11 @@ class FizzDiskApp(ctk.CTk):
             cov = os.path.join(out_dir, "cover.jpg")
             if self._cd_release_mbid and not os.path.exists(cov):
                 try:
-                    _md.download_cover(self._cd_release_mbid, cov, size="500")
+                    _md.download_cover(
+                        self._cd_release_mbid, cov, size="500",
+                        artist=self._cd_artist or "Unknown Artist",
+                        album=self._cd_album or "Unknown Album",
+                        release_group_mbid=self._cd_release_group_mbid or None)
                 except Exception:
                     pass
             if HAS_PIL and os.path.exists(cov):
@@ -1303,6 +1310,7 @@ class FizzDiskApp(ctk.CTk):
                 artist=self._cd_artist or "Unknown Artist",
                 album=self._cd_album or "Unknown Album",
                 release_mbid=self._cd_release_mbid or None,
+                release_group_mbid=self._cd_release_group_mbid or None,
                 selected={t.index for t in jobs},
                 progress_cb=self._on_title_progress,
                 stop_event=self._stopping,

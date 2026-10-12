@@ -192,21 +192,82 @@ def cover_art_url(release_mbid: str, size: Optional[str] = None) -> str:
     return _CAA + path
 
 
-def download_cover(release_mbid: str, dest: str,
-                   size: Optional[str] = None) -> Optional[str]:
-    """Download the front cover to `dest`. Returns dest or None."""
-    url = cover_art_url(release_mbid, size)
+def _raw_get(url: str) -> Optional[bytes]:
     try:
         req = urllib.request.Request(url, headers=_UA)
         with urllib.request.urlopen(req, timeout=25) as r:
-            data = r.read()
+            return r.read()
     except Exception:  # noqa: BLE001
         return None
-    if not data:
+
+
+def _itunes_artwork(artist: str, album: str) -> Optional[str]:
+    """Return a large iTunes / Apple Music artwork URL, or None.
+
+    Free, key-less fallback used only when the Cover Art Archive has no image
+    for a release. iTunes artwork payloads can be requested at any size by
+    editing the size in the URL path.
+    """
+    if not artist or not album:
         return None
     try:
-        with open(dest, "wb") as f:
-            f.write(data)
-        return dest
-    except OSError:
+        term = urllib.parse.quote("%s %s" % (artist, album))
+        url = ("https://itunes.apple.com/search?term=%s&entity=album"
+               "&media=music&limit=6" % term)
+        d = _get_json(url)
+        results = d.get("results") or []
+        if not results:
+            return None
+        low_a, low_b = artist.lower(), album.lower()
+        picked = None
+        for c in results:
+            ca = (c.get("artistName") or "").lower()
+            cl = (c.get("collectionName") or "").lower()
+            if ca and (ca == low_a or low_a in ca):
+                if low_b in cl:
+                    picked = c
+                    break
+                if picked is None:
+                    picked = c
+        c = picked or results[0]
+        art = (c.get("artworkUrl100") or "").strip()
+        if not art:
+            return None
+        return art.replace("100x100", "600x600")
+    except Exception:  # noqa: BLE001
         return None
+
+
+def download_cover(release_mbid: str, dest: str, size: Optional[str] = None,
+                   artist: Optional[str] = None, album: Optional[str] = None,
+                   release_group_mbid: Optional[str] = None) -> Optional[str]:
+    """Download the front cover to `dest`; returns dest or None.
+
+    Tries several sources in order so a release with no Cover Art Archive image
+    still gets artwork:
+      1. Cover Art Archive, by release (front / front-<size>);
+      2. Cover Art Archive, by release-group (front / front-<size>);
+      3. iTunes / Apple Music search (artist + album).
+    The first source that returns data wins; the image is written to `dest`.
+    """
+    suffix = "-%s" % size if size else ""
+    cands: List[str] = []
+    if release_mbid:
+        cands.append(_CAA + "/release/%s/front%s" % (release_mbid, suffix))
+        cands.append(_CAA + "/release/%s/front" % release_mbid)
+    if release_group_mbid:
+        cands.append(_CAA + "/release-group/%s/front%s" % (release_group_mbid, suffix))
+        cands.append(_CAA + "/release-group/%s/front" % release_group_mbid)
+    itunes = _itunes_artwork(artist or "", album or "")
+    if itunes:
+        cands.append(itunes)
+    for url in cands:
+        data = _raw_get(url)
+        if data:
+            try:
+                with open(dest, "wb") as f:
+                    f.write(data)
+                return dest
+            except OSError:
+                return None
+    return None

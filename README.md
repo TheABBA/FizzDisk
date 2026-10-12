@@ -147,27 +147,42 @@ FizzDisk/
 
 ## Website & payments
 
-The `website/` folder is the public download + buy page. It is fully static and
-needs no backend or database.
+The live site is deployed at **https://fizzdisk.philspad.com** (also `fizzdisk.com`) —
+a static, fully serverless site based on the existing themed landing page. Source
+lives in `website/`; the deployed copy is on the server at
+`/volume1/Server/srv/dir-local/fizzdisk` (mounted as `/srv/dir/fizzdisk` in the
+Caddy container). It is pure static HTML/CSS/JS — no backend or database.
 
-- `website/index.html` — landing page: free 50-backup trial, "Download for
-  Windows" button, and a "Buy a license" button.
-- `website/success.html` — shown after checkout. It **generates the buyer's
-  product key client-side** (no server) and reveals it with a Copy button +
-  activation instructions. Refreshing keeps the same key (stored in the URL
-  hash); a `mailto:` link lets the buyer email it to themselves.
-- `website/keygen.js` — cross-context key generator (WebCrypto with a pure-JS
-  SHA-256/HMAC fallback). It mirrors `fizzdisk/license.py` exactly, so every
-  key it issues validates in the app. Verify with: `node website/keygen.js`.
-- `website/config.js` — **edit before go-live:** `BUY_URL`, `VERSION`, `PRICE`,
-  `DOWNLOAD_URL`, `SUCCESS_URL`.
-- `website/download/FizzDiskSetup.exe` — drop the latest installer here per
-  release (git-ignored; it's a large build artifact).
-- Logo/favicon are copied into `website/assets/`.
+Files (mirror the deployed layout):
+- `website/index.html` — the themed landing page: free 50-backup trial, the
+  original feature / how-it-works sections, a new "Buy a license" section, and a
+  "Download for Windows" button pointing at the real installer. Brand mark and
+  favicon use the app's two-tone disc (blue ring / amber center).
+- `website/success.html` — shown after checkout. It **mints the buyer's product
+  key client-side** (no server) with a Copy button + activation instructions;
+  refreshing keeps the same key (URL hash) and a `mailto:` link lets them email
+  it to themselves.
+- `website/assets/app.css`, `website/assets/app.js` — the original theme and
+  section behavior; unchanged.
+- `website/assets/config.js` — **edit before go-live:** `BUY_URL` (paste your
+  2Checkout checkout link), `PRICE`, `VERSION`, `DOWNLOAD_URL`, `SUCCESS_URL`.
+- `website/assets/keygen.js` — cross-context key generator (WebCrypto with a
+  pure-JS SHA-256/HMAC fallback), mirroring `fizzdisk/license.py` so every key
+  it issues validates in the app. Verify: `node website/assets/keygen.js`.
+- `website/assets/fizzdisk_icon.png`, `fizzdisk.ico` — brand icon / favicon.
+- `website/download/FizzDiskSetup.exe` — the installer to upload each release
+  (git-ignored; it's a large build artifact).
 
-> **Keep the secret in sync.** The HMAC key in `website/keygen.js` (`FIZZ_SECRET`)
-> MUST equal `_SECRET` in `fizzdisk/license.py`. If you change one, change both,
-> or every key the site issues will be rejected by the app.
+> **Keep the secret in sync.** The HMAC key in `website/assets/keygen.js`
+> (`FIZZ_SECRET`) MUST equal `_SECRET` in `fizzdisk/license.py`. Change both or
+> every key the site issues will be rejected by the app.
+
+### Deployment (server .35)
+The site is served by Caddy's `file_server` — no reload is needed after pushing
+files. The `fizzdisk` directory is root-owned, so writes need sudo (the scratch
+helpers `ssh35.py` / `upload35.py` in the Hermes cache handle this via
+`sudo -A tee` with an askpass helper). To update: edit `website/`, then run the
+upload script. To access the box: SSH as `Philspad@192.168.0.35`.
 
 ### Accepting payment
 

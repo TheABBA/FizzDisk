@@ -13,12 +13,20 @@ import base64
 import sys
 import time
 
+try:
+    import winreg                      # Windows registry (per-user hard sentinel)
+except ImportError:                    # non-Windows dev box
+    winreg = None
+
 TRIAL_LIMIT = 50
 
-# The signing secret. Keys are minted by a small helper (see __main__ below)
-# and validated by the app, so only a properly signed key is accepted and no
-# server is required. Change this once to invalidate old keys.
-_SECRET = b"FizzDisk2026-LicKey-\xf0\x9f\x92\xbf-Unlimited"
+# The signing secret. Keys are minted by a helper (and by the website's
+# client-side generator) and validated by the app, so only a properly signed
+# key is accepted and no server is required. Keep in sync with the website
+# page (website/success.html) if you change it.
+_SECRET = b"FizzDisk2026-LicKey-UnlimitedBackups-ForLife"
+
+_REG_APP = r"Software\FizzDisk"
 
 
 def _data_dir() -> str:
@@ -67,6 +75,40 @@ def _save(st: dict) -> None:
         pass
 
 
+# ---- registry sentinels (HKCU, per-user) --------------------------------
+# Mirrors the high-water backup count and the activated key into the registry
+# so that wiping/deleting %LOCALAPPDATA% (e.g. a manual reset, or an add/remove
+# style cleanup) can't silently reset the 50-backup trial or forget the key.
+def _reg_get(name: str, default=""):
+    if winreg is None:
+        return default
+    try:
+        import winreg as wr
+        with wr.OpenKey(wr.HKEY_CURRENT_USER, _REG_APP) as k:
+            v, _ = wr.QueryValueEx(k, name)
+            return v
+    except Exception:
+        return default
+
+
+def _reg_set(name: str, value, dtype=None):
+    if winreg is None:
+        return
+    try:
+        import winreg as wr
+        with wr.CreateKey(wr.HKEY_CURRENT_USER, _REG_APP) as k:
+            wr.SetValueEx(k, name, 0, dtype or wr.REG_SZ, value)
+    except Exception:
+        pass
+
+
+def _reg_max_backups() -> int:
+    try:
+        return int(_reg_get("MaxBackups", 0) or 0)
+    except Exception:
+        return 0
+
+
 def _normalize(key: str) -> str:
     """Strip formatting, return the raw uppercase 16-char body or ''."""
     if not key:
@@ -95,12 +137,14 @@ def validate_key(key: str) -> bool:
 
 
 def is_licensed() -> bool:
-    """True if a valid key is configured (env var or saved state)."""
-    key = os.environ.get("FIZZDISK_LICENSE", "").strip()
-    if key and validate_key(key):
+    """True if a valid key is configured (env var, saved state, or registry)."""
+    env = os.environ.get("FIZZDISK_LICENSE", "").strip()
+    if env and validate_key(env):
         return True
-    key = _load().get("license_key", "")
-    return bool(key and validate_key(key))
+    for key in (_load().get("license_key", ""), _reg_get("LicenseKey", "")):
+        if key and validate_key(str(key)):
+            return True
+    return False
 
 
 def activate(key: str):
@@ -110,9 +154,11 @@ def activate(key: str):
         return False, "Enter a product key."
     if not validate_key(k):
         return False, "That key isn't valid. Check the format (FZFK-XXXX-...)."
+    canon = format_key(k)
     st = _load()
-    st["license_key"] = format_key(k)
+    st["license_key"] = canon
     _save(st)
+    _reg_set("LicenseKey", canon)                 # survive an appdata wipe
     return True, "Activated \u2014 unlimited backups & lifetime updates."
 
 
@@ -124,7 +170,8 @@ def format_key(key: str) -> str:
 
 
 def backups_used() -> int:
-    return int(_load().get("backups_used", 0) or 0)
+    json_used = int(_load().get("backups_used", 0) or 0)
+    return max(json_used, _reg_max_backups())
 
 
 def remaining() -> int:
@@ -145,9 +192,15 @@ def record_backup() -> int:
     if is_licensed():
         return backups_used()
     st = _load()
-    st["backups_used"] = min(TRIAL_LIMIT, int(st.get("backups_used", 0) or 0) + 1)
+    used = min(TRIAL_LIMIT, int(st.get("backups_used", 0) or 0) + 1)
+    st["backups_used"] = used
     _save(st)
-    return int(st["backups_used"])
+    # mirror the high-water count into the registry so wiping %LOCALAPPDATA%
+    # (or an uninstall/reinstall that leaves user data behind) can't reset the
+    # trial below the all-time high.
+    if winreg is not None and used > _reg_max_backups():
+        _reg_set("MaxBackups", used, winreg.REG_DWORD)
+    return used
 
 
 def status_text() -> str:

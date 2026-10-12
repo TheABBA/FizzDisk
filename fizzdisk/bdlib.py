@@ -328,13 +328,18 @@ def rip_bd(path: str, title: Title, out_path: str,
         for i in (sub_idx or []):
             cmd += ["-map", f"0:s:{i}"]
         if copy_codecs and video_codec is None:
-            cmd += ["-c:v", "copy", "-c:a", "copy", "-c:s", "copy"]
+            cmd += ["-c:v", "copy", "-c:s", "copy"] + ffutil.copy_audio_flags(title, audio_idx)
         else:
             cmd += ["-c:v", video_codec or ("libx264" if not copy_codecs else "copy")]
             if video_codec == "libx264" or (not copy_codecs and video_codec is None):
                 cmd += ["-preset", "fast", "-crf", "20"]
-            cmd += ["-c:a", audio_codec or ("aac" if not copy_codecs else "copy"),
-                    "-c:s", "copy"]
+            if audio_codec:
+                cmd += ["-c:a", audio_codec]
+            elif copy_codecs:
+                cmd += ffutil.copy_audio_flags(title, audio_idx)
+            else:
+                cmd += ["-c:a", "aac"]
+            cmd += ["-c:s", "copy"]
         cmd += ["-map_metadata", "0", "-default_mode", "infer",
                 "-metadata", f"title={title.name}", _native(out_path)]
 

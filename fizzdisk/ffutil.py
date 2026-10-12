@@ -249,6 +249,32 @@ def build_title_from_streams(idx: int, name: str, clips: List[Clip], info: dict,
 
 
 # ---- ffmpeg remux ----------------------------------------------------------
+def copy_audio_flags(title: "Title", audio_idx: Optional[List[int]]) -> List[str]:
+    """FFmpeg args to copy the selected audio streams, transcoding LPCM (the
+    pcm_bluray codec on Blu-rays) losslessly to FLAC.
+
+    Matroska cannot carry a ``pcm_bluray`` track directly (``No wav codec tag
+    found for codec pcm_bluray``) and refuses to write the MKV header, so any
+    LPCM stream must be re-encoded. FLAC is lossless, natively supported by
+    Matroska, and preserves the audio bit-exactly. All other audio is copied.
+    """
+    aud = list(audio_idx or [])
+    if not aud:
+        return ["-c:a", "copy"]
+    flags: List[str] = []
+    for j, ai in enumerate(aud):
+        cn = ""
+        try:
+            cn = (title.audio[ai].codec_name or "").lower()
+        except (IndexError, AttributeError):
+            pass
+        if cn in ("lpcm", "pcm_bluray"):
+            flags += [f"-c:a:{j}", "flac"]
+        else:
+            flags += [f"-c:a:{j}", "copy"]
+    return flags
+
+
 def remux(title: Title, out_path: str, video: bool = True,
           audio_idx: Optional[List[int]] = None, sub_idx: Optional[List[int]] = None,
           copy_codecs: bool = True, video_codec: Optional[str] = None,
@@ -306,8 +332,11 @@ def remux(title: Title, out_path: str, video: bool = True,
     if copy_codecs and video_codec is None and video and audio_idx is None:
         cmd += ["-c", "copy"]
     elif copy_codecs:
-        cmd += ["-c:v", "copy" if video and not video_codec else (video_codec or "copy"),
-                "-c:a", "copy" if audio_codec is None else audio_codec]
+        cmd += ["-c:v", "copy" if video and not video_codec else (video_codec or "copy")]
+        if audio_codec is None:
+            cmd += copy_audio_flags(title, audio_idx)
+        else:
+            cmd += ["-c:a", audio_codec]
     else:
         vc = video_codec or "libx264"
         cmd += ["-c:v", vc]

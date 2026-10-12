@@ -1410,12 +1410,45 @@ class FizzDiskApp(ctk.CTk):
                              else list(range(len(title.audio))))
                 sub_idx = (sorted(self.sub_sel) if self.detail_title is title
                            else list(range(len(title.subtitles))))
-                rc = bdlib.rip_bd(self.source, title, out_path, video=True,
-                                  audio_idx=audio_idx, sub_idx=sub_idx,
-                                  copy_codecs=not self.var_encode.get(),
-                                  progress_cb=progress_cb,
-                                  stop_event=self._stopping,
-                                  total_bytes=title.size_bytes)
+                try:
+                    rc = bdlib.rip_bd(self.source, title, out_path, video=True,
+                                      audio_idx=audio_idx, sub_idx=sub_idx,
+                                      copy_codecs=not self.var_encode.get(),
+                                      progress_cb=progress_cb,
+                                      stop_event=self._stopping,
+                                      total_bytes=title.size_bytes)
+                except RuntimeError:
+                    if self._stopping.is_set():
+                        return True
+                    # The bundled decoder couldn't decrypt this disc (typical
+                    # for AACS2/UHD 4K). Fall back to MakeMKV if it's available.
+                    if not engine.RIPPER:
+                        raise
+                    self.log("Bundled decoder couldn't decrypt this disc — trying MakeMKV…")
+                    try:
+                        mk_titles = engine.scan_titles(self.source) or []
+                    except Exception:
+                        mk_titles = []
+                    if not mk_titles:
+                        raise
+                    if title.duration:
+                        tgt = min(mk_titles, key=lambda t: abs((t.duration or 0) - title.duration))
+                    else:
+                        tgt = max(mk_titles, key=lambda t: t.duration or 0)
+                    fb_total = title.size_bytes or max(1, int((title.duration or 1) * 33_000_000 / 8))
+                    produced = engine.disc_rip(self.source, tgt.index, out_dir,
+                                               progress_cb=progress_cb,
+                                               output_path=out_path,
+                                               total_bytes=fb_total)
+                    if produced:
+                        if os.path.abspath(produced) != os.path.abspath(out_path):
+                            try:
+                                os.replace(produced, out_path)
+                            except OSError:
+                                pass
+                        self.after(0, lambda p=out_path: self.log("Made " + p))
+                        return self._stopping.is_set()
+                    raise
                 if rc != 0:
                     if self._stopping.is_set():
                         return True

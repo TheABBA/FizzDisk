@@ -29,13 +29,14 @@ SolidCompression=yes
 WizardStyle=modern
 DisableWelcomePage=no
 UninstallDisplayIcon={app}\{#MyAppExeName}
+SetupIconFile=..\assets\fizzdisk.ico
 ArchitecturesInstallIn64BitMode=x64compatible
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional shortcuts:"; Flags: unchecked
+Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional shortcuts:"
 
 [Files]
 Source: "..\dist\FizzDisk\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
@@ -43,8 +44,6 @@ Source: "..\dist\FizzDisk\*"; DestDir: "{app}"; Flags: recursesubdirs ignorevers
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
-; Optional: launch fully elevated if the user needs admin.
-Name: "{group}\{#MyAppName} (run as administrator)"; Filename: "{app}\{#MyAppExeName}"; Flags: runascurrentuser
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent

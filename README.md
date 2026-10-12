@@ -172,20 +172,29 @@ needs no backend or database.
 ### Accepting payment
 
 No processor cares that this rips video/audio — that's not a restricted
-category. Any of the following will approve you; pick based on effort:
+category. Stripe, PayPal, 2Checkout, Paddle and Lemon Squeezy will all approve
+you. Pick based on geography, fees and who handles tax:
 
-- **Stripe (recommended)** — free account, hosted checkout, developer-friendly,
-  and most permissive about software. You handle VAT/currency yourself (Stripe
-  Tax can automate it). Create a *Payment Link* in the Dashboard → copy its URL
-  → paste into `BUY_URL` in `config.js`. In the link's settings set the
-  *success URL* to your `success.html`.
-- **Paddle / Lemon Squeezy** — "merchant of record," so *they* handle global
-  VAT, invoices and refunds. Slightly higher fees but zero tax bookkeeping.
-  Same step: create a product → copy its checkout URL → set the success URL.
+- **2Checkout (chosen)** — broadest international reach (200+ countries /
+  territories, localized checkout, 100+ currencies), and the sign-up flow has
+  an explicit *digital products / software* category. Important nuance:
+  **2Sell** (3.5% + $0.35) means **you** handle sales tax & compliance;
+  **2Monetize** is their merchant-of-record tier where 2Checkout handles global
+  VAT, invoicing and refunds for you (higher fee, but zero tax bookkeeping). If
+  you sell internationally, 2Monetize is usually the better value despite the
+  fee.
+- **Stripe** — cheaper on domestic sales (2.9% + 30¢) and the most
+  developer-friendly, but you handle VAT yourself (unless Stripe Tax) and need
+  an account in a supported country with a bank/ACH payout. Use a *Payment
+  Link* and set its success URL to your `success.html`.
+- **Paddle / Lemon Squeezy** — merchant of record (like 2Monetize) but with
+  simpler onboarding.
 
-After setting it up you only need to: create the account, add payout/bank
-details, paste the checkout URL into `config.js`, and set the success URL to
-`success.html`. Nothing else on your side — the key is minted on the page.
+Whichever you choose, the flow is the same: create a product → copy its hosted
+checkout/buy URL → paste into `BUY_URL` in `config.js` → set the
+**post-payment (success / Approved) URL** to your `success.html`. The key is
+minted on that page in the buyer's browser; nothing else is required on your
+side.
 
 ## License
 Open source. Uses ffmpeg (LGPL/GPL) and, optionally, a user-installed MakeMKV

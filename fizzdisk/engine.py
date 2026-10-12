@@ -218,7 +218,8 @@ def rip_cd(letter: str, cd_titles: List[Title], out_root: str, fmt: str = "flac"
            release_mbid: Optional[str] = None, selected: Optional[set] = None,
            progress_cb: Optional[Callable[[float], None]] = None,
            stop_event: Optional[threading.Event] = None,
-           formats: Optional[list] = None) -> List[str]:
+           formats: Optional[list] = None,
+           release_group_mbid: Optional[str] = None) -> List[str]:
     """Rip selected CD audio tracks to FLAC/MP3 directly into `out_root`.
 
     `out_root` is the exact album folder (e.g. <Music>/<Artist>/<Album>) -- the
@@ -235,7 +236,9 @@ def rip_cd(letter: str, cd_titles: List[Title], out_root: str, fmt: str = "flac"
     cover_path = os.path.join(album_dir, "cover.jpg")
     if release_mbid:
         try:
-            musicdisc.download_cover(release_mbid, cover_path, size="500")
+            musicdisc.download_cover(release_mbid, cover_path, size="500",
+                                     artist=artist, album=album,
+                                     release_group_mbid=release_group_mbid)
         except Exception:  # noqa: BLE001
             pass
     if not Path(cover_path).exists():

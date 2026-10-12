@@ -20,6 +20,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
+LicenseFile=license.txt
 ; One UAC prompt on install (the "run as admin" step the user asked for)
 PrivilegesRequired=admin
 OutputDir=..\dist

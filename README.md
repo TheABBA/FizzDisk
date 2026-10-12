@@ -24,7 +24,7 @@ open, but it is never required.
   - `bdscan.py` — a clean-room Blu-ray **MPLS** playlist parser.
 - **Inspect tracks** — video, audio and subtitle streams per title with
   codec/language info.
-- **Copy to MKV** — select one or more titles, choose the output folder and file
+- **Click Start** — select one or more titles, choose the output folder and file
   name template, then remux them to `.mkv` with **stream copy (lossless)** by
   default, or re-encode if you prefer.
 - **AACS decryption** — protected Blu-ray discs are decrypted in-house by the

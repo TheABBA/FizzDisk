@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FizzDisk — Rip Blu-ray, DVD &amp; audio CDs</title>
+<link rel="icon" href="assets/fizzdisk.ico">
+<script src="config.js"></script>
+<style>
+  :root{
+    --blue:#3b82f6; --amber:#f59e0b; --ink:#0f172a; --muted:#64748b;
+    --bg:#f8fafc; --card:#ffffff; --border:#e2e8f0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);
+       background:var(--bg);line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:28px 20px 80px}
+  header{text-align:center;padding:40px 0 10px}
+  header img{width:96px;height:96px}
+  h1{margin:14px 0 6px;font-size:2rem}
+  .tag{color:var(--muted);font-size:1.02rem;margin:0 0 26px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+        padding:26px;margin:18px 0;box-shadow:0 4px 18px rgba(15,23,42,.05)}
+  h2{margin:0 0 8px;font-size:1.25rem}
+  .btn{display:block;width:100%;text-align:center;padding:15px 20px;border-radius:12px;
+       font-size:1.05rem;font-weight:600;text-decoration:none;border:0;cursor:pointer}
+  .btn-download{background:var(--blue);color:#fff}
+  .btn-buy{background:var(--amber);color:#111}
+  .note{font-size:.9rem;color:var(--muted);text-align:center;margin-top:10px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin:8px 0}
+  .tile{border:1px solid var(--border);border-radius:12px;padding:16px}
+  .tile h3{margin:0 0 6px;font-size:1rem}
+  .badge{display:inline-block;background:#eef2ff;color:#1d4ed8;font-size:.78rem;font-weight:600;
+         padding:2px 10px;border-radius:999px;margin-bottom:8px}
+  li{margin:6px 0}
+  code{background:#eef2f7;padding:1px 6px;border-radius:6px;font-size:.92em}
+  footer{text-align:center;color:var(--muted);font-size:.85rem;margin-top:40px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <img src="assets/fizzdisk_icon.png" alt="FizzDisk logo">
+    <h1>FizzDisk</h1>
+    <p class="tag">Rip your Blu-ray, DVD and audio CDs to MKV / FLAC — free for 50 discs.</p>
+  </header>
+
+  <div class="card">
+    <h2>Download for Windows</h2>
+    <p>One installer. It puts FizzDisk into its own folder, creates Start Menu &
+       desktop shortcuts, and runs without needing Python or any other install.</p>
+    <a class="btn btn-download" id="dl" href="download/FizzDiskSetup.exe">Download FizzDisk v<script>document.write(window.FIZZ_CONFIG.VERSION)</script></a>
+    <p class="note">Free 50-backup trial — no account, no signup. A license is only needed after 50 rips.</p>
+  </div>
+
+  <div class="card">
+    <h2>Unlock unlimited</h2>
+    <p>After you've used your 50 free rips, buy a product key for <b id="price"></b> to get
+       unlimited backups and lifetime updates. One key works for one user on any of their
+       machines. No subscription.</p>
+    <a class="btn btn-buy" id="buy" href="#">Buy a license — <b id="price2"></b></a>
+    <p class="note">Secure card checkout via Stripe. The product key is shown instantly after
+       payment and pasted into Settings → Activate.</p>
+  </div>
+
+  <div class="card">
+    <h2>What FizzDisk does</h2>
+    <ul>
+      <li><b>Blu-ray / DVD</b> — reads the disc (incl. AACS-protected discs), picks the movie,
+          and makes an MKV with your chosen audio/subtitle tracks. FFmpeg is built in.</li>
+      <li><b>Audio CDs</b> — rips to FLAC and/or MP3 with <b>paranoia error correction</b>,
+          automatic MusicBrainz titles and cover art.</li>
+      <li><b>Fully offline</b> — movies are identified via an optional free TheMovieDB key;
+          everything else works with no account.</li>
+    </ul>
+  </div>
+
+  <div class="grid">
+    <div class="tile"><span class="badge">Easy</span><h3>One installer</h3>Double-click, one prompt, done. No config, no DLLs to manage.</div>
+    <div class="tile"><span class="badge">Private</span><h3>Runs locally</h3>Your discs and files never leave your machine.</div>
+    <div class="tile"><span class="badge">Fair</span><h3>Pay once</h3>Unlimited backups + lifetime updates. No subscription, no per-disc fees.</div>
+  </div>
+
+  <div class="card">
+    <h2>Activating your key</h2>
+    <ol>
+      <li>Run FizzDisk and click the <b>gear icon</b> (top-right, next to the moon) to open Settings.</li>
+      <li>In <b>Trial &amp; Registration</b>, paste your product key and click <b>Activate</b>.</li>
+      <li>You're licensed — the trial limit is gone.</li>
+    </ol>
+  </div>
+
+  <footer>
+    FizzDisk v<script>document.write(window.FIZZ_CONFIG.VERSION)</script> ·
+    <a href="benefits">50 free backups</a> ·
+    Questions? Replace this with your support email.
+  </footer>
+</div>
+
+<script>
+  var cfg = window.FIZZ_CONFIG;
+  document.getElementById('price').textContent = cfg.PRICE;
+  document.getElementById('price2').textContent = cfg.PRICE;
+  var buy = document.getElementById('buy');
+  if (cfg.BUY_URL && cfg.BUY_URL.indexOf('PASTE') < 0) {
+    buy.href = cfg.BUY_URL;          // Stripe Payment Link / Checkout
+  } else {
+    buy.href = "success.html";       // until a Stripe link is configured, test-generate a key
+    buy.title = "Stripe link not set yet — this shows a generated key instead";
+  }
+</script>
+</body>
+</html>

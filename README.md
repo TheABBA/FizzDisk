@@ -145,6 +145,48 @@ FizzDisk/
   fast and quality is preserved. Uncheck the box to re-encode.
 - **Native paths.** All media paths passed to ffmpeg/ffprobe are Windows native.
 
+## Website & payments
+
+The `website/` folder is the public download + buy page. It is fully static and
+needs no backend or database.
+
+- `website/index.html` — landing page: free 50-backup trial, "Download for
+  Windows" button, and a "Buy a license" button.
+- `website/success.html` — shown after checkout. It **generates the buyer's
+  product key client-side** (no server) and reveals it with a Copy button +
+  activation instructions. Refreshing keeps the same key (stored in the URL
+  hash); a `mailto:` link lets the buyer email it to themselves.
+- `website/keygen.js` — cross-context key generator (WebCrypto with a pure-JS
+  SHA-256/HMAC fallback). It mirrors `fizzdisk/license.py` exactly, so every
+  key it issues validates in the app. Verify with: `node website/keygen.js`.
+- `website/config.js` — **edit before go-live:** `BUY_URL`, `VERSION`, `PRICE`,
+  `DOWNLOAD_URL`, `SUCCESS_URL`.
+- `website/download/FizzDiskSetup.exe` — drop the latest installer here per
+  release (git-ignored; it's a large build artifact).
+- Logo/favicon are copied into `website/assets/`.
+
+> **Keep the secret in sync.** The HMAC key in `website/keygen.js` (`FIZZ_SECRET`)
+> MUST equal `_SECRET` in `fizzdisk/license.py`. If you change one, change both,
+> or every key the site issues will be rejected by the app.
+
+### Accepting payment
+
+No processor cares that this rips video/audio — that's not a restricted
+category. Any of the following will approve you; pick based on effort:
+
+- **Stripe (recommended)** — free account, hosted checkout, developer-friendly,
+  and most permissive about software. You handle VAT/currency yourself (Stripe
+  Tax can automate it). Create a *Payment Link* in the Dashboard → copy its URL
+  → paste into `BUY_URL` in `config.js`. In the link's settings set the
+  *success URL* to your `success.html`.
+- **Paddle / Lemon Squeezy** — "merchant of record," so *they* handle global
+  VAT, invoices and refunds. Slightly higher fees but zero tax bookkeeping.
+  Same step: create a product → copy its checkout URL → set the success URL.
+
+After setting it up you only need to: create the account, add payout/bank
+details, paste the checkout URL into `config.js`, and set the success URL to
+`success.html`. Nothing else on your side — the key is minted on the page.
+
 ## License
 Open source. Uses ffmpeg (LGPL/GPL) and, optionally, a user-installed MakeMKV
 for AACS decryption as a last resort.

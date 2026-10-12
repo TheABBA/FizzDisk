@@ -1421,10 +1421,10 @@ class FizzDiskApp(ctk.CTk):
                     if self._stopping.is_set():
                         return True
                     # The bundled decoder couldn't decrypt this disc (typical
-                    # for AACS2/UHD 4K). Fall back to MakeMKV if it's available.
+                    # for AACS2/UHD 4K). Fall back to the bundled ripper.
                     if not engine.RIPPER:
                         raise
-                    self.log("Bundled decoder couldn't decrypt this disc — trying MakeMKV…")
+                    self.log("Bundled decoder couldn't decrypt this disc — trying the bundled ripper…")
                     try:
                         mk_titles = engine.scan_titles(self.source) or []
                     except Exception:

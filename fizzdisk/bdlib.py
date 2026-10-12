@@ -405,7 +405,8 @@ def rip_bd(path: str, title: Title, out_path: str,
                 "No decrypted video was read from the disc (AACS2 / UHD). "
                 "Your optical drive must be UHD-capable (e.g. a BP60NB10 / "
                 "UHD cross-flash) and the disc's key must be in the bundled "
-                "keydb.cfg. FizzDisk will fall back to MakeMKV if it's installed.")
+                "keydb.cfg. FizzDisk will fall back to its bundled ripper if "
+                "this decoder can't handle it.")
         if rc != 0 and not stopped[0]:
             raise RuntimeError(
                 f"ffmpeg exited {rc} for {title.name}: " + " | ".join(err_buf[-3:]))

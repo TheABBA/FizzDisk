@@ -832,6 +832,17 @@ class FizzDiskApp(ctk.CTk):
         ctk.CTkLabel(card1, textvariable=pk_status, text_color="#3b82f6",
                      anchor="w").pack(anchor="w", padx=12, pady=(2, 10))
 
+        def do_deactivate():
+            ok, msg = lic.deactivate()
+            lic_status.set(lic.status_text())
+            pk_status.set(msg)
+            self.log("License: " + msg)
+
+        ctk.CTkButton(card1, text="Move to another machine? Click here", fg_color="transparent",
+                      border_width=1, corner_radius=10, command=do_deactivate,
+                      width=260).pack(anchor="w", padx=12, pady=(0, 10))
+
+
         # ---- Card 2: TheMovieDB API key ----
         card2 = ctk.CTkFrame(sc, corner_radius=12, fg_color=("#f0f2f6", "#272a30"))
         card2.pack(fill="x", anchor="w", padx=4, pady=(2, 10))

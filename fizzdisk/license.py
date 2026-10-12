@@ -147,19 +147,72 @@ def is_licensed() -> bool:
     return False
 
 
+API_BASE = os.environ.get("FIZZDISK_API", "https://fizzdisk.philspad.com/api/license")
+
+
+def machine_id() -> str:
+    """A stable per-machine fingerprint that survives an app reinstall."""
+    if winreg is not None:
+        try:
+            import winreg as wr
+            with wr.OpenKey(wr.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Cryptography") as k:
+                v, _ = wr.QueryValueEx(k, "MachineGuid")
+                if v:
+                    return "win:" + str(v).strip()
+        except Exception:
+            pass
+    try:
+        import uuid
+        return "mac:" + format(uuid.getnode(), "012x")
+    except Exception:
+        return "unknown"
+
+
+def _api_post(path: str, payload: dict):
+    """POST JSON to the activation API; return parsed dict or None on failure."""
+    import urllib.request
+    try:
+        url = API_BASE.rstrip("/") + path
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=8) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except Exception:
+        return None
+
+
 def activate(key: str):
-    """Try to activate ``key``. Returns (ok, message)."""
+    """Try to activate ``key`` (one user, one device). Returns (ok, message)."""
     k = (key or "").strip()
     if not k:
         return False, "Enter a product key."
     if not validate_key(k):
         return False, "That key isn't valid. Check the format (FZFK-XXXX-...)."
     canon = format_key(k)
-    st = _load()
-    st["license_key"] = canon
-    _save(st)
+    fp = machine_id()
+    resp = _api_post("/activate", {"key": canon, "fingerprint": fp})
+    if resp is None:
+        # offline: accept locally; the binding will sync next time we're online
+        st = _load(); st["license_key"] = canon; _save(st)
+        _reg_set("LicenseKey", canon)
+        return True, "Activated (offline) \u2014 unlimited backups. It will sync when you\u2019re online."
+    if not resp.get("ok"):
+        return False, resp.get("message", "Could not activate that key.")
+    st = _load(); st["license_key"] = canon; _save(st)
     _reg_set("LicenseKey", canon)                 # survive an appdata wipe
     return True, "Activated \u2014 unlimited backups & lifetime updates."
+
+
+def deactivate():
+    """Release the license so it can be activated on another machine."""
+    current = _load().get("license_key", "") or _reg_get("LicenseKey", "")
+    if not current or not validate_key(current):
+        return True, "No active license on this device."
+    canon = format_key(current)
+    _api_post("/deactivate", {"key": canon, "fingerprint": machine_id()})
+    st = _load(); st["license_key"] = ""; _save(st)
+    _reg_set("LicenseKey", "")
+    return True, "License released \u2014 you can now activate on another machine."
 
 
 def format_key(key: str) -> str:

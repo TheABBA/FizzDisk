@@ -35,7 +35,7 @@ try:
 except ImportError:  # pillow optional: poster preview just won't show
     HAS_PIL = False
 
-from . import engine, ffutil, bdlib, movie
+from . import engine, ffutil, bdlib, movie, prefs
 from . import license as lic
 from .version import APP_NAME as _APP_NAME, __version__ as _APP_VERSION
 from .model import Title
@@ -102,9 +102,10 @@ class FizzDiskApp(ctk.CTk):
         self.combo_source.pack(side="left", padx=4)
         self.combo_source.bind("<<ComboboxSelected>>", lambda e: self._source_from_combo())
         ctk.CTkButton(top, text="Browse\u2026", width=90, corner_radius=10, command=self.browse).pack(side="left", padx=(0, 6))
-        self.btn_scan = ctk.CTkButton(top, text="Scan", width=80, corner_radius=10, command=self.on_scan)
+        ctk.CTkButton(top, text="Refresh Drives", width=110, corner_radius=10, command=self.refresh_drives).pack(side="left", padx=(0, 6))
+        self.btn_scan = ctk.CTkButton(top, text="Scan", width=80, corner_radius=10, command=self.on_scan,
+                                      fg_color="#f59e0b", hover_color="#d98e09", text_color="#ffffff")
         self.btn_scan.pack(side="left", padx=(0, 6))
-        ctk.CTkButton(top, text="Refresh Drives", width=110, corner_radius=10, command=self.refresh_drives).pack(side="left")
         # theme toggle on the right
         self.btn_theme = ctk.CTkButton(top, text="\U0001F319", width=42, corner_radius=10,
                                        fg_color="transparent", border_width=1,
@@ -209,6 +210,10 @@ class FizzDiskApp(ctk.CTk):
         btnrow.grid(row=6, column=0, columnspan=3, sticky="ew", padx=8, pady=2)
         btnrow.grid_columnconfigure((0, 1), weight=1)
         self.btn_make = ctk.CTkButton(btnrow, text="Start", corner_radius=10, command=self.on_make, state="disabled")
+        # capture the default palette so we can restore it after the orange flash
+        self._start_fg = self.btn_make.cget("fg_color")
+        self._start_hover = self.btn_make.cget("hover_color")
+        self._start_text = self.btn_make.cget("text_color")
         self.btn_make.grid(row=0, column=0, sticky="ew", padx=(0, 3))
         self.btn_stop = ctk.CTkButton(btnrow, text="Stop", corner_radius=10, command=self.on_stop, state="disabled")
         self.btn_stop.grid(row=0, column=1, sticky="ew", padx=(3, 0))
@@ -409,6 +414,10 @@ class FizzDiskApp(ctk.CTk):
                 main = max(titles, key=lambda t: t.duration or 0)
             self.selected.add(main.index)
         self.btn_make.configure(state="normal" if titles else "disabled")
+        if titles:
+            self._highlight_start()
+        else:
+            self._clear_start()
         self._populate_tree()
         # Bring the auto-selected (main feature) title to the top of the list.
         try:
@@ -438,6 +447,7 @@ class FizzDiskApp(ctk.CTk):
 
     def _scan_done_error(self, msg):
         self.btn_scan.configure(state="normal")
+        self._clear_start()
         self._set_status("Scan failed")
         self.var_eta.set("Scan failed")
         self.log("ERROR: " + msg, err=True)
@@ -940,6 +950,31 @@ class FizzDiskApp(ctk.CTk):
         ctk.CTkLabel(card2, textvariable=status, text_color="#3b82f6", anchor="w").pack(
             anchor="w", padx=12, pady=(6, 10))
 
+
+        # ---- Card 3: Ripping behaviour ----
+        card3 = ctk.CTkFrame(sc, corner_radius=12, fg_color=("#f0f2f6", "#272a30"))
+        card3.pack(fill="x", anchor="w", padx=4, pady=(2, 10))
+        ctk.CTkLabel(card3, text="Ripping", font=("Segoe UI", 12, "bold"),
+                     anchor="w").pack(anchor="w", padx=12, pady=(10, 2))
+        ctk.CTkLabel(card3, text=(
+            "When a rip finishes, FizzDisk automatically opens the disc tray so\n"
+            "you can swap the disc. Turn this off if you'd rather leave the tray\n"
+            "closed."),
+            justify="left", anchor="w", wraplength=470).pack(anchor="w", padx=12, pady=(0, 4))
+        eject_cb = ctk.CTkCheckBox(card3, text="Auto-eject disc after rip",
+                                   corner_radius=8, checkbox_width=15, checkbox_height=15,
+                                   width=17)
+        if prefs.get("auto_eject_after_rip", True):
+            eject_cb.select()
+        else:
+            eject_cb.deselect()
+
+        def on_eject_toggle():
+            prefs.set_("auto_eject_after_rip", bool(eject_cb.get()))
+
+        eject_cb.configure(command=on_eject_toggle)
+        eject_cb.pack(anchor="w", padx=12, pady=(2, 10))
+
         # app version footer
         ctk.CTkLabel(sc, text=f"{_APP_NAME} v{_APP_VERSION}",
                      text_color="gray", anchor="w").pack(anchor="w", padx=8, pady=(2, 4))
@@ -1297,6 +1332,7 @@ class FizzDiskApp(ctk.CTk):
 
     # -------------------------------------------------------------- ripping
     def on_make(self):
+        self._clear_start()
         if not self.var_out.get().strip():
             messagebox.showinfo("FizzDisk", "Choose an output folder.")
             return
@@ -1574,11 +1610,33 @@ class FizzDiskApp(ctk.CTk):
             self._eject_source()
 
     def _eject_source(self):
-        """Eject the physical optical drive after a completed rip (BD/DVD/CD)."""
+        """Eject the physical optical drive after a completed rip (BD/DVD/CD).
+
+        Honours the Settings > 'Auto-eject disc after rip' toggle (default on).
+        """
         try:
+            if not prefs.get("auto_eject_after_rip", True):
+                return
             letter = engine._optical_drive_letter(self.source)
             if letter and engine.eject_drive(letter):
                 self.log(f"Ejected drive {letter}.")
+        except Exception:
+            pass
+
+    def _highlight_start(self):
+        """Flash the Start button orange to draw attention that a scan found titles."""
+        try:
+            self.btn_make.configure(fg_color="#f59e0b", hover_color="#d98e09",
+                                    text_color="#ffffff")
+        except Exception:
+            pass
+
+    def _clear_start(self):
+        """Restore the Start button's normal palette (after it's clicked / no titles)."""
+        try:
+            self.btn_make.configure(fg_color=self._start_fg,
+                                    hover_color=self._start_hover,
+                                    text_color=self._start_text)
         except Exception:
             pass
 

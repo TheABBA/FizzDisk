@@ -14,3 +14,8 @@ signing_cert.pfx
 website/download/
 scratch_*.py
 logging_dl.c
+bkup/
+bkup2/
+bkup_out.txt
+bkup2_out.txt
+bin/fizzdisk-rip.exe.orig

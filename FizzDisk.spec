@@ -26,7 +26,8 @@ a = Analysis(
  ('bin/libwinpthread-1.dll', 'bin')]
             + ctk_bins + pws_bins,
     datas=[('bin/keydb.cfg', 'bin'),
-           ('assets/fizzdisk.ico', 'assets')]
+           ('assets/fizzdisk.ico', 'assets'),
+           ('assets/fizzdisk_icon.png', 'assets')]
            + ctk_datas + pws_datas,
     hiddenimports=['PIL', 'PIL.Image', 'PIL.ImageTk', 'PIL._tkinter_finder']
                   + ctk_hidden + pws_hidden,

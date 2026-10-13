@@ -30,6 +30,9 @@ _BUILTIN_TMDB_KEY = os.environ.get("TMDB_API_KEY", "").strip()
 
 # common tokens appended to disc volume labels that aren't part of a title
 _SUFFIXES = ("UHD", "ULTRA HD", "ULTRAHD", "4K", "BLURAY", "BD", "HD", "DVD")
+# region / edition tokens that trail a volume label and aren't part of a title
+_REGION_TOKENS = ("UNITED KINGDOM", "UNITED STATES", "REGION", "REG", "U.S.A.",
+                  "USA", "US", "ALL", "UK", "EN")
 
 
 def _get_json(url: str, timeout: int = 15):
@@ -68,8 +71,16 @@ def clean_term(raw: Optional[str]) -> str:
     for ch in ("_", "-", ".", ":", "x24"):
         s = s.replace(ch, " ")
     s = re.sub(r"\s+", " ", s).strip()
-    # drop trailing media-format tokens (case-insensitive, after a space)
+    # drop trailing media-format tokens first (case-insensitive, after a space)
+    # e.g. 'JOHN WICK 4K' -> 'JOHN WICK'; 'PANDA 2 UHD' -> 'PANDA 2'
     for suf in sorted(_SUFFIXES, key=len, reverse=True):
+        s = re.sub(r"\s+%s$" % re.escape(suf), "", s, flags=re.IGNORECASE)
+    # separate glued digits from letters so 'KILLBILL1' -> 'KILL BILL 1' and a
+    # follow-up search term is legible, but keep 'John Wick 4' -> 'John Wick 4'
+    s = re.sub(r"(?<=[A-Za-z])(?=[0-9])|(?<=[0-9])(?=[A-Za-z])", " ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    # drop trailing region / edition tokens (US, USA, REGION, ...)
+    for suf in sorted(_REGION_TOKENS, key=len, reverse=True):
         s = re.sub(r"\s+%s$" % re.escape(suf), "", s, flags=re.IGNORECASE)
     s = s.title()
     # don't title-cast words that the source already kept all-caps for no reason

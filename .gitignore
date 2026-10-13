@@ -33,3 +33,10 @@ makemkv_*.txt
 *_dbg.txt
 probe_out.txt
 full_aacs_dbg.txt
+*.rs
+vl_*.c
+probe_*.txt
+bin/keydb.cfg.orig
+aacs_videolan.c
+aacs_vl.c
+fm_*

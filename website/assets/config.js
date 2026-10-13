@@ -11,5 +11,8 @@ window.FIZZ_CONFIG = {
   // Download buttons show a "new build coming" note instead of delivering the exe.
   DOWNLOAD_AVAILABLE: false,
   DOWNLOAD_NOTE: "A refreshed build is being finalized \u2014 it'll be available here shortly.",
+  // Set BUY_AVAILABLE to false to disable the Buy buttons (no checkout yet).
+  BUY_AVAILABLE: false,
+  BUY_NOTE: "Purchases open soon \u2014 FizzDisk is being finalized; check back shortly.",
   SUCCESS_URL: "success.html",
 };

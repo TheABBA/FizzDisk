@@ -12,3 +12,5 @@ version_info.txt
 signing_cert.pfx
 # website installer artifact (built per release)
 website/download/
+scratch_*.py
+logging_dl.c

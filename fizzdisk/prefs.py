@@ -30,14 +30,18 @@ def _path() -> str:
     return os.path.join(_data_dir(), "settings.json")
 
 
-def get(key):
-    """Return the stored value for *key*, or the default if unset / unreadable."""
+def get(key, default=None):
+    """Return the stored value for *key*, or the default if unset / unreadable.
+
+    Falls back to the shipped default in _DEFAULTS when present, otherwise to
+    the caller-supplied *default* (or None). Never raises.
+    """
     try:
         with open(_path(), "r", encoding="utf-8") as f:
             st = json.load(f)
-        return st.get(key, _DEFAULTS.get(key))
+        return st.get(key, _DEFAULTS.get(key, default))
     except Exception:
-        return _DEFAULTS.get(key)
+        return _DEFAULTS.get(key, default)
 
 
 def set_(key, val):

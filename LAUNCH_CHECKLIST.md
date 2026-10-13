@@ -2,30 +2,31 @@
 
 Tracked here so nothing blocks a release. Update the boxes as each step is verified.
 
-## Code signing (Azure Artifact Signing)
+## Code signing (commercial certificate, not Azure — no monthly fee)
 
-- [ ] **Create the certificate profile** — Azure portal → Artifact Signing account
-      `fizzdiskcodesign` → **Objects → Certificate profiles → Create**. Type:
-      **Public Trust**. Name (e.g. `fizzdiskbasic`), select a validated identity.
-- [ ] **Complete identity validation** — `fizzdiskcodesign` → **Objects →
-      Identity validations** → **Individual** (recommended) or **Organization**.
-      Individual = AU10TIX via portal link (minutes); Organization needs a legal
-      entity >3 years old (1–20 business days).
-- [ ] **Assign the signer/verifier roles** — `fizzdiskcodesign` → **Access control
-      (IAM)** → assign your user both **Artifact Signing Certificate Profile
-      Signer** and **Artifact Signing Identity Verifier**.
-- [ ] **Create `signing_config.json`** in the repo (gitignored) with:
-      `endpoint = https://eus.codesigning.azure.net/`, `account = fizzdiskcodesign`,
-      `profile = <certificate profile name>`. (Alternatively set
-      `AZURE_SIGNING_ENDPOINT/_ACCOUNT/_PROFILE` env vars.)
+Decision: **Ice Monger, LLC** (>3 yrs) owns `fizzdisk.com`. Get a cheap one-off
+**commercial OV code-signing cert** (e.g. **Certum** ~$30–50/yr) issued to
+**Ice Monger, LLC** — publisher is a company name, NOT the user's personal name.
+(Skip Azure Artifact Signing at $9.99/mo ≈ $120/yr; it remains an optional
+fallback via `signing_config.json` + the `sign` tool.)
+
+- [ ] **Buy the OV code-signing cert** — order from Certum (or Sectigo/SSL.com)
+      as **Ice Monger, LLC**. Provide business registration details + control of
+      `fizzdisk.com` + a matching email. (Optional: a DBA "Ice Monger, LLC d/b/a
+      FizzDisk" makes the publisher print "FizzDisk" if desired.)
+- [ ] **Place the `.pfx`** in the repo root as `signing_cert.pfx`; set its password
+      via `FIZZDISK_CERT_PASS` (or `FIZZDISK_CERT` env var to a custom path).
+      `build.py`'s `find_cert()` already auto-detects it.
+- [ ] **Make sure a signer exists** — install signtool (Windows SDK) OR use the
+      .NET `sign` tool for `code` signing with the pfx. `build.py` falls through
+      to the signtool path when no Azure `signing_config.json` is present.
 - [ ] **Build signed** — `python build.py` must sign the app exe AND the Inno
-      installer (log shows `[sign azure]` for both). `sign.exe` is at
-      `~/.dotnet/tools/sign.exe`; auth path for the sign tool must be working
-      (DefaultAzureCredential: `az login` or `AZURE_TENANT_ID/CLIENT_ID/SECRET`).
+      installer (log shows `[sign]` for both), publisher = **Ice Monger, LLC**.
 - [ ] **Verify the signature** — right-click both the installer and the installed
       `FizzDisk.exe` → Properties → Digital Signatures shows a trusted signature;
       SmartScreen no longer says "unknown publisher".
-- [ ] **Deploy the signed installer** and update the site `DOWNLOAD_URL`.
+- [ ] **Deploy the signed installer** and update the site `DOWNLOAD_URL`; verify
+      live Content-Length equals the local byte size.
 
 ## Site config (website/assets/config.js) — edit before go-live
 

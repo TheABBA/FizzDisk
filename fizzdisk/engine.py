@@ -83,6 +83,44 @@ def list_optical_drives() -> List[str]:
     return drives
 
 
+def eject_drive(letter: str) -> bool:
+    """Eject a physical optical drive (CD/DVD/BD) via WinMM MCI.
+
+    Returns True if the 'door open' command was accepted. Safe to call on any
+    drive letter; callers pass only letters for physical optical drives.
+    """
+    try:
+        winmm = ctypes.windll.winmm
+        # Open the drive as an MCI cdaudio device so 'door open' targets it.
+        winmm.mciSendStringW("open %s: type cdaudio alias fzdej" % letter.upper(),
+                             None, 0, None)
+        rc = winmm.mciSendStringW("set fzdej door open", None, 0, None)
+        winmm.mciSendStringW("close fzdej", None, 0, None)
+        return rc == 0
+    except Exception:
+        return False
+
+
+def _optical_drive_letter(src: str) -> Optional[str]:
+    """Return the drive letter (e.g. 'D') if *src* is a physical optical drive
+    path (D:\\, D:), else None. ISO/folder/file sources return None."""
+    m = re.match(r"^([A-Za-z]):[/\\]?$", src or "")
+    if not m:
+        return None
+    letter = m.group(1).upper()
+    root = f"{letter}:\\"
+    if not os.path.isdir(root):
+        return None
+    # only treat it as a removable optical drive
+    try:
+        dtype = ctypes.windll.kernel32.GetDriveTypeW(ctypes.c_wchar_p(root))
+    except Exception:
+        return None
+    if dtype in (2, 5):  # 2=removable, 5=CDROM
+        return letter
+    return None
+
+
 def _has(root: str, *sub) -> bool:
     return any((Path(root) / s).exists() for s in sub)
 

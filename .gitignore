@@ -19,3 +19,17 @@ bkup2/
 bkup_out.txt
 bkup2_out.txt
 bin/fizzdisk-rip.exe.orig
+freemkv.tgz
+freemkv_src/
+fv_db/
+test_*.py
+vl_keydb.h
+vl_crypto.c
+aacs_*.c
+diag*.py
+compute_mk.py
+try_pk.py
+makemkv_*.txt
+*_dbg.txt
+probe_out.txt
+full_aacs_dbg.txt

@@ -101,6 +101,19 @@ def eject_drive(letter: str) -> bool:
         return False
 
 
+def close_drive(letter: str) -> bool:
+    """Close the tray of a physical optical drive (re-mount the disc)."""
+    try:
+        winmm = ctypes.windll.winmm
+        winmm.mciSendStringW("open %s: type cdaudio alias fzclj" % letter.upper(),
+                             None, 0, None)
+        rc = winmm.mciSendStringW("set fzclj door closed", None, 0, None)
+        winmm.mciSendStringW("close fzclj", None, 0, None)
+        return rc == 0
+    except Exception:
+        return False
+
+
 def _optical_drive_letter(src: str) -> Optional[str]:
     """Return the drive letter (e.g. 'D') if *src* is a physical optical drive
     path (D:\\, D:), else None. ISO/folder/file sources return None."""

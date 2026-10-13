@@ -28,6 +28,7 @@ Usage:  python build.py            # build the installer
 import os
 import sys
 import glob
+import json
 import shutil
 import subprocess
 from pathlib import Path
@@ -115,7 +116,66 @@ def find_cert():
     return str(pfx) if pfx.exists() else None
 
 
+def _azure_config():
+    """Return (endpoint, account, profile) for Azure Trusted Signing, or None.
+
+    Reads AZURE_SIGNING_ENDPOINT / _ACCOUNT / _PROFILE env vars, falling back to
+    signing_config.json (endpoint/account/profile keys) so tokens never live in
+    the repo. If any of the three is missing, returns None (no signing).
+    """
+    ep = os.environ.get("AZURE_SIGNING_ENDPOINT")
+    ac = os.environ.get("AZURE_SIGNING_ACCOUNT")
+    pf = os.environ.get("AZURE_SIGNING_PROFILE")
+    cfg = HERE / "signing_config.json"
+    if cfg.exists():
+        try:
+            d = json.loads(cfg.read_text(encoding="utf-8"))
+            ep = ep or d.get("endpoint")
+            ac = ac or d.get("account")
+            pf = pf or d.get("profile")
+        except Exception:
+            pass
+    if ep and ac and pf:
+        return ep, ac, pf
+    return None
+
+
+def _dotnet_sign():
+    """Locate the Microsoft 'sign' dotnet tool (preferred) in ~/.dotnet/tools."""
+    for n in ("sign.exe", "sign"):
+        here = os.path.join(os.path.expanduser("~"), ".dotnet", "tools", n)
+        if os.path.isfile(here):
+            return here
+    for n in ("sign.exe", "sign"):
+        p = shutil.which(n)
+        if p:
+            return p
+    return None
+
+
 def sign(exe, force=False):
+    # Azure Trusted Signing (Microsoft 'sign' dotnet tool) - preferred.
+    az = _azure_config()
+    sgn = _dotnet_sign()
+    if az and sgn:
+        ep, ac, pf = az
+        env = dict(os.environ)
+        env["DOTNET_ROOT"] = os.path.join(os.path.expanduser("~"), ".dotnet")
+        cmd = [sgn, "code", "artifact-signing",
+               "--artifact-signing-endpoint", ep,
+               "--artifact-signing-account", ac,
+               "--artifact-signing-certificate-profile", pf,
+               "--timestamp-url", "http://timestamp.acs.microsoft.com",
+               "--description", "FizzDisk",
+               "--description-url", "https://fizzdisk.philspad.com",
+               str(exe)]
+        r = subprocess.run(cmd, capture_output=True, text=True, env=env)
+        out = (r.stdout or r.stderr).strip()
+        print("  [sign azure] " + (out or "(signed)"))
+        if r.returncode != 0:
+            print(f"  [sign azure] FAILED rc={r.returncode}\n{out}")
+        return
+
     st = find_signtool()
     if not st:
         print("  [sign] signtool not found \u2014 skipping signing.")
@@ -151,6 +211,13 @@ def main():
     if r.returncode != 0:
         print("PyInstaller FAILED.")
         return r.returncode
+
+    # sign the app executable (inside the onedir) before Inno packages it, so
+    # the file installed to Program Files is signed too, not just the installer.
+    app_exe = HERE / "dist" / "FizzDisk" / "FizzDisk.exe"
+    if app_exe.exists() and _azure_config():
+        print("  [sign] signing app exe (Azure Trusted Signing)...")
+        sign(str(app_exe))
 
     iscc = find_iscc()
     if not iscc:

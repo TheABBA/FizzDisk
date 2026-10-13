@@ -271,14 +271,52 @@ class FizzDiskApp(ctk.CTk):
     def _set_window_icon(self):
         """Set the title-bar icon to the FizzDisk brand mark (assets/fizzdisk.ico)."""
         try:
-            base = Path(__file__).resolve().parent.parent
-            cand = base / "assets" / "fizzdisk.ico"
-            if not cand.exists():
-                cand = base.parent / "assets" / "fizzdisk.ico"
-            if cand.exists():
-                self.iconbitmap(default=str(cand))
+            ico = self._find_icon()
+            if ico:
+                self.iconbitmap(default=str(ico))
         except Exception:
             pass
+
+    def _find_icon(self):
+        """Locate assets/fizzdisk.ico across source + frozen (PyInstaller) layouts."""
+        import sys
+        cands = []
+        bases = []
+        # source tree: repo root / its parent (so 'assets/fizzdisk.ico' resolves)
+        try:
+            bases.append(Path(__file__).resolve().parent.parent)
+            bases.append(Path(__file__).resolve().parent.parent.parent)
+        except Exception:
+            pass
+        # frozen onedir: the exe's folder and its '_internal'
+        try:
+            exe_dir = Path(sys.executable).resolve().parent
+            bases.append(exe_dir)
+            bases.append(exe_dir / "_internal")
+        except Exception:
+            pass
+        # PyInstaller _MEIPASS (onefile / datadir)
+        try:
+            mp = getattr(sys, "_MEIPASS", None)
+            if mp:
+                bases.append(Path(mp))
+        except Exception:
+            pass
+        # reuse the known-good bin data directory (bdlib locates bundled libs)
+        try:
+            bdir = bdlib._bin_dir()
+            if bdir:
+                bases.append(Path(bdir).parent)
+        except Exception:
+            pass
+        for b in bases:
+            c = b / "assets" / "fizzdisk.ico"
+            if c.exists():
+                cands.append(c)
+            c2 = b / "fizzdisk.ico"
+            if c2.exists():
+                cands.append(c2)
+        return cands[0] if cands else None
 
     # ------------------------------------------------------------- drives
     def refresh_drives(self):
@@ -372,6 +410,14 @@ class FizzDiskApp(ctk.CTk):
             self.selected.add(main.index)
         self.btn_make.configure(state="normal" if titles else "disabled")
         self._populate_tree()
+        # Bring the auto-selected (main feature) title to the top of the list.
+        try:
+            if titles and not self.cd_mode:
+                sel = next((t for t in titles if t.is_main), None) or max(titles, key=lambda t: t.duration or 0)
+                pos = self.titles.index(sel)
+                self.after(30, lambda p=pos: self._scroll_title_to_top(p))
+        except Exception:
+            pass
         self.var_eta.set("Ready \u2014 select titles, then click Start")
         main = next((t for t in titles if t.is_main and t.duration > 0), titles[0] if titles else None)
         if main and not self.cd_mode:
@@ -1128,6 +1174,21 @@ class FizzDiskApp(ctk.CTk):
         self.selected = {t.index for t in self.titles} if on else set()
         self._populate_tree()
 
+    def _scroll_title_to_top(self, pos):
+        """Scroll the titles list so the row at list-position *pos* is at the top."""
+        try:
+            if 0 <= pos < len(self._row_frames):
+                row = self._row_frames[pos]
+                canvas = getattr(self.tree, "_parent_canvas", None)
+                if canvas is None:
+                    return
+                y = row.winfo_y()
+                total = canvas.winfo_reqheight()
+                if total > 0:
+                    canvas.yview_moveto(y / total)
+        except Exception:
+            pass
+
     # ------------------------------------------------------------- details
     def _clear_streams(self):
         for w in list(self.stream_frame.winfo_children()):
@@ -1432,7 +1493,7 @@ class FizzDiskApp(ctk.CTk):
                     # for AACS2/UHD 4K). Fall back to the bundled ripper.
                     if not engine.RIPPER:
                         raise
-                    self.log("Bundled decoder couldn't decrypt this disc — trying the bundled ripper…")
+                    self.log("That decoder didn't work \u2014 let's try another\u2026")
                     try:
                         mk_titles = engine.scan_titles(self.source) or []
                     except Exception:
@@ -1510,6 +1571,16 @@ class FizzDiskApp(ctk.CTk):
             self.var_eta.set("Done")
             self._set_status("Done")
             self.log("Rip finished.")
+            self._eject_source()
+
+    def _eject_source(self):
+        """Eject the physical optical drive after a completed rip (BD/DVD/CD)."""
+        try:
+            letter = engine._optical_drive_letter(self.source)
+            if letter and engine.eject_drive(letter):
+                self.log(f"Ejected drive {letter}.")
+        except Exception:
+            pass
 
     def _run_backup(self):
         import shutil

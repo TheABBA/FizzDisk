@@ -18,15 +18,14 @@ a = Analysis(
     pathex=[],
     binaries=[('bin/ffmpeg.exe', 'bin'), ('bin/ffprobe.exe', 'bin'), ('bin/libaacs.dll', 'bin'),
               ('bin/libbdplus.dll', 'bin'), ('bin/bluray.dll', 'bin'), ('bin/vcruntime140.dll', 'bin'),
-              ('bin/vcruntime140_1.dll', 'bin'), ('bin/fizzdisk-rip.exe', 'bin'),
- ('bin/libffm64.dll', 'bin'), ('bin/libfizdisk64.dll', 'bin'), ('bin/libdriveio64.dll', 'bin'),
+              ('bin/vcruntime140_1.dll', 'bin'),
  # audio-CD rip (libcdio-paranoia + runtime) -- error-corrected CD-DA reads
  ('bin/cd-paranoia.exe', 'bin'),
  ('bin/libcdio-21.dll', 'bin'), ('bin/libcdio_cdda-2.dll', 'bin'),
  ('bin/libcdio_paranoia-2.dll', 'bin'), ('bin/libiconv-2.dll', 'bin'),
  ('bin/libwinpthread-1.dll', 'bin')]
             + ctk_bins + pws_bins,
-    datas=[('bin/keydb.cfg', 'bin'), ('bin/blues.jar', 'bin'), ('bin/appdata.tar', 'bin'),
+    datas=[('bin/keydb.cfg', 'bin'),
            ('assets/fizzdisk.ico', 'assets')]
            + ctk_datas + pws_datas,
     hiddenimports=['PIL', 'PIL.Image', 'PIL.ImageTk', 'PIL._tkinter_finder']

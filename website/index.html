@@ -7,6 +7,10 @@
 <meta name="description" content="FizzDisk is a backup tool for Windows. Back up your Blu-ray UHD movies, DVDs and CDs — scan every title and stream and save them losslessly to MKV. 50 free backups, then a one-time license. Fully standalone.">
 <link rel="icon" href="assets/fizzdisk.ico">
 <link rel="stylesheet" href="assets/app.css">
+<style>
+  /* Download buttons temporarily disabled while a release is finalized. */
+  a.is-disabled { opacity:.55; cursor:not-allowed; pointer-events:none; }
+</style>
 <script src="assets/config.js"></script>
 </head>
 <body>
@@ -212,6 +216,7 @@
         <a class="btn btn-primary btn-lg" href="download/FizzDiskSetup.exe">⬇  Download for Windows (.exe)</a>
         <a class="btn btn-ghost" data-buy href="#">Buy license — $65</a>
       </div>
+      <p id="dl-status" class="dl-min" style="text-align:center;display:none"></p>
       <div class="dl-support" style="justify-content:center;text-align:center">
         <a class="btn btn-reddit" href="https://www.reddit.com/r/FizzDisk/" target="_blank" rel="noopener">🥽  Contact &amp; support — r/FizzDisk</a>
         <span class="dl-support-note">Questions, requests and help — join us on Reddit.</span>
@@ -244,6 +249,22 @@
     if (cfg.VERSION) { var v=document.getElementById('foot-ver'); if(v) v.textContent=cfg.VERSION; }
     var buyUrl = (cfg.BUY_URL && String(cfg.BUY_URL).trim()) ? cfg.BUY_URL : cfg.SUCCESS_URL;
     if (buyUrl) document.querySelectorAll('[data-buy]').forEach(function(b){ b.href = buyUrl; });
+    // Disable downloads while a release is being finalized (see config.js).
+    if (cfg.DOWNLOAD_AVAILABLE === false) {
+      var note = cfg.DOWNLOAD_NOTE || 'A new build is on the way \u2014 check back shortly.';
+      document.querySelectorAll('a[href*="FizzDiskSetup.exe"]').forEach(function(a){
+        a.classList.add('is-disabled');
+        a.removeAttribute('download');
+        a.setAttribute('aria-disabled','true');
+        a.href = '#download';
+      });
+      var heroBtn = document.querySelector('.hero-cta a[href*="FizzDiskSetup.exe"]');
+      if (heroBtn) heroBtn.textContent = '\u23F1\uFE0F New build soon';
+      var dlBtn = document.querySelector('.dl-cta a[href*="FizzDiskSetup.exe"]');
+      if (dlBtn) dlBtn.textContent = '\u23F1\uFE0F ' + note;
+      var st = document.getElementById('dl-status');
+      if (st) { st.textContent = note; st.style.display = 'block'; }
+    }
   })();
 </script>
 </body>

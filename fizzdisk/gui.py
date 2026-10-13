@@ -44,6 +44,13 @@ from .model import Title
 _DARK = {"text_bg": "#0d1013", "text_fg": "#dfe3ea", "err": "#ff6b6b"}
 _LIGHT = {"text_bg": "#ffffff", "text_fg": "#20242a", "err": "#b00020"}
 
+# brand palette (mirrors make_icon.py): amber accent = the icons' orange,
+# blue = the primary accent used for progress/busy states.
+_BRAND_ORANGE = "#f59e0b"
+_BRAND_ORANGE_HOVER = "#d98e09"
+_BRAND_BLUE = "#3b82f6"
+_BRAND_BLUE_HOVER = "#2563eb"
+
 
 class FizzDiskApp(ctk.CTk):
     def __init__(self):
@@ -372,7 +379,7 @@ class FizzDiskApp(ctk.CTk):
         self.progress.set(0.0)
         self.var_eta.set("Scanning\u2026")
         self._set_status("Scanning\u2026")
-        self.btn_scan.configure(state="disabled")
+        self._scan_running()
         threading.Thread(target=self._scan_worker, args=(src,), daemon=True).start()
 
     def _scan_worker(self, src):
@@ -386,7 +393,10 @@ class FizzDiskApp(ctk.CTk):
 
     def _scan_done(self, titles, info, source_kind="", meta=None):
         self.titles = titles
-        self.btn_scan.configure(state="normal")
+        if titles:
+            self._scan_pending()
+        else:
+            self._scan_idle()
         self._set_status(f"Scan complete \u2014 {len(titles)} title(s)")
         self.log(info)
         self.cd_mode = (source_kind == "cd")
@@ -446,7 +456,7 @@ class FizzDiskApp(ctk.CTk):
                 traceback.print_exc()
 
     def _scan_done_error(self, msg):
-        self.btn_scan.configure(state="normal")
+        self._scan_idle()
         self._clear_start()
         self._set_status("Scan failed")
         self.var_eta.set("Scan failed")
@@ -1598,6 +1608,7 @@ class FizzDiskApp(ctk.CTk):
     def _rip_done(self, stopped=False):
         self.btn_make.configure(state="normal")
         self.btn_stop.configure(state="disabled")
+        self._scan_idle()     # rip is over (done or stopped) — allow scanning again
         if stopped:
             self.var_eta.set("Stopped")
             self._set_status("Stopped")
@@ -1623,10 +1634,34 @@ class FizzDiskApp(ctk.CTk):
         except Exception:
             pass
 
+    def _scan_idle(self):
+        """Scan button: idle/ready — brand orange, enabled, 'Scan'."""
+        try:
+            self.btn_scan.configure(fg_color=_BRAND_ORANGE, hover_color=_BRAND_ORANGE_HOVER,
+                                    text_color="#ffffff", text="Scan", state="normal")
+        except Exception:
+            pass
+
+    def _scan_running(self):
+        """Scan button: busy scanning — brand blue, disabled, 'Scanning...'."""
+        try:
+            self.btn_scan.configure(fg_color=_BRAND_BLUE, hover_color=_BRAND_BLUE_HOVER,
+                                    text_color="#ffffff", text="Scanning\u2026", state="disabled")
+        except Exception:
+            pass
+
+    def _scan_pending(self):
+        """Scan button: greyed out (disabled) after a scan until the rip finishes."""
+        try:
+            self.btn_scan.configure(fg_color=_BRAND_BLUE, hover_color=_BRAND_BLUE_HOVER,
+                                    text_color="#ffffff", text="Scan", state="disabled")
+        except Exception:
+            pass
+
     def _highlight_start(self):
         """Flash the Start button orange to draw attention that a scan found titles."""
         try:
-            self.btn_make.configure(fg_color="#f59e0b", hover_color="#d98e09",
+            self.btn_make.configure(fg_color=_BRAND_ORANGE, hover_color=_BRAND_ORANGE_HOVER,
                                     text_color="#ffffff")
         except Exception:
             pass

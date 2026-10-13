@@ -40,3 +40,4 @@ bin/keydb.cfg.orig
 aacs_videolan.c
 aacs_vl.c
 fm_*
+signing_config.json

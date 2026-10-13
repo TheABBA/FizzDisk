@@ -9,7 +9,7 @@ window.FIZZ_CONFIG = {
   DOWNLOAD_URL: "download/FizzDiskSetup.exe",
   // Set DOWNLOAD_AVAILABLE to false while a release is being finalized: the
   // Download buttons show a "new build coming" note instead of delivering the exe.
-  DOWNLOAD_AVAILABLE: false,
+  DOWNLOAD_AVAILABLE: true,
   DOWNLOAD_NOTE: "A refreshed build is being finalized \u2014 it'll be available here shortly.",
   // Set BUY_AVAILABLE to false to disable the Buy buttons (no checkout yet).
   BUY_AVAILABLE: false,

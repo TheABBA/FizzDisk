@@ -192,11 +192,18 @@ def disc_metadata_name(source: str) -> Optional[str]:
     Returns a cleaned searchable title when the media identifies itself (Blu-ray
     META/DL metadata, else the raw UDF/ISO volume descriptor), or None. Used only
     as a fallback when the Windows volume label is missing or generic.
+
+    NOTE: only a *drive root* (``D:`` / ``D:\\``) is a raw-device source. A
+    generic Windows absolute path that merely starts with a drive letter (e.g.
+    ``C:\\Users\\...\\BDMV``) is a directory and must be read as a folder, not as
+    the whole drive.
     """
     src = (source or "").strip()
-    m = re.match(r"^([A-Za-z]):", src)
-    if m:
-        drive = m.group(1).upper()
+    if not src:
+        return None
+    drive_root = re.match(r"^([A-Za-z]):[/\\]?$", src)
+    if drive_root:
+        drive = drive_root.group(1).upper()
         meta = _bd_meta_name(drive + ":" + chr(92))
         if meta:
             return clean_term(meta)
@@ -382,18 +389,31 @@ def _gather_candidates(term: str) -> List[dict]:
         return s
 
     candidates.sort(key=score, reverse=True)
-    out: List[dict] = []
-    seen = set()
-    for c in candidates:
-        if not (c.get("year") and c.get("title") and _overlap(term, c["title"])):
-            continue
-        if c["title"] in seen:
-            continue
-        seen.add(c["title"])
-        out.append(_make_result(c))
-        if len(out) >= 5:  # keep the chooser list short and relevant
-            break
-    return out
+
+    def _collect(pred):
+        out_: List[dict] = []
+        seen_: set = set()
+        for c in candidates:
+            if not pred(c):
+                continue
+            t = c.get("title") or ""
+            if t in seen_:
+                continue
+            seen_.add(t)
+            out_.append(_make_result(c))
+            if len(out_) >= 5:  # keep the chooser list short and relevant
+                break
+        return out_
+
+    # Strict: must be a film with a year that overlaps the search term.
+    strict = _collect(lambda c: bool(c.get("year") and c.get("title")
+                                      and _overlap(term, c["title"])))
+    if strict:
+        return strict
+    # Lenient fallback: if the disc label carried noise/studio tokens and nothing
+    # overlaps, still offer plausible films (title + year) so the user can pick
+    # instead of the search silently returning nothing.
+    return _collect(lambda c: bool(c.get("film") and c.get("year") and c.get("title")))
 
 
 def _gather_tmdb(term: str, limit: int = 6) -> List[dict]:
@@ -578,3 +598,94 @@ def highres_poster(title: str, year, fallback_url: Optional[str]) -> Optional[st
     except Exception:  # noqa: BLE001
         pass
     return fallback_url
+
+
+def movie_runtime(title: str, year: Optional[int] = None) -> Optional[int]:
+    """Return a movie's runtime in minutes (best effort, no key required).
+
+    Tries TheMovieDB first (exact runtime when a user key is configured). If no
+    key is set or it has no match, falls back to a free, no-key lookup by parsing
+    the film's running time from the Wikipedia article. Used to sanity-check a
+    disc title's duration against the known movie length when scanning
+    obfuscated discs (e.g. Lionsgate), where a decoy/truncated playlist can be
+    reported as the "main" title.
+    """
+    rt = _tmdb_runtime(title, year)
+    if rt:
+        return rt
+    return _wikipedia_runtime(title, year)
+
+
+def _tmdb_runtime(title: str, year: Optional[int] = None) -> Optional[int]:
+    """Runtime from TheMovieDB (needs a user key); None when no key/no match."""
+    key = tmdb_key()
+    if not key or not title:
+        return None
+    try:
+        q = urllib.parse.quote((title or "").strip())
+        url = f"https://api.themoviedb.org/3/search/movie?api_key={key}&query={q}&language=en-US"
+        if year:
+            url += f"&year={int(year)}"
+        d = _get_json(url)
+        res = d.get("results") or []
+        if not res:
+            return None
+        mid = res[0].get("id")
+        if not mid:
+            return None
+        det = _get_json(f"https://api.themoviedb.org/3/movie/{mid}?api_key={key}&language=en-US")
+        rt = (det or {}).get("runtime")
+        return int(rt) if rt else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+_RUNTIME_RE = re.compile(
+    r"(?im)^\s*\|\s*(?:runtime|running[ _]?time)\s*=\s*(.*?)\s*$")
+
+
+def _parse_runtime_minutes(wt: str) -> Optional[int]:
+    """Best-effort runtime in minutes from film infobox wikitext (no API key).
+
+    Handles forms like ``131 minutes``, ``2h 10m``, ``1 hr 45 min``, ``105``.
+    Returns None when no plausible runtime is found (20-600 min).
+    """
+    for m in _RUNTIME_RE.finditer(wt or ""):
+        val = m.group(1)
+        if not val:
+            continue
+        val = re.sub(r"\{\{[^}]*\}\}", "", val)     # drop {{...}} templates
+        val = re.sub(r"<[^>]+>", "", val)           # drop html refs/tags
+        val = val.replace("&nbsp;", " ").strip()
+        txt = val.lower()
+        hours = re.search(r"(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h)\b", txt)
+        mins = re.search(r"(\d+(?:\.\d+)?)\s*(?:minutes?|mins?|m)\b", txt)
+        total = None
+        if hours:
+            total = float(hours.group(1)) * 60
+            if mins:
+                total += float(mins.group(1))
+        elif mins:
+            total = float(mins.group(1))
+        else:
+            nums = re.findall(r"\d+", txt)
+            if nums:
+                total = float(nums[0])
+        if total and 20 <= total <= 600:
+            return int(round(total))
+    return None
+
+
+def _wikipedia_runtime(title: str, year: Optional[int] = None) -> Optional[int]:
+    """Free, no-key runtime parsed from the Wikipedia film infobox (| runtime =)."""
+    if not title:
+        return None
+    try:
+        page = urllib.parse.quote(title.replace(" ", "_"))
+        url = ("https://en.wikipedia.org/w/api.php?action=parse&page=%s&prop=wikitext"
+               "&format=json&redirects=1" % page)
+        d = _get_json(url)
+        wt = ((d.get("parse") or {}).get("wikitext") or {}).get("*") or ""
+    except Exception:  # noqa: BLE001
+        return None
+    return _parse_runtime_minutes(wt)

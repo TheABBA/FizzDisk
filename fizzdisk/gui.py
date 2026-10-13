@@ -51,6 +51,100 @@ _BRAND_ORANGE_HOVER = "#d98e09"
 _BRAND_BLUE = "#3b82f6"
 _BRAND_BLUE_HOVER = "#2563eb"
 
+# ---------------------------------------------------------------------------
+# App icon (hard-wired). Every window -- the root and ALL CTkToplevel dialogs
+# -- gets the FizzDisk brand icon, never the Tk feather default. We apply both
+# iconbitmap (.ico, for title bar / taskbar) and iconphoto(default=True, .png),
+# which sets the app-wide default for every (incl. future) toplevel, so even a
+# dialog that never sets it explicitly cannot fall back to the Tk icon.
+# ---------------------------------------------------------------------------
+_APP_ICON_PHOTO = None
+_APP_ICON_PATHS = None
+
+
+def _find_icon_paths():
+    """Return (ico_path, png_path) for the brand icon, or (None, None)."""
+    global _APP_ICON_PATHS
+    if _APP_ICON_PATHS is not None:
+        return _APP_ICON_PATHS
+    import sys
+    bases = []
+    try:
+        bases += [Path(__file__).resolve().parent.parent,
+                  Path(__file__).resolve().parent.parent.parent]
+    except Exception:
+        pass
+    try:
+        exe_dir = Path(sys.executable).resolve().parent
+        bases += [exe_dir, exe_dir / "_internal"]
+    except Exception:
+        pass
+    try:
+        mp = getattr(sys, "_MEIPASS", None)
+        if mp:
+            bases.append(Path(mp))
+    except Exception:
+        pass
+    try:
+        bdir = bdlib._bin_dir()
+        if bdir:
+            bases.append(Path(bdir).parent)
+    except Exception:
+        pass
+    ico = png = None
+    for b in bases:
+        if ico is None:
+            for cand in (b / "assets" / "fizzdisk.ico", b / "fizzdisk.ico"):
+                if cand.exists():
+                    ico = str(cand)
+                    break
+        if png is None:
+            for cand in (b / "assets" / "fizzdisk_icon.png",
+                         b / "assets" / "fizzdisk_icon_512.png",
+                         b / "fizzdisk_icon.png"):
+                if cand.exists():
+                    png = str(cand)
+                    break
+    _APP_ICON_PATHS = (ico, png)
+    return _APP_ICON_PATHS
+
+
+def set_window_icon(win) -> None:
+    """Apply the FizzDisk brand icon to a window (root or a Toplevel dialog)."""
+    ico, png = _find_icon_paths()
+    try:
+        if ico:
+            win.iconbitmap(ico)
+    except Exception:
+        pass
+    try:
+        if png and HAS_PIL:
+            global _APP_ICON_PHOTO
+            if _APP_ICON_PHOTO is None:
+                img = Image.open(png)
+                img = img.resize((64, 64), Image.LANCZOS)
+                _APP_ICON_PHOTO = ImageTk.PhotoImage(img)
+            # default=True makes this the app-wide default icon for every window.
+            win.iconphoto(True, _APP_ICON_PHOTO)
+    except Exception:
+        pass
+
+
+# Hard-wire: every CTkToplevel created anywhere in the app gets our icon, so a
+# dialog can never silently show the Tk default icon.
+if ctk is not None and hasattr(ctk, "CTkToplevel"):
+    _orig_ctk_toplevel = ctk.CTkToplevel
+
+    def _iconed_toplevel(*a, **k):
+        w = _orig_ctk_toplevel(*a, **k)
+        try:
+            set_window_icon(w)
+        except Exception:
+            pass
+        return w
+
+    ctk.CTkToplevel = _iconed_toplevel
+
 
 class FizzDiskApp(ctk.CTk):
     def __init__(self):
@@ -281,54 +375,8 @@ class FizzDiskApp(ctk.CTk):
         self._apply_theme()
 
     def _set_window_icon(self):
-        """Set the title-bar icon to the FizzDisk brand mark (assets/fizzdisk.ico)."""
-        try:
-            ico = self._find_icon()
-            if ico:
-                self.iconbitmap(default=str(ico))
-        except Exception:
-            pass
-
-    def _find_icon(self):
-        """Locate assets/fizzdisk.ico across source + frozen (PyInstaller) layouts."""
-        import sys
-        cands = []
-        bases = []
-        # source tree: repo root / its parent (so 'assets/fizzdisk.ico' resolves)
-        try:
-            bases.append(Path(__file__).resolve().parent.parent)
-            bases.append(Path(__file__).resolve().parent.parent.parent)
-        except Exception:
-            pass
-        # frozen onedir: the exe's folder and its '_internal'
-        try:
-            exe_dir = Path(sys.executable).resolve().parent
-            bases.append(exe_dir)
-            bases.append(exe_dir / "_internal")
-        except Exception:
-            pass
-        # PyInstaller _MEIPASS (onefile / datadir)
-        try:
-            mp = getattr(sys, "_MEIPASS", None)
-            if mp:
-                bases.append(Path(mp))
-        except Exception:
-            pass
-        # reuse the known-good bin data directory (bdlib locates bundled libs)
-        try:
-            bdir = bdlib._bin_dir()
-            if bdir:
-                bases.append(Path(bdir).parent)
-        except Exception:
-            pass
-        for b in bases:
-            c = b / "assets" / "fizzdisk.ico"
-            if c.exists():
-                cands.append(c)
-            c2 = b / "fizzdisk.ico"
-            if c2.exists():
-                cands.append(c2)
-        return cands[0] if cands else None
+        """Set the title-bar icon to the FizzDisk brand mark (hard-wired)."""
+        set_window_icon(self)
 
     # ------------------------------------------------------------- drives
     def refresh_drives(self):
@@ -628,19 +676,23 @@ class FizzDiskApp(ctk.CTk):
         m = re.match(r"^([A-Za-z]):", src)
         if m:
             label = self._volume_label(m.group(1).upper())
+            # The on-disc identity (BDMV/META or the raw UDF/ISO volume
+            # descriptor) is the authoritative movie title and must win over the
+            # generic Windows volume label, which is often a studio token like
+            # 'BLURAY'/'LOGICAL_VOLUME_ID' that searches fail on even though the
+            # real title is present on the media.
+            name = movie.disc_metadata_name(src)
+            if movie.name_is_useful(name):
+                return name
             if movie.name_is_useful(label):
                 return label
-            # The label is blank/generic (e.g. 'LOGICAL_VOLUME_ID'); the media still
-            # names itself in its raw UDF/ISO descriptor or BDMV/META. Dig it out.
-            name = movie.disc_metadata_name(src)
-            if name:
-                return name
-            return label or src
+            return name or label or src
         base = os.path.basename(src.rstrip("\\/"))
+        name = movie.disc_metadata_name(src)
+        if movie.name_is_useful(name):
+            return name
         if movie.name_is_useful(base):
             return base
-        # A folder/ISO source: try the disc metadata as a last resort.
-        name = movie.disc_metadata_name(src)
         return name or base or src
 
     def _fallback_name(self, term: str) -> str:
@@ -919,11 +971,13 @@ class FizzDiskApp(ctk.CTk):
                      anchor="w").pack(anchor="w", padx=12, pady=(10, 2))
         ctk.CTkLabel(card2, text=(
             "FizzDisk uses TheMovieDB to identify the movie title & year when a\n"
-            "disc is scanned, and to download a sharp HD poster. It needs a free\n"
-            "API key. We don't share one master key, so please grab your own\n"
-            "(~1 minute) \u2014 each user having their own avoids usage limits.\n"
-            "Without a key, FizzDisk falls back to Wikipedia: titles and years\n"
-            "still work, but posters are smaller."),
+            "disc is scanned, to download a sharp HD poster, and to check a disc's\n"
+            "length against the real runtime so it can back up an obfuscated disc\n"
+            "(e.g. Lionsgate) in full. It needs a free API key (~1 minute) \u2014 do\n"
+            "grab one: we don't share a master key, so each user having their own\n"
+            "avoids usage limits. Without a key FizzDisk still works (Wikipedia\n"
+            "titles/years and a best-effort runtime), but HD posters are\n"
+            "unavailable and the length check is less reliable."),
             justify="left", anchor="w", wraplength=470).pack(anchor="w", padx=12, pady=(0, 4))
 
         def open_key():
@@ -940,8 +994,8 @@ class FizzDiskApp(ctk.CTk):
         def save():
             k = key.get().strip()
             if not k:
-                self.log("No API key \u2014 using Wikipedia lookup.")
-                status.set("Using Wikipedia (no key).")
+                self.log("No API key \u2014 using Wikipedia (titles/years/runtime).")
+                status.set("Using Wikipedia (no key) \u2014 titles/years/runtime still work.")
             else:
                 p = movie.set_tmdb_key(k)
                 if p:
@@ -1499,7 +1553,66 @@ class FizzDiskApp(ctk.CTk):
             return f"{m}m {s:02d}s"
         return f"{s}s"
 
+    def _known_runtime(self):
+        """Return the movie's runtime in minutes (via TMDb), cached on movie_info."""
+        mi = self.movie_info or {}
+        rt = mi.get("runtime")
+        if rt:
+            return rt
+        title = mi.get("title")
+        if title:
+            try:
+                rt = movie.movie_runtime(title, mi.get("year"))
+            except Exception:
+                rt = None
+            if rt:
+                mi["runtime"] = rt
+        return rt
+
+    def _best_title_for_movie(self, title):
+        """Re-select the main title to the one whose duration best matches the
+        known movie runtime.
+
+        Obfuscated discs (e.g. Lionsgate) can present a *truncated* playlist as
+        the disc's "main" title, so an auto-rip loses scenes/credits from the end
+        (bd_get_main_title / "longest" alone is not reliable). When the movie's
+        real runtime is known (via TMDb) we prefer the title closest to that
+        length. Returns (chosen_title, changed).
+        """
+        rt = self._known_runtime()
+        if not rt or not title or getattr(title, "source_kind", "") != "bd":
+            return title, False
+        # Only guide the *main feature* title. A secondary title (featurette,
+        # trailer) the user deliberately selected must not be hijacked to the
+        # feature-length title.
+        if not getattr(title, "is_main", False):
+            return title, False
+        target = float(rt) * 60.0
+        cur = float(title.duration or 0.0)
+        if cur <= 0:
+            return title, False
+        all_bd = [t for t in self.titles
+                  if getattr(t, "source_kind", "") == "bd" and (t.duration or 0) > 0]
+        if len(all_bd) <= 1:
+            return title, False
+        best = min(all_bd, key=lambda t: abs(float(t.duration or 0) - target))
+        # Only override if the current pick is meaningfully off the real runtime
+        # and a clearly closer match exists (don't hijack a deliberate choice).
+        tol = max(90.0, target * 0.02)
+        if best is not title and abs(cur - target) > tol and \
+                abs(float(best.duration or 0) - target) < abs(cur - target) - tol:
+            return best, True
+        return title, False
+
     def _make_one(self, title, progress_cb=None, num_jobs=1):
+        # Obfuscated-disc guard: if we know the movie's runtime, prefer the title
+        # whose duration matches it -- a decoy/truncated "main" playlist on
+        # discs like Lionsgate otherwise loses scenes/credits from the end.
+        title, reselected = self._best_title_for_movie(title)
+        if reselected:
+            rt = self._known_runtime()
+            self.log(f"Disc title '{_safe_name(title.name)}' is closest to the "
+                     f"known runtime ({rt} min) \u2014 using it.")
         out_dir = self.var_out.get().strip()
         tmpl = self.var_tmpl.get().strip() or "{name}.mkv"
         if "{name}" not in tmpl and num_jobs > 1:
@@ -1643,18 +1756,23 @@ class FizzDiskApp(ctk.CTk):
             pass
 
     def _scan_running(self):
-        """Scan button: busy scanning — brand blue, disabled, 'Scanning...'."""
+        """Scan button: busy scanning — default button palette (all other buttons),
+        disabled with greyed text, label 'Scanning...'."""
         try:
-            self.btn_scan.configure(fg_color=_BRAND_BLUE, hover_color=_BRAND_BLUE_HOVER,
-                                    text_color="#ffffff", text="Scanning\u2026", state="disabled")
+            self.btn_scan.configure(fg_color=getattr(self, "_start_fg", ("#3B8ED0", "#1F6AA5")),
+                                    hover_color=getattr(self, "_start_hover", ("#36719F", "#144870")),
+                                    text_color=getattr(self, "_start_text", ("#DCE4EE", "#DCE4EE")),
+                                    text="Scanning\u2026", state="disabled")
         except Exception:
             pass
 
     def _scan_pending(self):
         """Scan button: greyed out (disabled) after a scan until the rip finishes."""
         try:
-            self.btn_scan.configure(fg_color=_BRAND_BLUE, hover_color=_BRAND_BLUE_HOVER,
-                                    text_color="#ffffff", text="Scan", state="disabled")
+            self.btn_scan.configure(fg_color=getattr(self, "_start_fg", ("#3B8ED0", "#1F6AA5")),
+                                    hover_color=getattr(self, "_start_hover", ("#36719F", "#144870")),
+                                    text_color=getattr(self, "_start_text", ("#DCE4EE", "#DCE4EE")),
+                                    text="Scan", state="disabled")
         except Exception:
             pass
 

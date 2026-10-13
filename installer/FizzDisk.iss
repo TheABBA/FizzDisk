@@ -32,6 +32,15 @@ DisableWelcomePage=no
 UninstallDisplayIcon={app}\{#MyAppExeName}
 SetupIconFile=..\assets\fizzdisk.ico
 ArchitecturesInstallIn64BitMode=x64compatible
+; Give the installer a real FizzDisk version resource (not the generic "Inno Setup"
+; stub) -- Defender/AV engines use company & product metadata for reputation, and
+; a generic setup stub is a common false-positive trigger while unsigned.
+VersionInfoVersion={#MyAppVersion}
+VersionInfoProductName={#MyAppName}
+VersionInfoProductVersion={#MyAppVersion}
+VersionInfoCompany={#MyAppPublisher}
+VersionInfoDescription={#MyAppName} Setup
+VersionInfoOriginalFileName=FizzDiskSetup-{#MyAppVersion}.exe
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

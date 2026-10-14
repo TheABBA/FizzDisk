@@ -20,7 +20,9 @@ import ctypes
 import os
 import re
 import subprocess
+import sys
 import threading
+import time
 from pathlib import Path
 from typing import Callable, List, Optional
 
@@ -152,6 +154,10 @@ def _init_prototypes(lib) -> None:
     lib.bd_read.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_ubyte), ctypes.c_int]
     lib.bd_get_version.restype = ctypes.c_char_p
     lib.bd_get_version.argtypes = []
+    lib.bd_seek_time.restype = ctypes.c_uint64
+    lib.bd_seek_time.argtypes = [ctypes.c_void_p, ctypes.c_uint64, ctypes.c_uint32]
+    lib.bd_tell_time.restype = ctypes.c_uint64
+    lib.bd_tell_time.argtypes = [ctypes.c_void_p]
 
 
 def _raw_device(path: str) -> str:
@@ -167,11 +173,78 @@ def _raw_device(path: str) -> str:
     return path
 
 
+# ---------------------------------------------------------------------------
+# AACS key database (KEYDB.cfg) refresh
+# ---------------------------------------------------------------------------
+_KEYDB_URL = "https://fvonline-db.bplaced.net/fv_download.php?lang=eng"
+
+def _cfg_dir() -> str:
+    """Writable dir for a user-updated KEYDB.cfg (never Program Files)."""
+    base = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~")
+    d = os.path.join(base, "FizzDisk")
+    try:
+        os.makedirs(d, exist_ok=True)
+    except Exception:
+        d = os.path.dirname(os.path.abspath(__file__))
+    return d
+
+
+def _user_keydb_path() -> Optional[str]:
+    p = os.path.join(_cfg_dir(), "keydb.cfg")
+    return p if os.path.exists(p) else None
+
+
+def update_keydb(force: bool = False) -> Optional[str]:
+    """Best-effort, silent refresh of the AACS KEYDB.cfg from FindVUK.
+
+    The bundled keydb is a snapshot; newer discs' keys won't be in it. We keep
+    a user copy under LOCALAPPDATA (writable, never Program Files) and refresh
+    it at most once per 24h. libaacs uses VUK entries from here, so an updated
+    db keeps new discs decryptable WITHOUT any online lookup at rip time (so
+    ISP/DNS blocks of MakeMKV-style online key services don't matter to us).
+
+    Returns the path to the keydb to use, or None. Never raises.
+    """
+    p = os.path.join(_cfg_dir(), "keydb.cfg")
+    if not force and os.path.exists(p):
+        try:
+            if time.time() - os.path.getmtime(p) < 24 * 3600:
+                return p
+        except Exception:
+            pass
+    try:
+        import io
+        import urllib.request
+        import zipfile
+        req = urllib.request.Request(_KEYDB_URL, headers={"User-Agent":
+                                                          "FizzDisk/1.0"})
+        data = urllib.request.urlopen(req, timeout=30).read()
+        zf = zipfile.ZipFile(io.BytesIO(data))
+        name = next((n for n in zf.namelist()
+                     if n.lower().endswith("keydb.cfg")), None)
+        if name:
+            cfg = zf.read(name)
+            # sanity: a real keydb has many disc keys with VUK/unit entries
+            if b" | " in cfg and cfg.count(b"0x") > 100000:
+                tmp = p + ".tmp"
+                with open(tmp, "wb") as f:
+                    f.write(cfg)
+                os.replace(tmp, p)
+                return p
+    except Exception:
+        pass
+    return p if os.path.exists(p) else None
+
+
 def open_disc(path: str) -> int:
     """Open a Blu-ray disc/ISO/folder. Returns the BLURAY* handle (int)."""
     ensure_loaded()
     bdir = _bin_dir()
-    keyfile = os.path.join(bdir, "keydb.cfg").encode() if bdir else None
+    # Prefer an auto-refreshed, user-owned keydb (newer discs) over the bundled
+    # snapshot; fall back to the bundled one if no refresh was done.
+    up = _user_keydb_path()
+    keyfile = (up or os.path.join(bdir, "keydb.cfg")).encode() if (up or bdir) \
+        else None
     dev = _raw_device(path)
     bd = _BLURAY.bd_open(dev.encode("utf-8", "replace") if isinstance(dev, str) else dev,
                          keyfile)
@@ -369,6 +442,7 @@ def rip_bd(path: str, title: Title, out_path: str,
         read_buf = (ctypes.c_ubyte * (256 * 1024))()
         written = 0
         last_frac = -1.0
+        recover_rounds = 0
         try:
             while True:
                 if stop_event is not None and stop_event.is_set():
@@ -377,6 +451,29 @@ def rip_bd(path: str, title: Title, out_path: str,
                     break
                 r = _BLURAY.bd_read(ctypes.c_void_p(bd), read_buf, len(read_buf))
                 if r <= 0:
+                    # Some BD-50 / obfuscated discs (e.g. Lionsgate "boneyard"
+                    # segments at a layer boundary) present an undecryptable
+                    # unit that makes libbluray STOP bd_read() before the
+                    # title's real end, truncating the rip (loses the tail).
+                    # The movie content after the break IS on the disc, so if we
+                    # stopped well short of the declared duration, seek past the
+                    # broken unit and keep reading the remainder into ffmpeg.
+                    try:
+                        cur = _BLURAY.bd_tell_time(ctypes.c_void_p(bd)) / 90000.0
+                    except Exception:
+                        cur = 0.0
+                    dur = float(title.duration or 0)
+                    if recover_rounds < 4 and dur > 60 and (cur <= 0 or cur < dur - 10):
+                        recover_rounds += 1
+                        resume_s = (cur + 3.0) if cur > 0 else dur * 0.75
+                        print(f"[fizz] boneyard: stopped at {cur:.1f}s, seeking to "
+                              f"{resume_s:.1f}s to recover ({recover_rounds})",
+                              file=sys.stderr, flush=True)
+                        _BLURAY.bd_seek_time(ctypes.c_void_p(bd),
+                                             int(resume_s * 90000), 0)
+                        if progress_cb:
+                            progress_cb(min(1.0, written / total))
+                        continue
                     break
                 chunk = bytes(read_buf[:r])
                 try:

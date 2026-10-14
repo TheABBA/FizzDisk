@@ -190,6 +190,13 @@ class FizzDiskApp(ctk.CTk):
         self._set_window_icon()
         self._prompted_tmdb = False
         self.after(250, self._maybe_prompt_tmdb_key)
+        # Best-effort: keep the AACS key database fresh so newer discs stay
+        # decryptable (silent, backgrounded, never blocks the UI).
+        try:
+            threading.Thread(target=lambda: bdlib.update_keydb(),
+                             daemon=True).start()
+        except Exception:
+            pass
         self.log("FizzDisk ready. Choose a source and click Scan.")
 
     # ------------------------------------------------------------------ UI

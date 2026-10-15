@@ -250,7 +250,7 @@ def scan_dvd_folder(base_str: str) -> List[Title]:
         clips = [Clip(files=[str(f) for f in vob_files])]
         title = Title(index=len(titles), name=name, clips=clips,
                       duration=info.get("duration", 0.0),
-                      source_kind="dvd", is_main=(len(titles) == 0))
+                      source_kind="dvd", is_main=False)
         for s in info.get("streams", []):
             if s.codec_type == "video" and title.video is None:
                 title.video = s
@@ -263,6 +263,15 @@ def scan_dvd_folder(base_str: str) -> List[Title]:
 
     if not titles:
         raise ValueError("DVD scan produced no titles")
+    # Second line of defense: a DVD has no authoritative "main title" navigation
+    # (unlike a BD), so mark the LONGEST title as main rather than blindly title
+    # #1 -- title #1 is often a menu/marker/extras clip (e.g. a 1-second entry).
+    # The runtime match in the GUI later refines this against the movie's real
+    # length; this just keeps the raw auto-pick from being obviously wrong.
+    if titles:
+        main = max(range(len(titles)), key=lambda i: titles[i].duration or 0)
+        for i, t in enumerate(titles):
+            t.is_main = (i == main)
     return titles
 
 

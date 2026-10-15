@@ -912,7 +912,16 @@ class FizzDiskApp(ctk.CTk):
             _scal = 1.0
         _tw, _th = max(1, int(60 * _scal)), max(1, int(86 * _scal))
 
+        # Exclusive single-choice. Sharing one StringVar across CTkCheckBox
+        # does NOT clear siblings on its own (the variable callback only fires
+        # when the value equals a checkbox's own onvalue/offvalue), which made
+        # the wrong candidate stay checked until a second click. Instead we
+        # drive each checkbox's state directly so clicking one clears the rest.
+        checkboxes: list = []
+
         def _select(name):
+            for n, cb in checkboxes:
+                cb.set(n == name)
             sel.set(name)
 
         for c in cands:
@@ -924,13 +933,16 @@ class FizzDiskApp(ctk.CTk):
                                  text_color="#8b949e", font=("Segoe UI", 9))
             thumb.pack(side="left", padx=(2, 8), pady=2)
             thumb.bind("<Button-1>", lambda e, n=c["name"]: _select(n))
-            cb = ctk.CTkCheckBox(row, text=c["name"], variable=sel,
-                                 onvalue=c["name"], offvalue="",
+            cb = ctk.CTkCheckBox(row, text=c["name"],
                                  corner_radius=8, checkbox_width=13,
                                  checkbox_height=13, width=16,
                                  command=lambda n=c["name"]: _select(n))
             cb.pack(side="left", fill="x", expand=True, padx=(0, 4), pady=2)
+            checkboxes.append((c["name"], cb))
             self._start_thumb_load(c, thumb, _tw, _th, 60, 86)
+
+        # Establish the initial selection (first candidate is the pre-picked one).
+        _select(cands[0]["name"])
 
         res = {"v": None}
 

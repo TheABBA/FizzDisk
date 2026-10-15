@@ -170,6 +170,9 @@ class FizzDiskApp(ctk.CTk):
         self._poster_photo = None              # keep a ref to the PhotoImage
         self._film_folder: str = ""
         self._dark = False
+        # special-features disc detection (no title matches the movie runtime)
+        self.special_features = False
+        self._sf_prompted = False
         # audio-CD state
         self.cd_mode = False
         self.cd_meta: Optional[dict] = None
@@ -448,6 +451,8 @@ class FizzDiskApp(ctk.CTk):
 
     def _scan_done(self, titles, info, source_kind="", meta=None):
         self.titles = titles
+        self.special_features = False
+        self._sf_prompted = False
         if titles:
             self._scan_pending()
         else:
@@ -775,6 +780,115 @@ class FizzDiskApp(ctk.CTk):
         self.var_tmpl.set(name + ".mkv")
         self._film_folder = name
         self.log("Movie title set: " + name)
+        try:
+            self._rationalize_selection()
+        except Exception:
+            traceback.print_exc()
+
+    def _rationalize_selection(self):
+        """Correct the auto-selected title now that the movie runtime is known.
+
+        The scan only picks the disc's ``is_main`` flag (title #1 on a DVD) or
+        the longest title, so an obscure menu/marker title can end up selected.
+        Once the movie is identified we know the real runtime, so:
+          * if some title is feature-length (matches the runtime), auto-select the
+            closest match if the current pick is wrong; leaves a deliberate choice
+            alone;
+          * if no title is feature-length, this is a special-features/extra disc
+            \u2014 ask whether to rip all files or let the user choose, naming each
+            output 'Movie - Special Features N.mkv'."""
+        if self.source_kind not in ("dvd", "bd"):
+            return
+        if self.cd_mode or not self._film_folder or self._sf_prompted:
+            return
+        rt = self._known_runtime()
+        if not rt:
+            return
+        target = float(rt) * 60.0
+        tol = max(180.0, target * 0.06)  # 6% or ±3 min
+        near = [t for t in self.titles
+                if (t.duration or 0) > 0 and abs(float(t.duration) - target) <= tol]
+        if near:
+            # The movie IS on this disc. Only re-select if the current pick is a
+            # bad/short title that doesn't match the runtime (don't hijack a
+            # deliberate choice that already matches).
+            sel_ok = any(t.index in self.selected and
+                         abs(float(t.duration or 0) - target) <= tol
+                         for t in self.titles)
+            if not sel_ok:
+                best = min(near, key=lambda t: abs(float(t.duration) - target))
+                self.selected = {best.index}
+                self.log(f"Re-selected '{_safe_name(best.name)}' "
+                         f"({int((best.duration or 0) / 60)} min) \u2014 closest to the "
+                         f"known runtime ({rt} min).")
+                try:
+                    self._populate_tree()
+                    self._show_detail(best)
+                except Exception:
+                    traceback.print_exc()
+            return
+        # No feature-length title \u2014 likely a special-features disc.
+        self._sf_prompted = True
+        self._ask_sf_confirm(target)
+
+    def _ask_sf_confirm(self, target):
+        res = {"v": None}
+        dlg = ctk.CTkToplevel(self)
+        dlg.title("Special features disc?")
+        dlg.transient(self)
+        dlg.grab_set()
+        dlg.attributes("-topmost", True)
+        frame = ctk.CTkFrame(dlg, corner_radius=14)
+        frame.pack(fill="both", expand=True, padx=10, pady=10)
+        ctk.CTkLabel(
+            frame,
+            text=f"No title matches the movie runtime ({int(target / 60)} min). "
+                 "This looks like a special-features (extras) disc.\n\n"
+                 "Is this a special features disc? If so, would you like me to rip "
+                 "all the files, or would you like to choose them?",
+            font=("Segoe UI", 10), wraplength=460, justify="left",
+        ).pack(anchor="w", padx=12, pady=(12, 8))
+
+        def pick(v):
+            res["v"] = v
+            dlg.destroy()
+
+        btns = ctk.CTkFrame(frame, fg_color="transparent")
+        btns.pack(fill="x", padx=12, pady=(0, 12))
+        ctk.CTkButton(btns, text="Rip all files", fg_color="#f59e0b",
+                      command=lambda: pick("all")).pack(side="left", expand=True, fill="x", padx=(0, 5))
+        ctk.CTkButton(btns, text="Let me choose", command=lambda: pick("choose")).pack(
+            side="left", expand=True, fill="x", padx=5)
+        ctk.CTkButton(btns, text="Eject disc", command=lambda: pick("eject")).pack(
+            side="left", expand=True, fill="x", padx=(5, 0))
+        try:
+            dlg.wait_window()
+        except Exception:
+            res["v"] = None
+
+        ch = res["v"]
+        if ch == "all":
+            self.special_features = True
+            self.selected = {t.index for t in self.titles if (t.duration or 0) > 0}
+            self.log(f"Special-features disc: ripping all {len(self.selected)} title(s) as "
+                     f"'{self._film_folder} - Special Features N.mkv'.")
+            self._populate_tree()
+        elif ch == "choose":
+            self.special_features = True
+            self.log("Special-features disc: pick the titles to rip.")
+        elif ch == "eject":
+            # Pop the disc out so the user can look at it before deciding.
+            try:
+                letter = engine._optical_drive_letter(self.source)
+                if letter and engine.eject_drive(letter):
+                    self.log(f"Ejected drive {letter} \u2014 pop the disc out to have a look, "
+                             "then close the tray and rescan.")
+                else:
+                    self.log("Ejecting the disc\u2026")
+            except Exception:
+                traceback.print_exc()
+        else:
+            self.log("Left title selection as-is.")
 
     def _pick_movie(self, cands) -> Optional[dict]:
         dlg = ctk.CTkToplevel(self)
@@ -1505,6 +1619,7 @@ class FizzDiskApp(ctk.CTk):
         self._rip_started = time.time()
         stopped = False
         made = 0
+        sf = self.special_features
         for i, t in enumerate(jobs):
             if self._stopping.is_set():
                 stopped = True
@@ -1512,7 +1627,8 @@ class FizzDiskApp(ctk.CTk):
             self._prog_curdur = t.duration or 0.0
             self.after(0, lambda t=t: self._set_status(f"Ripping {t.name} ..."))
             try:
-                was_stopped = self._make_one(t, self._on_title_progress, len(jobs))
+                was_stopped = self._make_one(t, self._on_title_progress, len(jobs),
+                                             sf_index=(i + 1) if sf else None)
             except Exception as e:  # noqa: BLE001
                 if not self._stopping.is_set():
                     self.after(0, lambda e=e: self.log(f"ERROR: {e}", err=True))
@@ -1611,7 +1727,7 @@ class FizzDiskApp(ctk.CTk):
             return best, True
         return title, False
 
-    def _make_one(self, title, progress_cb=None, num_jobs=1):
+    def _make_one(self, title, progress_cb=None, num_jobs=1, sf_index=None):
         # Obfuscated-disc guard: if we know the movie's runtime, prefer the title
         # whose duration matches it -- a decoy/truncated "main" playlist on
         # discs like Lionsgate otherwise loses scenes/credits from the end.
@@ -1628,6 +1744,10 @@ class FizzDiskApp(ctk.CTk):
         if not os.path.splitext(tmpl)[1]:
             tmpl += ".mkv"
         name = tmpl.replace("{name}", _safe_name(title.name))
+        if sf_index is not None:
+            # special-features rip: name each output with the movie title
+            film = _safe_name(self._film_folder or "movie")
+            name = f"{film} - Special Features {sf_index}.mkv"
         film_dir = os.path.join(out_dir, self._film_folder or "")
         os.makedirs(film_dir, exist_ok=True)
         out_path = os.path.join(film_dir, name)

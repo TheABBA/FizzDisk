@@ -248,6 +248,7 @@ class FizzDiskApp(ctk.CTk):
         self.tree._scrollbar.configure(height=60)
         self.tree.grid(row=1, column=0, sticky="nsew", padx=4, pady=2)
         self._row_frames: list = []
+        self._row_labels: list = []
         row = ctk.CTkFrame(left, corner_radius=8)
         row.grid(row=2, column=0, sticky="ew", padx=6, pady=(4, 8))
         ctk.CTkButton(row, text="Select All", width=110, corner_radius=10, command=lambda: self._set_all(True)).pack(side="left", padx=6, pady=4)
@@ -1337,6 +1338,7 @@ class FizzDiskApp(ctk.CTk):
             except Exception:
                 pass
         self._row_frames = []
+        self._row_labels = []
         self._clear_streams()
 
     def _set_status(self, s):
@@ -1374,15 +1376,29 @@ class FizzDiskApp(ctk.CTk):
             label.pack(side="left", fill="x", expand=True, padx=6, pady=2)
 
             def _click(e, idx=t.index, lbl=label, s=src):
-                self._toggle_rip(idx)
+                # Exclusive single-select for video: a plain click makes this
+                # the ONLY selected title (deselecting the auto-picked one).
+                # Ctrl/Shift click toggles additively so the user can still
+                # select several extras; 'Select All'/'Select None' remain too.
+                # Music CDs stay on plain toggling (users select multiple tracks).
+                if self.cd_mode or (e.state & (0x4 | 0x1)):   # CD, or Ctrl/Shift
+                    self._toggle_rip(idx)
+                else:
+                    self.selected = {idx}
+                self._refresh_row_marks()
                 self._show_detail(self.titles[idx])
-                try:
-                    lbl.configure(text=self._row_text(self.titles[idx], s))
-                except Exception:
-                    pass
             label.bind("<Button-1>", _click)
             row.bind("<Button-1>", _click)
             self._row_frames.append(row)
+            self._row_labels.append((label, t, src))
+
+    def _refresh_row_marks(self):
+        """Re-render the checkbox glyph on every row after a selection change."""
+        for label, t, src in getattr(self, "_row_labels", []):
+            try:
+                label.configure(text=self._row_text(t, src))
+            except Exception:
+                pass
 
     def _toggle_rip(self, idx):
         if idx in self.selected:

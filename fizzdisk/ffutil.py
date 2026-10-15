@@ -134,6 +134,48 @@ def _safe_unlink(p: str) -> None:
         pass
 
 
+def _copy_dvd_to_disk(drive_dir: str) -> Optional[str]:
+    """Copy a physical DVD's VIDEO_TS folder to a fresh temp dir.
+
+    libdvdnav navigating the LIVE optical drive can abort on a disc whose cell
+    navigation state is fragile (it demuxes everything before the bad NAV packet
+    then exits 0 -- a silent truncation). Copying the disc's file tree to disk
+    yields a stable source: a raw file copy does not need NAV packets, and the
+    bundled libdvdcss still descrambles the VOBs.
+
+    Returns the temp PARENT dir (the one containing a VIDEO_TS subfolder, safe to
+    pass to ``-f dvdvideo -i``), or None if the copy failed. The caller is
+    responsible for removing the returned dir when done.
+    """
+    if not drive_dir:
+        return None
+    src = os.path.join(drive_dir, "VIDEO_TS")
+    if not os.path.isdir(src):
+        return None
+    base = tempfile.mkdtemp(prefix="fizzdisk_dvfolder_")
+    dst = os.path.join(base, "VIDEO_TS")
+    ok = False
+    # robocopy (always present on Windows) is far faster than shutil for ~5 GB.
+    try:
+        r = subprocess.run(["robocopy", src, dst, "/E", "/NFL", "/NDL", "/NJH", "/NJS"],
+                           capture_output=True, text=True, timeout=600, creationflags=_NO_WINDOW)
+        # robocopy exit code <8 means at least one file copied without permanent error.
+        ok = r.returncode < 8 and os.path.isfile(os.path.join(dst, "VIDEO_TS.IFO"))
+    except Exception:
+        ok = False
+    if not ok:
+        try:
+            shutil.copytree(src, dst)
+            ok = os.path.isfile(os.path.join(dst, "VIDEO_TS.IFO"))
+        except Exception:
+            ok = False
+    if not ok:
+        shutil.rmtree(base, ignore_errors=True)
+        return None
+    return base
+
+
+
 def _parse_time(pts: Optional[str]) -> Optional[float]:
     if pts is None:
         return None
@@ -319,58 +361,99 @@ def remux(title: Title, out_path: str, video: bool = True,
         list_path = _write_concat_list(all_files, in_pts, out_pts)
         inputs += ["-f", "concat", "-safe", "0", "-i", _native(list_path)]
 
-    cmd = [FFMPEG, "-y", "-hide_banner", "-nostdin", "-loglevel", "info", *inputs]
-    # maps
-    cmd += ["-map", "0:v:0"] if video else []
-    for i in (audio_idx or []):
-        cmd += ["-map", f"0:a:{i}"]
-    for i in (sub_idx or []):
-        cmd += ["-map", f"0:s:{i}"]
-    for i in (extra_map or []):
-        cmd += ["-map", f"0:{i}"]
+    def _run(inputs: List[str], out: str, dur: float) -> int:
+        """Build cmd from `inputs`, run ffmpeg, stream progress, return rc."""
+        cmd = [FFMPEG, "-y", "-hide_banner", "-nostdin", "-loglevel", "info", *inputs]
+        print("[remux] ffmpeg:", " ".join(cmd[:40]), flush=True)
+        # maps
+        cmd += ["-map", "0:v:0"] if video else []
+        for i in (audio_idx or []):
+            cmd += ["-map", f"0:a:{i}"]
+        for i in (sub_idx or []):
+            cmd += ["-map", f"0:s:{i}"]
+        for i in (extra_map or []):
+            cmd += ["-map", f"0:{i}"]
 
-    if copy_codecs and video_codec is None and video and audio_idx is None:
-        cmd += ["-c", "copy"]
-    elif copy_codecs:
-        cmd += ["-c:v", "copy" if video and not video_codec else (video_codec or "copy")]
-        if audio_codec is None:
-            cmd += copy_audio_flags(title, audio_idx)
+        if copy_codecs and video_codec is None and video and audio_idx is None:
+            cmd += ["-c", "copy"]
+        elif copy_codecs:
+            cmd += ["-c:v", "copy" if video and not video_codec else (video_codec or "copy")]
+            if audio_codec is None:
+                cmd += copy_audio_flags(title, audio_idx)
+            else:
+                cmd += ["-c:a", audio_codec]
         else:
-            cmd += ["-c:a", audio_codec]
-    else:
-        vc = video_codec or "libx264"
-        cmd += ["-c:v", vc]
-        if vc == "libx264":
-            cmd += ["-preset", "fast", "-crf", "20"]
-        cmd += ["-c:a", audio_codec or "aac", "-b:a", "192k"]
+            vc = video_codec or "libx264"
+            cmd += ["-c:v", vc]
+            if vc == "libx264":
+                cmd += ["-preset", "fast", "-crf", "20"]
+            cmd += ["-c:a", audio_codec or "aac", "-b:a", "192k"]
 
-    cmd += ["-c:s", "copy"]
-    cmd += ["-map_metadata", "0"]
-    cmd += ["-default_mode", "infer", "-metadata", f"title={title.name}"]
-    cmd += [_native(out_path)]
+        cmd += ["-c:s", "copy"]
+        cmd += ["-map_metadata", "0"]
+        cmd += ["-default_mode", "infer", "-metadata", f"title={title.name}"]
+        cmd += [_native(out)]
 
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            text=True, creationflags=_NO_WINDOW)
-    set_active_proc(proc)
-    err_lines: List[str] = []
-    last_time = 0.0
-    try:
-        for line in proc.stderr:
-            line = line.strip()
-            if line.startswith("frame=") or "time=" in line:
-                m = re.search(r"time=(\d+):(\d+):(\d+)\.(\d+)", line)
-                if m:
-                    t = int(m.group(1)) * 3600 + int(m.group(2)) * 60 + int(m.group(3)) + float(m.group(4)) / 10
-                    if progress_cb and t != last_time:
-                        last_time = t
-                        progress_cb({"time": t, "duration": title.duration})
-            elif line and "Duplicate" not in line and "Press" not in line:
-                if "Error" in line or "Invalid" in line or "failed" in line.lower():
-                    err_lines.append(line)
-        rc = proc.wait()
-    finally:
-        set_active_proc(None)
-        _safe_unlink(list_path)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                text=True, creationflags=_NO_WINDOW)
+        set_active_proc(proc)
+        last_time = 0.0
+        try:
+            for line in proc.stderr:
+                line = line.strip()
+                if line.startswith("frame=") or "time=" in line:
+                    m = re.search(r"time=(\d+):(\d+):(\d+)\.(\d+)", line)
+                    if m:
+                        t = int(m.group(1)) * 3600 + int(m.group(2)) * 60 + int(m.group(3)) + float(m.group(4)) / 10
+                        if progress_cb and t != last_time:
+                            last_time = t
+                            progress_cb({"time": t, "duration": dur})
+                elif line and "Duplicate" not in line and "Press" not in line:
+                    if "Error" in line or "Invalid" in line or "failed" in line.lower():
+                        print("[remux] ERR>", line, flush=True)
+            rc = proc.wait()
+        finally:
+            set_active_proc(None)
+        return rc
+
+    expected_dur = title.duration or 0.0
+    rc = _run(inputs, out_path, expected_dur)
+    setattr(title, "_remux_used_disk_copy", False)
+
+    # A physical drive DVD can fail while reading the LIVE optical drive:
+    #   * libdvdnav navigating the device can hit a cell with no NAV packet and
+    #     abort the demux yet ffmpeg exits 0 (a silent truncation), or
+    #   * the device itself can fail to open (libdvdcss needing a real raw device).
+    # The same bytes, copied to a temp VIDEO_TS folder, open and navigate cleanly
+    # (a raw file copy doesn't need NAV packets, and bundled libdvdcss still
+    # descrambles). So for drive DVDs, if the primary rip failed OR produced a
+    # much-too-short file, re-rip once from a disk copy.
+    if is_drive_dvd and expected_dur > 0:
+        info = validate_mkv(out_path)
+        out_dur = info.get("duration") or 0.0
+        truncated = (rc != 0) or (not info.get("ok")) or \
+                    (out_dur > 0 and out_dur < expected_dur * 0.90)
+        if truncated:
+            print(f"[remux] drive rip failed/truncated (rc={rc}, got {out_dur:.1f}s "
+                  f"vs expected {expected_dur:.1f}s) -> re-ripping from a disc copy",
+                  flush=True)
+            dvd_base = _copy_dvd_to_disk(dvd_dir) if dvd_dir else None
+            if dvd_base:
+                try:
+                    fb_inputs = ["-analyzeduration", "20000000", "-probesize", "20000000",
+                                 "-f", "dvdvideo", "-title", str(dvd_title_no),
+                                 "-i", _native(dvd_base)]
+                    rc2 = _run(fb_inputs, out_path, expected_dur)
+                    if rc2 == 0:
+                        rc = rc2
+                        setattr(title, "_remux_used_disk_copy", True)
+                        print("[remux] disk-copy re-rip complete", flush=True)
+                finally:
+                    shutil.rmtree(dvd_base, ignore_errors=True)
+            else:
+                print("[remux] could not copy disc to disk; keeping problematic rip", flush=True)
+
+    _safe_unlink(list_path)
     return rc
 
 

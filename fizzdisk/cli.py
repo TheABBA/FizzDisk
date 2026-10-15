@@ -13,7 +13,6 @@ import os
 import sys
 
 from . import engine, ffutil
-from .model import Title
 
 
 def _print_titles(titles):

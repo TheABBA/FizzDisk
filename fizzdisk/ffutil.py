@@ -37,7 +37,6 @@ def set_active_proc(proc):
 
 def stop_active_proc():
     """Terminate the currently running ripper subprocess, if any."""
-    global _active_proc
     if _active_proc:
         try:
             _active_proc.terminate()

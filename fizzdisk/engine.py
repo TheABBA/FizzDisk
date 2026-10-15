@@ -502,21 +502,8 @@ def scan_titles(src: str, min_seconds: float = 120.0) -> List[Title]:
     arg = f"disc:0" if detect_source(src) in ("disc", "bd") and _drive_arg(src) else _source_arg(src)
     out = _run_backend(["info", arg])
     titles: List[Title] = []
-    title_ids: List[int] = []
-    # Titles are announced by MSG lines? Actually the title list is in the
-    # TINFO/`TCOUNT` block from the info output. We parse per-title blocks that
-    # look like: "TINFO:<i>,<titleid>,<field>,<value>". Simpler: the default
-    # `info` prints TSV of titles when not -r; but -r gives TNAME/TINFO.
-    # We also tolerate the human-readable list for robustness.
-    lines = out.splitlines()
-    # Title headers appear as lines starting with TCOUNT then per title TINFO.
-    # Each title entry: a TINFO line with field 1 = name? We use field 1 as
-    # the description and field 3 as duration.
-    # -r information: title lines look like:
-    #   TINFO:0,<titleid>,0,<duration> ... etc.
-    # We group by titleid (index 1 in TINFO under -r) — but the exact schema:
-    #   TCOUNT:N  then per title: TINFO:<dummy>,<title>,<key>,<value>.
-    # We parse the human-readable `info` (non -r) fallback below.
+    # -r info emits TCOUNT + per-title TINFO lines; _parse_backend_info handles
+    # both the robot-mode block and the human-readable fallback.
     if not titles:
         titles = _parse_backend_info(out, min_seconds)
     return titles

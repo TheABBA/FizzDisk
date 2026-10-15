@@ -147,7 +147,6 @@ def build_test_bd(m2ts_files: List[Path], out_dir: Path, title_seconds: float = 
 
 
 def _make_mpls(clip_names: List[str], title_seconds: float) -> bytes:
-    n = len(clip_names)
     # Per PlayItem: name bytes (5) + "M2TS" (4) + marker/in-out. We lay each item
     # out so it matches what the scanner's regex (\\d{5}M2TS) + in/out logic reads.
     item_bytes = []

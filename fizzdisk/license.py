@@ -11,7 +11,6 @@ import hmac
 import hashlib
 import base64
 import sys
-import time
 
 try:
     import winreg                      # Windows registry (per-user hard sentinel)
@@ -291,9 +290,6 @@ def main_self_test():
     print("status:", status_text())
     print("can_rip:", can_rip())
     print("remaining (licensed):", remaining())
-    # test trial limiting on a throwaway state
-    import tempfile
-    print("--- trial counter test ---")
 
 
 if __name__ == "__main__":

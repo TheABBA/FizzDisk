@@ -12,8 +12,6 @@ only with the disc itself.
 from __future__ import annotations
 
 import ctypes
-import os
-import re
 import struct
 from ctypes import (POINTER, Structure, Union, byref, c_byte, c_uint, c_uint16,
                     c_uint32, c_uint8, c_void_p, c_wchar_p, c_longlong, c_int32)
@@ -105,7 +103,6 @@ def _query_dos_devices() -> dict:
 
 def _candidate_device_paths(letter: str) -> List[str]:
     """Return raw device paths to try for opening the optical drive."""
-    letters = letter.upper() if re.match(r"^[A-Za-z]$", letter) else letter
     # Build both formatted (letter without colon, or drive letter)
     drive = (letter.rstrip(":") if letter else "")
     paths = [
@@ -197,7 +194,6 @@ def read_toc_device(h) -> List[dict]:
         raise OSError(ctypes.get_last_error(), "IOCTL_CDROM_READ_TOC failed")
     first, last = toc.FirstTrack, toc.LastTrack
     tracks: List[dict] = []
-    prev_lba = 0
     count = last - first + 2  # + lead-out
     for i in range(count):
         td = toc.TrackData[i]
@@ -208,7 +204,6 @@ def read_toc_device(h) -> List[dict]:
                            "sectors": None, "is_audio": is_audio,
                            "control": td.Control})
     # compute sector lengths from consecutive LBAs
-    lbas = [t["lba"] for t in tracks] + [0]
     # lead-out is the last entry in the raw TOC (index count-1)
     leadout_lba = 0
     td = toc.TrackData[count - 1]
@@ -286,7 +281,6 @@ def detect_audio_cd(letter: str) -> bool:
     # a pure audio CD has audio tracks and no data track
     if not audio:
         return False
-    has_data = any(t["track"] and not t["is_audio"] for t in tracks)
     # more than a couple of audio tracks -> treat as a music CD
     return len(audio) >= 1
 

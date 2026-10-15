@@ -54,8 +54,11 @@ def _artist_credit(ac: list) -> str:
         name = item.get("name") if isinstance(item, dict) else item
         if name:
             parts.append(name)
-        jp = " ".join((x.get("joinphrase", "") for x in ([item] if isinstance(item, dict) else [])
-                       if isinstance(x, dict)))
+        # MusicBrainz artist-credit items carry a 'joinphrase' (" & ", " feat. ")
+        # that belongs BETWEEN names — drop it and "Simon & Garfunkel" becomes
+        # "SimonGarfunkel".
+        if isinstance(item, dict) and item.get("joinphrase"):
+            parts.append(item["joinphrase"])
     return "".join(parts) if parts else "Unknown Artist"
 
 

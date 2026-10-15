@@ -134,6 +134,27 @@ def _safe_unlink(p: str) -> None:
         pass
 
 
+def _dvd_copy_complete(dst: str, expected: dict) -> bool:
+    """True only if `dst/VIDEO_TS` holds EVERY expected file at the right size.
+
+    A copy that stops part-way can still contain VIDEO_TS.IFO (which is copied
+    first), so checking just the IFO is not enough -- we require the whole tree
+    to be present and byte-for-byte sized. `expected` maps filename -> size.
+    """
+    if not os.path.isfile(os.path.join(dst, "VIDEO_TS.IFO")):
+        return False
+    if not expected:
+        return True
+    try:
+        for name, size in expected.items():
+            p = os.path.join(dst, name)
+            if not os.path.isfile(p) or os.path.getsize(p) != size:
+                return False
+    except OSError:
+        return False
+    return True
+
+
 def _copy_dvd_to_disk(drive_dir: str) -> Optional[str]:
     """Copy a physical DVD's VIDEO_TS folder to a fresh temp dir.
 
@@ -152,21 +173,47 @@ def _copy_dvd_to_disk(drive_dir: str) -> Optional[str]:
     src = os.path.join(drive_dir, "VIDEO_TS")
     if not os.path.isdir(src):
         return None
+    # Snapshot the exact file set + sizes we must end up with, so we can tell a
+    # complete copy from a partial one (a partial tree still contains the IFO).
+    expected: dict = {}
+    try:
+        for f in os.scandir(src):
+            if f.is_file():
+                expected[f.name] = f.stat().st_size
+    except OSError:
+        expected = {}
     base = tempfile.mkdtemp(prefix="fizzdisk_dvfolder_")
     dst = os.path.join(base, "VIDEO_TS")
-    ok = False
-    # robocopy (always present on Windows) is far faster than shutil for ~5 GB.
-    try:
-        r = subprocess.run(["robocopy", src, dst, "/E", "/NFL", "/NDL", "/NJH", "/NJS"],
-                           capture_output=True, text=True, timeout=600, creationflags=_NO_WINDOW)
-        # robocopy exit code <8 means at least one file copied without permanent error.
-        ok = r.returncode < 8 and os.path.isfile(os.path.join(dst, "VIDEO_TS.IFO"))
-    except Exception:
-        ok = False
-    if not ok:
+
+    def _run_copy(retries: str) -> bool:
+        # Bounded retries (NOT robocopy's default /R:1000000 /W:30, which hangs
+        # forever on a bad sector and gets killed by the timeout half-way,
+        # leaving a partial tree). /Z enables restartable copy for the rare
+        # re-try pass. We do NOT trust the exit code alone -- we verify the tree.
         try:
+            subprocess.run(
+                ["robocopy", src, dst, "/E", "/R:" + retries, "/W:2", "/Z",
+                 "/NFL", "/NDL", "/NJH", "/NJS"],
+                capture_output=True, text=True, timeout=1800, creationflags=_NO_WINDOW)
+        except subprocess.TimeoutExpired:
+            # Copy may still have produced a complete tree before the cap; verify
+            # rather than assuming failure (robocopy is a child of a killed proc).
+            pass
+        except Exception:
+            return False
+        return _dvd_copy_complete(dst, expected)
+
+    # Try the copy, then a second pass if the first came up short.
+    ok = _run_copy("8")
+    if not ok:
+        shutil.rmtree(dst, ignore_errors=True)   # clear partials before retry
+        ok = _run_copy("16")
+    if not ok:
+        # Last resort: plain shutil copy (honors no retries, but a clean copy).
+        try:
+            shutil.rmtree(dst, ignore_errors=True)
             shutil.copytree(src, dst)
-            ok = os.path.isfile(os.path.join(dst, "VIDEO_TS.IFO"))
+            ok = _dvd_copy_complete(dst, expected)
         except Exception:
             ok = False
     if not ok:
@@ -419,6 +466,7 @@ def remux(title: Title, out_path: str, video: bool = True,
     expected_dur = title.duration or 0.0
     rc = _run(inputs, out_path, expected_dur)
     setattr(title, "_remux_used_disk_copy", False)
+    setattr(title, "_remux_truncated", False)
 
     # A physical drive DVD can fail while reading the LIVE optical drive:
     #   * libdvdnav navigating the device can hit a cell with no NAV packet and
@@ -445,13 +493,25 @@ def remux(title: Title, out_path: str, video: bool = True,
                                  "-i", _native(dvd_base)]
                     rc2 = _run(fb_inputs, out_path, expected_dur)
                     if rc2 == 0:
-                        rc = rc2
-                        setattr(title, "_remux_used_disk_copy", True)
-                        print("[remux] disk-copy re-rip complete", flush=True)
+                        # Verify the re-rip is actually the full length; a bad or
+                        # partial disk copy can still "succeed" (ffmpeg exits 0)
+                        # with a short output, which must NOT be reported as done.
+                        info2 = validate_mkv(out_path)
+                        dur2 = info2.get("duration") or 0.0
+                        if dur2 > 0 and dur2 < expected_dur * 0.90:
+                            print(f"[remux] disk-copy re-rip still short "
+                                  f"({dur2:.1f}s vs {expected_dur:.1f}s) \u2014 keeping "
+                                  f"problematic rip", flush=True)
+                            setattr(title, "_remux_truncated", True)
+                        else:
+                            rc = rc2
+                            setattr(title, "_remux_used_disk_copy", True)
+                            print("[remux] disk-copy re-rip complete", flush=True)
                 finally:
                     shutil.rmtree(dvd_base, ignore_errors=True)
             else:
                 print("[remux] could not copy disc to disk; keeping problematic rip", flush=True)
+                setattr(title, "_remux_truncated", True)
 
     _safe_unlink(list_path)
     return rc

@@ -1870,8 +1870,33 @@ class FizzDiskApp(ctk.CTk):
             if self._stopping.is_set():
                 return True
             raise RuntimeError(f"ffmpeg exited {rc} for {title.name}")
+        if getattr(title, "_remux_truncated", False):
+            # The rip "succeeded" (ffmpeg rc 0) but the output is known-short
+            # and the disc-copy recovery couldn't fix it. Tell the user instead
+            # of silently reporting success on a truncated file.
+            self.after(0, lambda p=out_path, t=title: self._warn_truncated(t, p))
         self.after(0, lambda p=out_path: self.log("Made " + p))
         return self._stopping.is_set()
+
+    def _warn_truncated(self, title, out_path):
+        """Surface a visible warning for a rip that completed short."""
+        try:
+            got = ffutil.validate_mkv(out_path).get("duration") or 0.0
+        except Exception:
+            got = 0.0
+        exp = title.duration or 0.0
+        from .model import _fmt_duration
+        msg = (f"WARNING: {os.path.basename(out_path)} is INCOMPLETE \u2014 "
+               f"got {_fmt_duration(got) if got else 'unknown length'}"
+               f" of {_fmt_duration(exp)} expected. The disc could not "
+               f"be fully read even after a disc-copy retry; the file is "
+               f"missing its ending. Try cleaning the disc or another drive.")
+        self.log(msg)
+        try:
+            from tkinter import messagebox
+            messagebox.showwarning("Rip incomplete", msg, parent=self)
+        except Exception:
+            pass
 
     def _rip_done(self, stopped=False):
         self.btn_make.configure(state="normal")

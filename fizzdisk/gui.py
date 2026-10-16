@@ -433,10 +433,20 @@ class FizzDiskApp(ctk.CTk):
 
     # ------------------------------------------------------------- scanning
     def on_scan(self):
+        # HARD re-entrancy guard. Disabling btn_scan is NOT sufficient: the
+        # configure() call lives in a try/except and any other caller (a retry
+        # path, a rebound key, an auto-scan on media change) can re-enter here
+        # while a scan thread is still running. Two concurrent probes on ONE
+        # optical device DEADLOCK libdvdnav/libdvdread -- verified: a single
+        # `-f dvdvideo` probe returns in 3.5s, three concurrent probes on the
+        # same drive all hang past 90s and leave unkillable children behind.
+        if getattr(self, "_scan_in_flight", False):
+            return
         src = self.var_source.get().strip()
         if not src:
             messagebox.showinfo("FizzDisk", "Choose a source first.")
             return
+        self._scan_in_flight = True
         self.source = src
         self.titles = []
         self.selected.clear()
@@ -457,6 +467,7 @@ class FizzDiskApp(ctk.CTk):
                                               res.source_kind, res.meta))
 
     def _scan_done(self, titles, info, source_kind="", meta=None):
+        self._scan_in_flight = False
         self.titles = titles
         self.special_features = False
         self._sf_prompted = False
@@ -522,6 +533,7 @@ class FizzDiskApp(ctk.CTk):
                 traceback.print_exc()
 
     def _scan_done_error(self, msg):
+        self._scan_in_flight = False
         self._scan_idle()
         self._start_busy()
         self._set_status("Scan failed")

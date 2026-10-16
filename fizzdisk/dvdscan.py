@@ -282,6 +282,18 @@ def scan_dvd_folder(base_str: str) -> List[Title]:
         except Exception:
             durs.append(0.0)
     main_idx = max(range(len(durs)), key=lambda i: durs[i] or 0) if durs else 0
+    # Seamless-branching / multi-angle discs expose SEVERAL VMG titles that are
+    # alternate navigation entries into the SAME physical cells (e.g. a disc
+    # with VTS1=6250s and VTS3=6249s, plus branch-entry titles 7-9). libdvdnav
+    # cannot navigate those entries on a live optical device and the
+    # `-f dvdvideo` probe HANGS on each one for the full timeout -- verified
+    # sequentially, with nothing else touching the drive, on a disc that other
+    # rippers read fine (they parse the IFOs instead of navigating).
+    #
+    # Only ever issue the navigating probe for the feature title. Every other
+    # title's audio/subtitle set comes from the cheap VOB union, which reads
+    # the program-stream headers directly and never navigates.
+    probe_ok = {main_idx}
     for i, t in enumerate(titles_raw):
         vts_num = t["vts"]
         ttn = t["ttn"]
@@ -294,7 +306,7 @@ def scan_dvd_folder(base_str: str) -> List[Title]:
         # a VTS: every title in a VTS would then get the same (wrong) number.
         dur = durs[i]
         info = {"duration": dur, "chapters": [], "streams": _title_streams(
-                    base, title_no, vts_num, probe_dvdvideo=(i == main_idx)),
+                    base, title_no, vts_num, probe_dvdvideo=(i in probe_ok)),
                 "raw": None, "dvd_title_no": title_no, "dvd_dir": vts_dir}
         name = f"Title {ttn}"
         clips = [Clip(files=[str(f) for f in vob_files])]

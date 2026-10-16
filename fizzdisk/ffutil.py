@@ -13,6 +13,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 from typing import Callable, List, Optional, Sequence
 
@@ -133,6 +134,21 @@ def _safe_unlink(p: str) -> None:
         pass
 
 
+def _dir_size(p: str) -> int:
+    """Sum the byte size of every file under `p` (used for copy progress)."""
+    n = 0
+    try:
+        for root, _dirs, files in os.walk(p):
+            for f in files:
+                try:
+                    n += os.path.getsize(os.path.join(root, f))
+                except OSError:
+                    pass
+    except OSError:
+        pass
+    return n
+
+
 def _dvd_copy_complete(dst: str, expected: dict) -> bool:
     """True only if `dst/VIDEO_TS` holds EVERY expected file at the right size.
 
@@ -154,7 +170,8 @@ def _dvd_copy_complete(dst: str, expected: dict) -> bool:
     return True
 
 
-def _copy_dvd_to_disk(drive_dir: str) -> Optional[str]:
+def _copy_dvd_to_disk(drive_dir: str,
+                      on_progress: Optional[Callable[[float], None]] = None) -> Optional[str]:
     """Copy a physical DVD's VIDEO_TS folder to a fresh temp dir.
 
     libdvdnav navigating the LIVE optical drive can abort on a disc whose cell
@@ -162,6 +179,9 @@ def _copy_dvd_to_disk(drive_dir: str) -> Optional[str]:
     then exits 0 -- a silent truncation). Copying the disc's file tree to disk
     yields a stable source: a raw file copy does not need NAV packets, and the
     bundled libdvdcss still descrambles the VOBs.
+
+    `on_progress` (if given) is called with a 0..1 fraction of bytes copied so
+    the caller can show motion + time remaining during the copy.
 
     Returns the temp PARENT dir (the one containing a VIDEO_TS subfolder, safe to
     pass to ``-f dvdvideo -i``), or None if the copy failed. The caller is
@@ -181,8 +201,16 @@ def _copy_dvd_to_disk(drive_dir: str) -> Optional[str]:
                 expected[f.name] = f.stat().st_size
     except OSError:
         expected = {}
+    total = _dir_size(src) or 1
     base = tempfile.mkdtemp(prefix="fizzdisk_dvfolder_")
     dst = os.path.join(base, "VIDEO_TS")
+
+    def _report():
+        if on_progress and total:
+            try:
+                on_progress(min(1.0, _dir_size(dst) / total))
+            except Exception:
+                pass
 
     def _run_copy(retries: str) -> bool:
         # Bounded retries (NOT robocopy's default /R:1000000 /W:30, which hangs
@@ -190,16 +218,25 @@ def _copy_dvd_to_disk(drive_dir: str) -> Optional[str]:
         # leaving a partial tree). /Z enables restartable copy for the rare
         # re-try pass. We do NOT trust the exit code alone -- we verify the tree.
         try:
-            subprocess.run(
+            proc = subprocess.Popen(
                 ["robocopy", src, dst, "/E", "/R:" + retries, "/W:2", "/Z",
                  "/NFL", "/NDL", "/NJH", "/NJS"],
-                capture_output=True, text=True, timeout=1800, creationflags=_NO_WINDOW)
-        except subprocess.TimeoutExpired:
-            # Copy may still have produced a complete tree before the cap; verify
-            # rather than assuming failure (robocopy is a child of a killed proc).
-            pass
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                creationflags=_NO_WINDOW)
+            start = time.time()
+            while True:
+                try:
+                    proc.wait(timeout=0.6)
+                    break
+                except subprocess.TimeoutExpired:
+                    if time.time() - start > 1800:
+                        proc.terminate()
+                        proc.wait()
+                        break
+                    _report()
         except Exception:
             return False
+        _report()   # report final state after the copy finishes
         return _dvd_copy_complete(dst, expected)
 
     # Try the copy, then a second pass if the first came up short.
@@ -407,8 +444,13 @@ def remux(title: Title, out_path: str, video: bool = True,
         list_path = _write_concat_list(all_files, in_pts, out_pts)
         inputs += ["-f", "concat", "-safe", "0", "-i", _native(list_path)]
 
-    def _run(inputs: List[str], out: str, dur: float) -> int:
-        """Build cmd from `inputs`, run ffmpeg, stream progress, return rc."""
+    def _run(inputs: List[str], out: str, dur: float,
+             prog: Optional[Callable[[dict], None]] = None) -> int:
+        """Build cmd from `inputs`, run ffmpeg, stream progress, return rc.
+
+        `prog` overrides the default progress_cb (used to translate the re-rip's
+        time-progress into a continuous overall fraction during recovery)."""
+        cb = prog if prog is not None else progress_cb
         cmd = [FFMPEG, "-y", "-hide_banner", "-nostdin", "-loglevel", "info", *inputs]
         print("[remux] ffmpeg:", " ".join(cmd[:40]), flush=True)
         # maps
@@ -451,9 +493,9 @@ def remux(title: Title, out_path: str, video: bool = True,
                     m = re.search(r"time=(\d+):(\d+):(\d+)\.(\d+)", line)
                     if m:
                         t = int(m.group(1)) * 3600 + int(m.group(2)) * 60 + int(m.group(3)) + float(m.group(4)) / 10
-                        if progress_cb and t != last_time:
+                        if cb and t != last_time:
                             last_time = t
-                            progress_cb({"time": t, "duration": dur})
+                            cb({"time": t, "duration": dur})
                 elif line and "Duplicate" not in line and "Press" not in line:
                     if "Error" in line or "Invalid" in line or "failed" in line.lower():
                         print("[remux] ERR>", line, flush=True)
@@ -492,13 +534,37 @@ def remux(title: Title, out_path: str, video: bool = True,
                                  "got": out_dur, "expected": expected_dur})
                 except Exception:
                     pass
-            dvd_base = _copy_dvd_to_disk(dvd_dir) if dvd_dir else None
+            # The recovery = disc copy + re-rip. Show the copy as the first part
+            # of the progress (COPY_WEIGHT of the bar) and continue the re-rip
+            # monotonically from there, so the bar moves and the ETA counts down
+            # throughout instead of stalling during the copy.
+            COPY_WEIGHT = 0.30
+
+            def _copy_prog(f: float) -> None:
+                # f is 0..1 bytes copied; map onto the first COPY_WEIGHT portion.
+                if progress_cb:
+                    try:
+                        progress_cb({"fraction": COPY_WEIGHT * min(1.0, f)})
+                    except Exception:
+                        pass
+
+            def _fb_prog(d: dict) -> None:
+                # d has time/duration from ffmpeg; map onto the remaining portion
+                # so the overall progress is continuous with the copy phase.
+                frac = min(1.0, (d.get("time") or 0.0) / max(1.0, d.get("duration") or 1.0))
+                if progress_cb:
+                    try:
+                        progress_cb({"fraction": COPY_WEIGHT + (1.0 - COPY_WEIGHT) * frac})
+                    except Exception:
+                        pass
+
+            dvd_base = _copy_dvd_to_disk(dvd_dir, on_progress=_copy_prog) if dvd_dir else None
             if dvd_base:
                 try:
                     fb_inputs = ["-analyzeduration", "20000000", "-probesize", "20000000",
                                  "-f", "dvdvideo", "-title", str(dvd_title_no),
                                  "-i", _native(dvd_base)]
-                    rc2 = _run(fb_inputs, out_path, expected_dur)
+                    rc2 = _run(fb_inputs, out_path, expected_dur, prog=_fb_prog)
                     if rc2 == 0:
                         # Verify the re-rip is actually the full length; a bad or
                         # partial disk copy can still "succeed" (ffmpeg exits 0)

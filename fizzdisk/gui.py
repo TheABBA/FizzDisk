@@ -353,6 +353,7 @@ class FizzDiskApp(ctk.CTk):
                             relief="flat", highlightthickness=0)
         self.text.pack(fill="both", expand=True, padx=6, pady=4)
         self.text.tag_config("err", foreground="#b00020")
+        self.text.tag_config("warn", foreground="#f59e0b")
 
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
@@ -368,6 +369,7 @@ class FizzDiskApp(ctk.CTk):
             self.text.configure(bg=pal["text_bg"], fg=pal["text_fg"],
                                 insertbackground=pal["text_fg"])
             self.text.tag_config("err", foreground=pal["err"])
+            self.text.tag_config("warn", foreground=pal.get("warn", "#f59e0b"))
         except Exception:
             pass
         try:
@@ -1872,6 +1874,12 @@ class FizzDiskApp(ctk.CTk):
                 # the long quiet stretch isn't mistaken for a hang.
                 self.after(0, lambda d=d: self._notify_fallback(title, d))
                 return
+            if "fraction" in d:
+                # Recovery phase (disc copy + re-rip) reports an explicit overall
+                # fraction so the bar moves and ETA counts down continuously.
+                if progress_cb:
+                    progress_cb(max(0.0, min(1.0, d["fraction"])))
+                return
             if progress_cb:
                 progress_cb(max(0.0, min(1.0, d.get("time", 0.0) / dur)))
 
@@ -1901,8 +1909,8 @@ class FizzDiskApp(ctk.CTk):
                f"instead \u2014 this recovers the full movie but takes extra time "
                f"(roughly the length of a full disc copy). Please leave the "
                f"disc in the drive.")
-        self.log("Disc read came up short \u2014 switching to disc-copy recovery "
-                 "(this will take longer).")
+        self.log_warn("Disc read came up short \u2014 switching to disc-copy recovery "
+                      "(this will take longer).")
         self._set_status("Recovering via disc copy\u2026")
         try:
             from tkinter import messagebox
@@ -2063,6 +2071,19 @@ class FizzDiskApp(ctk.CTk):
             try:
                 self.text.config(state="normal")
                 self.text.insert("end", msg + "\n", "err" if err else None)
+                self.text.see("end")
+                self.text.config(state="disabled")
+            except Exception:
+                pass
+        self.after(0, _append)
+
+    def log_warn(self, msg):
+        """Append a log line rendered in brand amber (attention) — used only for
+        the fallback/recovery notices so they stand out from normal log text."""
+        def _append():
+            try:
+                self.text.config(state="normal")
+                self.text.insert("end", msg + "\n", "warn")
                 self.text.see("end")
                 self.text.config(state="disabled")
             except Exception:

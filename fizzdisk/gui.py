@@ -329,6 +329,10 @@ class FizzDiskApp(ctk.CTk):
         self.btn_make.grid(row=0, column=0, sticky="ew", padx=(0, 3))
         self.btn_stop = ctk.CTkButton(btnrow, text="Stop", corner_radius=10, command=self.on_stop, state="disabled")
         self.btn_stop.grid(row=0, column=1, sticky="ew", padx=(3, 0))
+        # capture the default palette so we can restore it after the orange flash
+        self._stop_fg = self.btn_stop.cget("fg_color")
+        self._stop_hover = self.btn_stop.cget("hover_color")
+        self._stop_text = self.btn_stop.cget("text_color")
         # ---- progress + status (single row: bar left, status right) ----
         bar_row = ctk.CTkFrame(self, fg_color="transparent")
         bar_row.pack(fill="x", padx=10, pady=(2, 0))
@@ -484,11 +488,10 @@ class FizzDiskApp(ctk.CTk):
             if main is None:
                 main = max(titles, key=lambda t: t.duration or 0)
             self.selected.add(main.index)
-        self.btn_make.configure(state="normal" if titles else "disabled")
         if titles:
-            self._highlight_start()
+            self._start_ready()
         else:
-            self._clear_start()
+            self._start_busy()
         self._populate_tree()
         # Bring the auto-selected (main feature) title to the top of the list.
         try:
@@ -518,7 +521,7 @@ class FizzDiskApp(ctk.CTk):
 
     def _scan_done_error(self, msg):
         self._scan_idle()
-        self._clear_start()
+        self._start_busy()
         self._set_status("Scan failed")
         self.var_eta.set("Scan failed")
         self.log("ERROR: " + msg, err=True)
@@ -1545,7 +1548,6 @@ class FizzDiskApp(ctk.CTk):
 
     # -------------------------------------------------------------- ripping
     def on_make(self):
-        self._clear_start()
         if not self.var_out.get().strip():
             messagebox.showinfo("FizzDisk", "Choose an output folder.")
             return
@@ -1571,8 +1573,8 @@ class FizzDiskApp(ctk.CTk):
             fmts = self._selected_cd_formats()
             label = " + ".join(f.upper() for f in fmts)
             self._stopping.clear()
-            self.btn_make.configure(state="disabled")
-            self.btn_stop.configure(state="normal")
+            self._start_busy()
+            self._stop_active()
             self.progress.set(0.0)
             self.var_eta.set("Preparing\u2026")
             self.log(f"Ripping CD to {label} into {self.var_out.get()} ...")
@@ -1589,8 +1591,8 @@ class FizzDiskApp(ctk.CTk):
             messagebox.showinfo("FizzDisk", "Select at least one title.")
             return
         self._stopping.clear()
-        self.btn_make.configure(state="disabled")
-        self.btn_stop.configure(state="normal")
+        self._start_busy()
+        self._stop_active()
         self.progress.set(0.0)
         self.var_eta.set("Preparing\u2026")
         self.log(f"Making MKV for {len(jobs)} title(s) into {self.var_out.get()} ...")
@@ -1598,7 +1600,7 @@ class FizzDiskApp(ctk.CTk):
 
     def on_stop(self):
         self._stopping.set()
-        self.btn_stop.configure(state="disabled")
+        self._stop_idle()
         self._set_status("Stopping\u2026")
         ffutil.stop_active_proc()
 
@@ -1929,8 +1931,8 @@ class FizzDiskApp(ctk.CTk):
             pass
 
     def _rip_done(self, stopped=False):
-        self.btn_make.configure(state="normal")
-        self.btn_stop.configure(state="disabled")
+        self._start_ready()    # scan is complete + title chosen — Start is actionable again
+        self._stop_idle()
         self._scan_idle()     # rip is over (done or stopped) — allow scanning again
         if stopped:
             self.var_eta.set("Stopped")
@@ -1986,20 +1988,41 @@ class FizzDiskApp(ctk.CTk):
         except Exception:
             pass
 
-    def _highlight_start(self):
-        """Flash the Start button orange to draw attention that a scan found titles."""
+    def _start_ready(self):
+        """Start button: actionable (scan complete + title chosen) — brand orange,
+        enabled, to draw attention that a rip can start."""
         try:
-            self.btn_make.configure(fg_color=_BRAND_ORANGE, hover_color=_BRAND_ORANGE_HOVER,
-                                    text_color="#ffffff")
+            self.btn_make.configure(state="normal", fg_color=_BRAND_ORANGE,
+                                    hover_color=_BRAND_ORANGE_HOVER, text_color="#ffffff")
         except Exception:
             pass
 
-    def _clear_start(self):
-        """Restore the Start button's normal palette (after it's clicked / no titles)."""
+    def _start_busy(self):
+        """Start button: clicked / rip running — app-default blue, disabled
+        (customtkinter greys the text automatically in the disabled state)."""
         try:
-            self.btn_make.configure(fg_color=self._start_fg,
+            self.btn_make.configure(state="disabled", fg_color=self._start_fg,
                                     hover_color=self._start_hover,
                                     text_color=self._start_text)
+        except Exception:
+            pass
+
+    def _stop_active(self):
+        """Stop button: rip in progress — brand orange, enabled, to draw
+        attention that it can be stopped."""
+        try:
+            self.btn_stop.configure(state="normal", fg_color=_BRAND_ORANGE,
+                                    hover_color=_BRAND_ORANGE_HOVER, text_color="#ffffff")
+        except Exception:
+            pass
+
+    def _stop_idle(self):
+        """Stop button: no rip running / stopped — app-default blue, disabled
+        (customtkinter greys the text automatically in the disabled state)."""
+        try:
+            self.btn_stop.configure(state="disabled", fg_color=self._stop_fg,
+                                    hover_color=self._stop_hover,
+                                    text_color=self._stop_text)
         except Exception:
             pass
 

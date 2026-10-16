@@ -1862,7 +1862,18 @@ class FizzDiskApp(ctk.CTk):
         audio_idx = sorted(self.audio_sel) if self.detail_title is title else list(range(len(title.audio)))
         sub_idx = sorted(self.sub_sel) if self.detail_title is title else list(range(len(title.subtitles)))
         dur = title.duration or 1
-        cb = (lambda d: progress_cb(max(0.0, min(1.0, d.get("time", 0.0) / dur)))) if progress_cb else None
+
+        def _cb(d):
+            if d.get("event") == "disk_copy_fallback":
+                # The live-drive rip came up short; remux() is now copying the
+                # whole disc to the hard drive and re-ripping. Warn the user so
+                # the long quiet stretch isn't mistaken for a hang.
+                self.after(0, lambda d=d: self._notify_fallback(title, d))
+                return
+            if progress_cb:
+                progress_cb(max(0.0, min(1.0, d.get("time", 0.0) / dur)))
+
+        cb = _cb
         rc = ffutil.remux(title, out_path, video=True, audio_idx=audio_idx,
                           sub_idx=sub_idx, copy_codecs=not self.var_encode.get(),
                           progress_cb=cb)
@@ -1877,6 +1888,25 @@ class FizzDiskApp(ctk.CTk):
             self.after(0, lambda p=out_path, t=title: self._warn_truncated(t, p))
         self.after(0, lambda p=out_path: self.log("Made " + p))
         return self._stopping.is_set()
+
+    def _notify_fallback(self, title, d):
+        """Tell the user the rip entered the slow disc-copy recovery path."""
+        from .model import _fmt_duration
+        got, exp = d.get("got") or 0.0, d.get("expected") or 0.0
+        msg = (f"The drive could only read {_fmt_duration(got)} of "
+               f"{_fmt_duration(exp)} for {title.name}. FizzDisk is now copying "
+               f"the whole disc to your hard drive and ripping from that copy "
+               f"instead \u2014 this recovers the full movie but takes extra time "
+               f"(roughly the length of a full disc copy). Please leave the "
+               f"disc in the drive.")
+        self.log("Disc read came up short \u2014 switching to disc-copy recovery "
+                 "(this will take longer).")
+        self._set_status("Recovering via disc copy\u2026")
+        try:
+            from tkinter import messagebox
+            messagebox.showinfo("Rip needs a second pass", msg, parent=self)
+        except Exception:
+            pass
 
     def _warn_truncated(self, title, out_path):
         """Surface a visible warning for a rip that completed short."""

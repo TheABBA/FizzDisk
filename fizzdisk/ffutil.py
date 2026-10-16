@@ -484,6 +484,14 @@ def remux(title: Title, out_path: str, video: bool = True,
             print(f"[remux] drive rip failed/truncated (rc={rc}, got {out_dur:.1f}s "
                   f"vs expected {expected_dur:.1f}s) -> re-ripping from a disc copy",
                   flush=True)
+            # Tell the UI the rip is entering the slow recovery path (disc copy
+            # + second rip pass) so the user knows why it will take longer.
+            if progress_cb:
+                try:
+                    progress_cb({"event": "disk_copy_fallback",
+                                 "got": out_dur, "expected": expected_dur})
+                except Exception:
+                    pass
             dvd_base = _copy_dvd_to_disk(dvd_dir) if dvd_dir else None
             if dvd_base:
                 try:

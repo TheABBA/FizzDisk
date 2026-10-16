@@ -20,7 +20,7 @@ import struct
 from pathlib import Path
 from typing import List
 
-from .ffutil import _native, _streams_from_probe, ffprobe_json
+from .ffutil import _native, ProbeTimeoutError, _streams_from_probe, ffprobe_json
 from .model import Clip, Stream, Title
 
 DVD_SECTOR = 2048
@@ -125,6 +125,13 @@ def _pgc_duration_ifo(base: Path, vts_num: int, ttn: int = 1) -> float:
 def _resolve_base(base_str: str) -> Path:
     """Return the parent directory that CONTAINS a VIDEO_TS folder."""
     base = Path(base_str)
+    # A bare drive letter ("D:") is drive-RELATIVE in pathlib: Path("D:")/"VIDEO_TS"
+    # becomes "D:VIDEO_TS" and resolves against the process CWD on D: instead of
+    # "D:\VIDEO_TS". Normalize any bare "X:" to "X:\" (like detect_source /
+    # _bd_base / _raw_device all do) so a manually-typed drive letter scans too.
+    m = re.match(r"^([A-Za-z]):$", base_str.strip())
+    if m:
+        base = Path(f"{m.group(1)}:\\")
     if (base / "VIDEO_TS").is_dir():
         return base
     if (base / "VIDEO_TS.IFO").exists():
@@ -163,6 +170,9 @@ def _dvdvideo_streams(base: Path, title_no: int) -> List[Stream]:
     disc just like the external ripper. This yields the exact video/audio/subpicture set for
     that title, so the GUI selection and the rip stay consistent.
     """
+    global _DVDVIDEO_STUCK
+    if _DVDVIDEO_STUCK:
+        return []          # a previous title already timed out; don't re-wait
     demux = _dvd_demux_path(base)
     try:
         # -trim 0: don't trim padding cells, so titles whose PGC is only
@@ -172,6 +182,11 @@ def _dvdvideo_streams(base: Path, title_no: int) -> List[Stream]:
         data = ffprobe_json(["-f", "dvdvideo", "-title", str(title_no),
                              "-trim", "0", _native(demux)])
         return _streams_from_probe(data)
+    except ProbeTimeoutError:
+        # The drive is stuck/hanging; probe every subsequent title too and
+        # we'd burn PROBE_TIMEOUT each. Latch so only the first title waits.
+        _DVDVIDEO_STUCK = True
+        return []
     except Exception:
         # A title that libdvdread cannot demux (pillarbox/padding-only PGC,
         # malformed IFO…) must not abort the scan. Return no streams; the GUI
@@ -180,6 +195,13 @@ def _dvdvideo_streams(base: Path, title_no: int) -> List[Stream]:
 
 
 _VOB_STREAM_CACHE: dict = {}
+
+# Latch set when the dvdvideo (libdvdread) probe times out on a title, meaning
+# the drive is stuck/hanging. Once set, no further dvdvideo probe is attempted
+# in the same scan (each would otherwise wait PROBE_TIMEOUT seconds), so the
+# scan finishes quickly with IFO-derived durations and the movie prompt still
+# appears. Reset at the start of every scan_dvd_folder.
+_DVDVIDEO_STUCK: bool = False
 
 
 def _vts_stream_union(base: Path, vts_num: int) -> List[Stream]:
@@ -199,6 +221,10 @@ def _vts_stream_union(base: Path, vts_num: int) -> List[Stream]:
     for vob in _vts_vob_files(base, vts_num):
         try:
             data = ffprobe_json(["-f", "mpeg", _native(vob)])
+        except ProbeTimeoutError:
+            # The drive is stuck/timing out; probing further VOBs would just
+            # burn PROBE_TIMEOUT each. Stop here rather than stall the scan.
+            break
         except Exception:
             continue
         for s in _streams_from_probe(data):
@@ -226,6 +252,8 @@ def _title_streams(base: Path, title_no: int, vts_num: int) -> List[Stream]:
 
 
 def scan_dvd_folder(base_str: str) -> List[Title]:
+    global _DVDVIDEO_STUCK
+    _DVDVIDEO_STUCK = False
     base = _resolve_base(base_str)
     titles_raw = _read_vmg_titles(base)
     if not titles_raw:

@@ -78,9 +78,36 @@ def _native(p: str) -> str:
     return p.replace("\\", "/")
 
 
+# How long to let a single ffprobe/ffmpeg invocation run before we give up.
+# On a slow, flaky or scratched optical drive (or a disc still spinning up)
+# libdvdread/libdvdcss can block for a very long time; without a cap the scan
+# worker hangs forever and the "Which movie?" prompt never appears. We kill
+# the child on expiry so no orphaned ffprobe processes pile up and hammer the
+# drive, and the per-title probe is skipped (the caller falls back to probing
+# the raw VOBs / shows the title without streams) instead of stalling the scan.
+PROBE_TIMEOUT = 45
+
+
+class ProbeTimeoutError(RuntimeError):
+    """Raised when ffprobe did not finish within PROBE_TIMEOUT seconds.
+
+    Distinct from a normal ffprobe failure so the DVD scan can bail out of
+    probing further VOBs (a stuck drive will just keep timing out) rather
+    than spend PROBE_TIMEOUT seconds on every single VOB."""
+
+
 def run(cmd: Sequence[str], timeout: Optional[int] = None) -> subprocess.CompletedProcess:
-    return subprocess.run(list(cmd), capture_output=True, text=True,
-                          timeout=timeout, creationflags=_NO_WINDOW)
+    p = subprocess.Popen(list(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                         text=True, creationflags=_NO_WINDOW)
+    try:
+        out, err = p.communicate(timeout=float(timeout) if timeout is not None else None)
+    except subprocess.TimeoutExpired:
+        # Wrapper timeouts do NOT reap the child -> it keeps running and
+        # contends for the optical drive (we saw multiple orphaned ffprobe).
+        p.kill()
+        out, err = p.communicate()
+        raise subprocess.TimeoutExpired(cmd, timeout, output=out, stderr=err)
+    return subprocess.CompletedProcess(cmd, p.returncode, out, err)
 
 
 # ---- ffprobe ---------------------------------------------------------------
@@ -88,10 +115,21 @@ def ffprobe_json(input_args: List[str]) -> dict:
     """Run ffprobe returning parsed JSON dict. input_args excludes the -i."""
     cmd = [FFPROBE, "-v", "error", "-show_format", "-show_streams", "-show_chapters",
            "-of", "json", *input_args]
-    r = run(cmd)
+    try:
+        r = run(cmd, timeout=PROBE_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        # A probe that never returns (flaky/slow drive, disc still spinning up,
+        # bad sector) must fail OPEN rather than hang the scan forever.
+        raise ProbeTimeoutError(
+            f"ffprobe timed out after {PROBE_TIMEOUT}s (hanging on a slow, "
+            f"flaky or bad optical read?)")
     if r.returncode != 0:
         raise RuntimeError(r.stderr.strip() or r.stdout.strip() or "ffprobe failed")
-    return json.loads(r.stdout)
+    try:
+        return json.loads(r.stdout)
+    except json.JSONDecodeError:
+        # Empty/partial output (e.g. probe killed early) -> treat as no result.
+        raise RuntimeError("ffprobe returned no usable output")
 
 
 def probe_media_file(path: str) -> dict:

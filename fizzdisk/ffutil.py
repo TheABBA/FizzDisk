@@ -13,6 +13,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import threading
 import time
 from pathlib import Path
 from typing import Callable, List, Optional, Sequence
@@ -102,7 +103,58 @@ class ProbeTimeoutError(RuntimeError):
     than spend PROBE_TIMEOUT seconds on every single VOB."""
 
 
+# Serialises EVERY ffprobe/ffmpeg invocation that touches an optical device.
+#
+# Two concurrent probes on ONE optical drive DEADLOCK libdvdnav/libdvdread:
+# measured on a healthy drive with a healthy disc, a single `-f dvdvideo`
+# probe returns in 3.5s, while three concurrent probes on the same drive ALL
+# hang past 90s and leave children the OS cannot reap (taskkill reports
+# "no running instance" while the process is still listed, because the thread
+# is stuck in an uninterruptible kernel I/O wait on the device). The GUI's
+# scan guard covers the scan path; this lock is the backstop for every other
+# caller (rip, metadata, retry) so the invariant holds process-wide.
+_DEVICE_LOCK = threading.Lock()
+
+
+_RAW_DEV_RE    = re.compile(r"^\\\\[.?]\\[A-Za-z]:")
+_BARE_DRIVE_RE = re.compile(r"^[A-Za-z]:[\\/]*$")
+_DRIVE_PATH_RE = re.compile(r"^([A-Za-z]):[\\/]")
+
+
+def _drive_is_cdrom(letter: str) -> bool:
+    try:
+        import ctypes
+        return ctypes.windll.kernel32.GetDriveTypeW(f"{letter}:\\") == 5  # DRIVE_CDROM
+    except Exception:
+        return False
+
+
+def _is_optical(cmd: Sequence[str]) -> bool:
+    """True if this command reads an optical device (drive letter / raw device).
+
+    A VIDEO_TS folder copied to a hard disk is NOT optical and must not be
+    serialised -- that would needlessly halve disk-copy fallback throughput.
+    """
+    for a in cmd:
+        s = str(a)
+        if _RAW_DEV_RE.match(s):          # \\.\D:
+            return True
+        if _BARE_DRIVE_RE.match(s):       # "D:"  or  "D:\"
+            return True
+        m = _DRIVE_PATH_RE.match(s)       # D:\VIDEO_TS\...
+        if m and _drive_is_cdrom(m.group(1)):
+            return True
+    return False
+
+
 def run(cmd: Sequence[str], timeout: Optional[int] = None) -> subprocess.CompletedProcess:
+    if _is_optical(cmd):
+        with _DEVICE_LOCK:
+            return _run_inner(cmd, timeout)
+    return _run_inner(cmd, timeout)
+
+
+def _run_inner(cmd: Sequence[str], timeout: Optional[int] = None) -> subprocess.CompletedProcess:
     p = subprocess.Popen(list(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                          text=True, creationflags=_NO_WINDOW)
     try:
@@ -111,7 +163,12 @@ def run(cmd: Sequence[str], timeout: Optional[int] = None) -> subprocess.Complet
         # Wrapper timeouts do NOT reap the child -> it keeps running and
         # contends for the optical drive (we saw multiple orphaned ffprobe).
         p.kill()
-        out, err = p.communicate()
+        try:
+            out, err = p.communicate(timeout=10)
+        except subprocess.TimeoutExpired:
+            # Child is wedged in uninterruptible device I/O: kill() cannot
+            # reap it. Do NOT block the scan waiting on a corpse.
+            out, err = "", ""
         raise subprocess.TimeoutExpired(cmd, timeout, output=out, stderr=err)
     return subprocess.CompletedProcess(cmd, p.returncode, out, err)
 

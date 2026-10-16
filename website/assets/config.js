@@ -3,7 +3,7 @@
 //   page (success.html) until checkout is set up.
 //   DOWNLOAD_URL = path to the installer you upload per release.
 window.FIZZ_CONFIG = {
-  VERSION: "1.3.3",
+  VERSION: "1.3.4",
   PRICE: "$65",
   BUY_URL: "",
   DOWNLOAD_URL: "download/FizzDiskSetup.exe",

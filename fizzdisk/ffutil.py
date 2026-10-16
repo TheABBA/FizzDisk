@@ -73,9 +73,15 @@ if _FFDIR and _FFDIR not in os.environ.get("PATH", ""):
     os.environ["PATH"] = _FFDIR + os.pathsep + os.environ.get("PATH", "")
 
 
-def _native(p: str) -> str:
-    """Normalise a path for a native Windows binary."""
-    return p.replace("\\", "/")
+def _native(p) -> str:
+    """Normalise a path for a native Windows binary.
+
+    Accepts str OR pathlib.Path (callers pass both). str(p) is required: a
+    Path uses ``Path.replace()`` (a 2-arg file-rename), NOT ``str.replace``,
+    so calling ``p.replace('\\\\', '/')`` on a Path raised TypeError, which
+    was silently swallowed and made _vts_stream_union return no streams.
+    """
+    return str(p).replace("\\", "/")
 
 
 # How long to let a single ffprobe/ffmpeg invocation run before we give up.

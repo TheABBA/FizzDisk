@@ -1900,23 +1900,60 @@ class FizzDiskApp(ctk.CTk):
         return self._stopping.is_set()
 
     def _notify_fallback(self, title, d):
-        """Tell the user the rip entered the slow disc-copy recovery path."""
+        """Build a themed popup telling the user the rip entered the slow
+        disc-copy recovery path, and why. Uses our customtkinter theme (not the
+        Windows messagebox) and explains the usual USB cause."""
         from .model import _fmt_duration
         got, exp = d.get("got") or 0.0, d.get("expected") or 0.0
-        msg = (f"The drive could only read {_fmt_duration(got)} of "
-               f"{_fmt_duration(exp)} for {title.name}. FizzDisk is now copying "
-               f"the whole disc to your hard drive and ripping from that copy "
-               f"instead \u2014 this recovers the full movie but takes extra time "
-               f"(roughly the length of a full disc copy). Please leave the "
-               f"disc in the drive.")
+        body = ""
         self.log_warn("Disc read came up short \u2014 switching to disc-copy recovery "
                       "(this will take longer).")
         self._set_status("Recovering via disc copy\u2026")
         try:
-            from tkinter import messagebox
-            messagebox.showinfo("Rip needs a second pass", msg, parent=self)
+            dlg = ctk.CTkToplevel(self)
+            dlg.title("Rip needs a second pass")
+            dlg.transient(self)
+            dlg.grab_set()
+            frame = ctk.CTkFrame(dlg, corner_radius=14)
+            frame.pack(fill="both", expand=True, padx=12, pady=12)
+            ctk.CTkLabel(frame, text="Rip needs a second pass",
+                         font=("Segoe UI", 11, "bold"), text_color="#f59e0b",
+                         anchor="w").pack(anchor="w", padx=10, pady=(10, 4))
+            body = (
+                f"The drive could only read {_fmt_duration(got)} of "
+                f"{_fmt_duration(exp)} for {title.name}. FizzDisk is now copying "
+                f"the whole disc to your hard drive and ripping from that copy "
+                f"instead \u2014 this recovers the full movie, but it takes extra "
+                f"time (roughly the length of a full disc copy). Please leave the "
+                f"disc in the drive."
+            )
+            ctk.CTkLabel(frame, text=body, justify="left", anchor="w",
+                         wraplength=420, font=("Segoe UI", 10)
+                         ).pack(anchor="w", padx=10, pady=(2, 8))
+            hint = (
+                "This usually happens when the USB link between the drive and the "
+                "computer can't keep up with the read. If you're going through a "
+                "docking station, a hub, or any other adapter, try plugging the "
+                "drive straight into a port on the computer \u2014 that often clears "
+                "it up."
+            )
+            ctk.CTkLabel(frame, text=hint, justify="left", anchor="w",
+                         text_color="gray", wraplength=420, font=("Segoe UI", 9)
+                         ).pack(anchor="w", padx=10, pady=(0, 8))
+            ok = ctk.CTkButton(frame, text="Got it", corner_radius=10,
+                               fg_color="#f59e0b", hover_color="#d98e09",
+                               text_color="#ffffff", command=dlg.destroy)
+            ok.pack(anchor="e", padx=10, pady=(4, 10))
+            dlg.bind("<Return>", lambda e: dlg.destroy())
+            dlg.bind("<Escape>", lambda e: dlg.destroy())
+            dlg.wait_window()
         except Exception:
-            pass
+            # Fall back to the native messagebox if the themed dialog can't build.
+            try:
+                from tkinter import messagebox
+                messagebox.showinfo("Rip needs a second pass", body, parent=self)
+            except Exception:
+                pass
 
     def _warn_truncated(self, title, out_path):
         """Surface a visible warning for a rip that completed short."""

@@ -239,10 +239,19 @@ def _vts_stream_union(base: Path, vts_num: int) -> List[Stream]:
     return out
 
 
-def _title_streams(base: Path, title_no: int, vts_num: int) -> List[Stream]:
+def _title_streams(base: Path, title_no: int, vts_num: int,
+                   probe_dvdvideo: bool = True) -> List[Stream]:
     """Return the title's stream list: the dvdvideo probe merged with any
-    audio/subtitle streams recovered from the VOB program stream headers."""
-    streams = _dvdvideo_streams(base, title_no)
+    audio/subtitle streams recovered from the VOB program stream headers.
+
+    ``probe_dvdvideo`` is False for every non-feature title: the ``-f dvdvideo``
+    (libdvdread) probe is the ONLY source of the VIDEO stream, but it can HANG
+    on padding/menu/extras PGCs that libdvdnav cannot navigate (some retail discs
+    have a handful of such PGCs, each stalling the scan for the full probe
+    timeout). The feature title is the only one needing the video stream, so we
+    probe only it and get the rest (audio/subtitle) from the cheap VOB union.
+    """
+    streams = _dvdvideo_streams(base, title_no) if probe_dvdvideo else []
     present = {(s.codec_type, s.id) for s in streams}
     for s in _vts_stream_union(base, vts_num):
         if (s.codec_type, s.id) not in present:
@@ -261,6 +270,18 @@ def scan_dvd_folder(base_str: str) -> List[Title]:
 
     titles: List[Title] = []
     vts_dir = _dvd_demux_path(base)
+    # Pre-read IFO durations (fast local reads) to identify the feature title
+    # BEFORE probing, so the slow libdvdread (-f dvdvideo) probe runs on ONLY
+    # the feature. Most retail discs have padding/menu/extras PGCs whose
+    # dvdvideo probe HANGS (libdvdnav cannot navigate them); probing every
+    # title would stall the scan for the full probe timeout per hung title.
+    durs: List[float] = []
+    for t in titles_raw:
+        try:
+            durs.append(_pgc_duration_ifo(base, t["vts"], t["ttn"]))
+        except Exception:
+            durs.append(0.0)
+    main_idx = max(range(len(durs)), key=lambda i: durs[i] or 0) if durs else 0
     for i, t in enumerate(titles_raw):
         vts_num = t["vts"]
         ttn = t["ttn"]
@@ -271,8 +292,9 @@ def scan_dvd_folder(base_str: str) -> List[Title]:
         # The DVD's own PGC playback time (BCD) is the authoritative per-title
         # length and matches the external ripper. Never trust the ffprobe concat duration for
         # a VTS: every title in a VTS would then get the same (wrong) number.
-        dur = _pgc_duration_ifo(base, vts_num, ttn)
-        info = {"duration": dur, "chapters": [], "streams": _title_streams(base, title_no, vts_num),
+        dur = durs[i]
+        info = {"duration": dur, "chapters": [], "streams": _title_streams(
+                    base, title_no, vts_num, probe_dvdvideo=(i == main_idx)),
                 "raw": None, "dvd_title_no": title_no, "dvd_dir": vts_dir}
         name = f"Title {ttn}"
         clips = [Clip(files=[str(f) for f in vob_files])]

@@ -15,4 +15,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }, {rootMargin: '-40% 0px -55% 0px'});
   sections.filter(Boolean).forEach(s => observer.observe(s));
+
+  // Download tracking — fire a fire-and-forget beacon on every installer download
+  // so the owner can see uptake by version on the private /api/license/stats page.
+  // The download link itself is untouched (still points straight at the .exe), so
+  // a failed beacon never blocks the download. A disabled button (href="#download")
+  // no longer points at the file, so it's not counted while releases are gated.
+  const cfg = window.FIZZ_CONFIG || {};
+  const ver = encodeURIComponent((cfg.VERSION || 'unknown').toString());
+  document.querySelectorAll('a[href*="FizzDiskSetup.exe"]').forEach(a => {
+    a.addEventListener('click', () => {
+      try {
+        fetch('/api/license/dl?ver=' + ver, {keepalive: true});
+      } catch (e) { /* never block the download */ }
+    });
+  });
 });

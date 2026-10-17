@@ -163,12 +163,25 @@ def _run_inner(cmd: Sequence[str], timeout: Optional[int] = None) -> subprocess.
         # Wrapper timeouts do NOT reap the child -> it keeps running and
         # contends for the optical drive (we saw multiple orphaned ffprobe).
         p.kill()
-        try:
-            out, err = p.communicate(timeout=10)
-        except subprocess.TimeoutExpired:
-            # Child is wedged in uninterruptible device I/O: kill() cannot
-            # reap it. Do NOT block the scan waiting on a corpse.
-            out, err = "", ""
+        # A child wedged in UNINTERRUPTIBLE kernel I/O on a sick optical device
+        # cannot be reaped at all: Windows reports HasExited=True while the
+        # thread stays in wait=Executive and taskkill answers "no running
+        # instance". communicate() would then block FOREVER draining pipes the
+        # corpse still holds open -- that is what hung the scan worker (2
+        # threads in Executive wait) and left the GUI with no movie prompt.
+        # Drain on a daemon thread so an unreapable child can never pin us.
+        box = {}
+
+        def _drain():
+            try:
+                box["r"] = p.communicate()
+            except Exception:
+                box["r"] = ("", "")
+
+        t = threading.Thread(target=_drain, daemon=True)
+        t.start()
+        t.join(10)
+        out, err = box.get("r", ("", ""))
         raise subprocess.TimeoutExpired(cmd, timeout, output=out, stderr=err)
     return subprocess.CompletedProcess(cmd, p.returncode, out, err)
 
@@ -621,6 +634,25 @@ def remux(title: Title, out_path: str, video: bool = True,
     if is_drive_dvd and expected_dur > 0:
         info = validate_mkv(out_path)
         out_dur = info.get("duration") or 0.0
+        if info.get("probe_failed"):
+            # We could NOT measure the output (ffprobe missing -- usually AV
+            # deleted it -- or the probe could not run). This says nothing
+            # about the rip, so do NOT trigger the disc-copy fallback: that
+            # re-rips, fails the same verification, and loops forever while
+            # reporting a perfectly good rip as truncated. Surface the real
+            # problem instead and keep the rip we have.
+            setattr(title, "_remux_verify_failed", True)
+            setattr(title, "_remux_verify_error", info.get("error") or "probe failed")
+            print(f"[remux] cannot verify output ({info.get('error')}) -- "
+                  f"keeping rip, NOT running disc-copy fallback", flush=True)
+            if progress_cb:
+                try:
+                    progress_cb({"event": "verify_unavailable",
+                                 "error": info.get("error") or "probe failed"})
+                except Exception:
+                    pass
+            _safe_unlink(list_path)
+            return rc
         truncated = (rc != 0) or (not info.get("ok")) or \
                     (out_dur > 0 and out_dur < expected_dur * 0.90)
         if truncated:
@@ -692,14 +724,38 @@ def remux(title: Title, out_path: str, video: bool = True,
 
 
 def validate_mkv(path: str) -> dict:
-    """Probe an output MKV; return {duration, streams:[Stream], ok}."""
+    """Probe an output MKV; return {duration, streams:[Stream], ok, probe_failed}.
+
+    ``ok=False`` means *this file is bad*. ``probe_failed=True`` means we could
+    not MEASURE the file at all (ffprobe missing/killed/unrunnable) and the
+    result says NOTHING about the rip. Callers MUST NOT treat a failed probe as
+    a short rip: when AV deletes ffprobe.exe the rip itself is perfect, but
+    conflating the two sends the user into an endless disc-copy fallback loop
+    and reports a complete rip as truncated.
+    """
+    if not os.path.isfile(FFPROBE):
+        return {"duration": 0.0, "streams": [], "ok": False, "probe_failed": True,
+                "error": f"ffprobe is missing: {FFPROBE}"}
     try:
         data = ffprobe_json([_native(path)])
+    except ProbeTimeoutError as e:
+        # The probe could not COMPLETE (hung drive) -> unmeasurable, not short.
+        return {"duration": 0.0, "streams": [], "ok": False, "probe_failed": True,
+                "error": str(e)}
+    except FileNotFoundError as e:
+        # ffprobe.exe vanished between the check above and the call (AV).
+        return {"duration": 0.0, "streams": [], "ok": False, "probe_failed": True,
+                "error": str(e)}
     except Exception as e:  # noqa: BLE001
-        return {"duration": 0.0, "streams": [], "ok": False, "error": str(e)}
+        # ffprobe RAN and rejected the file: that is a genuinely bad/corrupt
+        # output and the disc-copy fallback SHOULD run. Do not mask it as
+        # "unmeasurable" -- only a tool that cannot run sets probe_failed.
+        return {"duration": 0.0, "streams": [], "ok": False, "probe_failed": False,
+                "error": str(e)}
     duration = _parse_time((data.get("format") or {}).get("duration"))
     streams = _streams_from_probe(data)
-    return {"duration": duration or 0.0, "streams": streams, "ok": True}
+    return {"duration": duration or 0.0, "streams": streams, "ok": True,
+            "probe_failed": False}
 
 
 def encode_audio(input_wav: str, output_path: str, fmt: str = "flac",

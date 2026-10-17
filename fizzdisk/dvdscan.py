@@ -15,6 +15,7 @@ fully offline.
 """
 from __future__ import annotations
 
+import os
 import re
 import struct
 from pathlib import Path
@@ -204,21 +205,61 @@ _VOB_STREAM_CACHE: dict = {}
 _DVDVIDEO_STUCK: bool = False
 
 
+def _is_optical_base(base: Path) -> bool:
+    """True when ``base`` lives on a physical optical drive (DRIVE_CDROM).
+
+    Bulk-probing CSS-scrambled title VOBs off a live drive wedges the device
+    (see _vts_stream_union); the same files copied to a hard disk are safe.
+    """
+    try:
+        drv = os.path.splitdrive(str(base))[0]
+        if not drv:
+            return False
+        import ctypes
+        return ctypes.windll.kernel32.GetDriveTypeW(drv + "\\") == 5  # DRIVE_CDROM
+    except Exception:
+        return False
+
+
 def _vts_stream_union(base: Path, vts_num: int) -> List[Stream]:
     """Return the union of audio/subtitle streams from probing the VTS's VOBs
     (cached per VTS).
 
     The bundled ffmpeg ``-f dvdvideo`` demuxer only exposes the default audio
-    program and hides subpicture (VobSub) streams. The VOB files' (unencrypted)
-    program-stream headers list every PID, so probing them recovers the full
-    audio and subtitle set. Deduplicated by stream PID.
+    program and hides subpicture (VobSub) streams. The VOB files' program-stream
+    headers list every PID, so probing them recovers the full audio/subtitle set.
+
+    CRITICAL -- on a LIVE OPTICAL DRIVE we probe ONLY the small ``VTS_nn_0.VOB``
+    menu VOB, never the multi-GB title VOBs. A retail title VOB is CSS
+    SCRAMBLED and the ``-f mpeg`` demuxer has NO libdvdcss: it cannot
+    descramble, so instead of failing fast it grinds sequentially through
+    gigabytes of encrypted sectors hunting for a valid pack header. That read
+    storm makes the drive emit `cdrom` controller errors (event 11) and
+    eventually wedges the device -- the probe then sits in an uninterruptible
+    kernel I/O wait that `kill()` CANNOT reap (HasExited=True while the thread
+    stays in `wait=Executive`), and the pipe-reading parent blocks forever, so
+    the scan never finishes and no movie prompt appears.
+
+    A VIDEO_TS folder on a hard disk has no such cost (and may be decrypted
+    already), so there we keep probing the full VOB set.
     """
     key = (str(base), vts_num)
     if key in _VOB_STREAM_CACHE:
         return _VOB_STREAM_CACHE[key]
+    vobs = _vts_vob_files(base, vts_num)
+    if _is_optical_base(base):
+        menu = [v for v in vobs if v.name.upper().endswith("_0.VOB")]
+        # Menu VOB only; it is small, usually unscrambled, and carries the
+        # same audio/subpicture PIDs as the title VOBs in the same VTS.
+        vobs = menu[:1]
     out: List[Stream] = []
     seen = set()
-    for vob in _vts_vob_files(base, vts_num):
+    for vob in vobs:
+        try:
+            if vob.stat().st_size <= 0:
+                continue
+        except OSError:
+            continue
         try:
             data = ffprobe_json(["-f", "mpeg", _native(vob)])
         except ProbeTimeoutError:

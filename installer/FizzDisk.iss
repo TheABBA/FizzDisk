@@ -65,17 +65,17 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 ; looped on the disc-copy fallback. The exclusion prevents that whole class of
 ; failure. Best-effort: runasoriginaluser is NOT used (needs the admin token),
 ; and failures are ignored so the install never breaks because of it.
-Filename: "powershell.exe"; \
+Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; \
   Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command ""try {{ Add-MpPreference -ExclusionPath '{app}' -ErrorAction Stop }} catch {{ }}"""; \
   StatusMsg: "Adding antivirus exclusion for FizzDisk..."; \
-  Flags: runhidden skipifdoesntexist
+  Flags: runhidden waituntilterminated
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
 ; Remove the exclusion again on uninstall so we leave no trace behind.
-Filename: "powershell.exe"; \
+Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; \
   Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command ""try {{ Remove-MpPreference -ExclusionPath '{app}' -ErrorAction Stop }} catch {{ }}"""; \
-  Flags: runhidden skipifdoesntexist
+  Flags: runhidden waituntilterminated skipifdoesntexist
 
 [Code]
 procedure InitializeWizard();

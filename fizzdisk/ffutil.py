@@ -514,6 +514,42 @@ def copy_audio_flags(title: "Title", audio_idx: Optional[List[int]]) -> List[str
     return flags
 
 
+_INPUT_COUNT_CACHE: dict = {}
+
+
+def _input_stream_counts(inputs: Sequence[str]) -> dict:
+    """Count the video/audio/subtitle streams the RIP input actually exposes.
+
+    Probes with the SAME demuxer flags the rip will use, because the counts
+    differ per demuxer: for a DVD title the `-f dvdvideo` demuxer exposes only
+    the selected PGC's streams while the scan's list is the VOB program-stream
+    union of the whole VTS. Returns {} if it cannot tell (never guess -- an
+    empty result means "do not clamp", so a probe failure can't silently drop
+    tracks the user asked for).
+
+    Cached per input: remux() may call this for the primary rip and again for
+    the disc-copy re-rip, and the probe costs a few seconds of drive time.
+    """
+    key = tuple(str(x) for x in inputs)
+    if key in _INPUT_COUNT_CACHE:
+        return _INPUT_COUNT_CACHE[key]
+    out: dict = {}
+    try:
+        data = ffprobe_json(list(inputs))
+        counts = {"video": 0, "audio": 0, "subtitle": 0}
+        for s in (data.get("streams") or []):
+            t = s.get("codec_type")
+            if t in counts:
+                counts[t] += 1
+        out = counts
+    except Exception as e:  # noqa: BLE001
+        print(f"[remux] could not enumerate input streams ({e}); not clamping maps",
+              flush=True)
+        out = {}
+    _INPUT_COUNT_CACHE[key] = out
+    return out
+
+
 def remux(title: Title, out_path: str, video: bool = True,
           audio_idx: Optional[List[int]] = None, sub_idx: Optional[List[int]] = None,
           copy_codecs: bool = True, video_codec: Optional[str] = None,
@@ -566,12 +602,33 @@ def remux(title: Title, out_path: str, video: bool = True,
         time-progress into a continuous overall fraction during recovery)."""
         cb = prog if prog is not None else progress_cb
         cmd = [FFMPEG, "-y", "-hide_banner", "-nostdin", "-loglevel", "info", *inputs]
+        # The scan's stream list and what the RIP demuxer exposes can disagree.
+        # For a DVD the audio/subtitle lists come from the VOB program-stream
+        # union (every PID in the VTS), but `-f dvdvideo` presents only the
+        # streams of the selected title's PGC -- e.g. union says 4 audio, the
+        # demuxer offers 3. A `-map 0:a:3` that matches nothing makes ffmpeg
+        # abort INSTANTLY with "Stream map '' matches no streams" / rc=-22 and
+        # zero bytes. remux() then read rc!=0 as a failed rip and launched the
+        # disc-copy fallback, which rebuilt the same impossible map and failed
+        # the same way -- an endless "copying the disc" loop on a disc that
+        # rips perfectly. Clamp every requested ordinal to what this input
+        # actually has, and never emit a map we know cannot resolve.
+        a_sel, s_sel = list(audio_idx or []), list(sub_idx or [])
+        avail = _input_stream_counts(inputs)
+        if avail:
+            n_a, n_s = avail.get("audio", 0), avail.get("subtitle", 0)
+            a_keep = [i for i in a_sel if i < n_a]
+            s_keep = [i for i in s_sel if i < n_s]
+            if len(a_keep) != len(a_sel) or len(s_keep) != len(s_sel):
+                print(f"[remux] dropping unavailable maps: audio {a_sel}->{a_keep} "
+                      f"(have {n_a}), subs {s_sel}->{s_keep} (have {n_s})", flush=True)
+            a_sel, s_sel = a_keep, s_keep
         print("[remux] ffmpeg:", " ".join(cmd[:40]), flush=True)
         # maps
         cmd += ["-map", "0:v:0"] if video else []
-        for i in (audio_idx or []):
+        for i in a_sel:
             cmd += ["-map", f"0:a:{i}"]
-        for i in (sub_idx or []):
+        for i in s_sel:
             cmd += ["-map", f"0:s:{i}"]
         for i in (extra_map or []):
             cmd += ["-map", f"0:{i}"]

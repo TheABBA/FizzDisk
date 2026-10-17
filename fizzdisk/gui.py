@@ -1880,6 +1880,13 @@ class FizzDiskApp(ctk.CTk):
         dur = title.duration or 1
 
         def _cb(d):
+            if d.get("event") == "verify_unavailable":
+                # The rip finished but could not be MEASURED (ffprobe missing,
+                # usually deleted by antivirus). The rip itself is kept and is
+                # most likely fine -- say so plainly instead of implying the
+                # disc read came up short.
+                self.after(0, lambda d=d: self._notify_verify_unavailable(d))
+                return
             if d.get("event") == "disk_copy_fallback":
                 # The live-drive rip came up short; remux() is now copying the
                 # whole disc to the hard drive and re-ripping. Warn the user so
@@ -1910,6 +1917,34 @@ class FizzDiskApp(ctk.CTk):
             self.after(0, lambda p=out_path, t=title: self._warn_truncated(t, p))
         self.after(0, lambda p=out_path: self.log("Made " + p))
         return self._stopping.is_set()
+
+    def _notify_verify_unavailable(self, d):
+        """The rip completed but could not be verified because ffprobe is
+        missing (antivirus deletes it from unsigned installs).
+
+        This must NOT be worded as a short/failed rip: the output is kept and
+        is usually complete. Previously a failed probe was indistinguishable
+        from a truncated rip, which launched the disc-copy fallback and looped.
+        """
+        err = d.get("error") or "the verification tool could not run"
+        self.log_warn("Rip finished but could not be verified \u2014 "
+                      "ffprobe is missing (antivirus has likely removed it). "
+                      "The rip was kept.")
+        self._set_status("Rip complete (unverified)")
+        try:
+            from . import toolcheck
+            msg = toolcheck.missing_tools_message() or str(err)
+        except Exception:
+            msg = str(err)
+        try:
+            messagebox.showwarning(
+                "FizzDisk \u2014 could not verify the rip",
+                "Your rip finished and has been kept.\n\n"
+                "FizzDisk could not CHECK its length because a bundled tool "
+                "is missing, so it cannot confirm the file is complete.\n\n"
+                + msg)
+        except Exception:
+            pass
 
     def _notify_fallback(self, title, d):
         """Build a themed popup telling the user the rip entered the slow
@@ -2154,6 +2189,20 @@ def _safe_name(s: str) -> str:
 def main():
     import sys
     app = FizzDiskApp()
+    # Bundled-tool integrity: AV (Defender) false-positives the unsigned
+    # binaries and can DELETE ffprobe.exe after install, leaving ffmpeg in
+    # place. Rips then succeed but cannot be verified, which used to look
+    # like an endless "copying the disc" fallback loop. Warn up front and
+    # name the fix instead of failing mysteriously mid-rip.
+    try:
+        from . import toolcheck
+        if not toolcheck.tools_ok():
+            msg = toolcheck.missing_tools_message()
+            app.log_warn("Missing bundled tool - see the warning dialog "
+                         "(antivirus has most likely removed it).")
+            app.after(400, lambda: messagebox.showwarning("FizzDisk", msg))
+    except Exception:
+        pass
     argv = sys.argv[1:] if len(sys.argv) > 1 else []
     if argv:
         src = " ".join(argv)

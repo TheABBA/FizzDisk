@@ -12,6 +12,11 @@ _VERSION_FILE = "version_info.txt" if os.path.exists("version_info.txt") else No
 # bundle customtkinter (widgets) and pywinstyles (frosted-glass/Mica) fully
 ctk_datas, ctk_bins, ctk_hidden = collect_all('customtkinter')
 pws_datas, pws_bins, pws_hidden = collect_all('pywinstyles')
+# BD+ auto-provisioning: py7zr (7z archive decode) + cryptography (MEGA AES decrypt)
+z7_datas, z7_bins, z7_hidden = collect_all('py7zr')
+crypto_datas, crypto_bins, crypto_hidden = collect_all('cryptography')
+collect_all('pyzstd'); collect_all('pybcj'); collect_all('pyppmd')
+collect_all('inflate64'); collect_all('brotli'); collect_all('texttable')
 
 a = Analysis(
     ['FizzDisk.pyw'],
@@ -24,13 +29,15 @@ a = Analysis(
  ('bin/libcdio-21.dll', 'bin'), ('bin/libcdio_cdda-2.dll', 'bin'),
  ('bin/libcdio_paranoia-2.dll', 'bin'), ('bin/libiconv-2.dll', 'bin'),
  ('bin/libwinpthread-1.dll', 'bin')]
-            + ctk_bins + pws_bins,
+            + ctk_bins + pws_bins + z7_bins + crypto_bins,
     datas=[('bin/keydb.cfg', 'bin'),
            ('assets/fizzdisk.ico', 'assets'),
            ('assets/fizzdisk_icon.png', 'assets')]
-           + ctk_datas + pws_datas,
-    hiddenimports=['PIL', 'PIL.Image', 'PIL.ImageTk', 'PIL._tkinter_finder']
-                  + ctk_hidden + pws_hidden,
+           + ctk_datas + pws_datas + z7_datas + crypto_datas,
+    hiddenimports=['PIL', 'PIL.Image', 'PIL.ImageTk', 'PIL._tkinter_finder',
+                   'pyzstd', 'pybcj', 'pyppmd', 'inflate64', 'brotli',
+                   'texttable']
+                  + ctk_hidden + pws_hidden + z7_hidden + crypto_hidden,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

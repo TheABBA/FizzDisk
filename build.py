@@ -195,14 +195,41 @@ def sign(exe, force=False):
     print("  [sign] " + (r.stdout or r.stderr).strip() or "(signed)")
 
 
+def _bump_website_version(version: str):
+    """Update the VERSION field in website/assets/config.js to match the build."""
+    cfg = HERE / "website" / "assets" / "config.js"
+    if not cfg.exists():
+        return
+    try:
+        txt = cfg.read_text(encoding="utf-8")
+        import re
+        new = re.sub(r'VERSION:\s*"[^"]*"', f'VERSION: "{version}"', txt, count=1)
+        if new != txt:
+            cfg.write_text(new, encoding="utf-8")
+            print(f"  [website] config.js VERSION -> {version}")
+    except Exception:
+        pass
+
+
 def main():
     version, app, desc = _read_version()
     print(f"Building {app} v{version} (onedir + Inno installer)...")
     write_version_resource(version, app, desc)
 
+    # Bump the version in the website's config.js so the footer and download
+    # tracker stay in sync with the installer being built.
+    _bump_website_version(version)
+
     # clean previous build output
     shutil.rmtree(HERE / "build", ignore_errors=True)
     shutil.rmtree(HERE / "dist", ignore_errors=True)
+
+    # Write a version.txt in the dist download dir so the website's download
+    # tracker can auto-detect which version is served (app.js fetches
+    # download/version.txt instead of relying on a hardcoded config.js value).
+    dist_dl = HERE / "dist" / "download"
+    dist_dl.mkdir(parents=True, exist_ok=True)
+    (dist_dl / "version.txt").write_text(version + "\n", encoding="utf-8")
 
     spec = HERE / "FizzDisk.spec"
     r = subprocess.run([sys.executable, "-m", "PyInstaller",

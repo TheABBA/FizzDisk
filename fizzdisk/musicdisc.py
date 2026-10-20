@@ -144,6 +144,38 @@ def my_track_seconds(tracks: List[dict]) -> List[float]:
     return out
 
 
+def search_albums(artist: str, album: str, limit: int = 8) -> List[dict]:
+    """Search MusicBrainz for releases by artist + album name.
+
+    Returns a list of dicts: {artist, album, year, release_mbid,
+    release_group_mbid, tracks, cover_url, date}.
+    ``cover_url`` is an iTunes artwork URL (best-effort; Cover Art Archive
+    is fetched on demand by the caller via download_cover).
+    """
+    if not artist and not album:
+        return []
+    out: List[dict] = []
+    try:
+        parts = []
+        if artist:
+            parts.append("artist:" + urllib.parse.quote(artist))
+        if album:
+            parts.append("release:" + urllib.parse.quote(album))
+        q = " AND ".join(parts)
+        url = (_MB + "/release/?query=%s&inc=artist-credits+recordings&fmt=json"
+               "&limit=%d" % (urllib.parse.quote(q), limit))
+        d = _get_json(url)
+        for rel in (d.get("releases") or [])[:limit]:
+            meta = _release_to_meta(rel)
+            # Attach a best-effort cover URL (iTunes).
+            meta["cover_url"] = _itunes_artwork(
+                meta.get("artist") or "", meta.get("album") or "")
+            out.append(meta)
+    except Exception:
+        pass
+    return out
+
+
 def identify_disc(tracks: List[dict]) -> dict:
     """Return metadata for the CD from its TOC, or {} if not found.
 

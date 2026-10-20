@@ -93,9 +93,23 @@ def _html_escape(s) -> str:
     return ("" if s is None else str(s)).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+def _version_key(ver: str):
+    """Sort key for semver-like version strings: (major, minor, patch, extra)."""
+    parts = []
+    for p in str(ver).split("."):
+        try:
+            parts.append(int(p))
+        except ValueError:
+            parts.append(0)
+    return tuple(parts + [0, 0, 0, 0][:4])
+
+
 def _stats_html(db: dict) -> str:
-    """Self-contained brand-styled HTML stats page (server-rendered)."""
-    items = sorted(db.items(), key=lambda kv: (-kv[1], kv[0]))
+    """Self-contained brand-styled HTML stats page (server-rendered).
+
+    Sorted by version (newest first, oldest at bottom) — not by download count.
+    """
+    items = sorted(db.items(), key=lambda kv: _version_key(kv[0]), reverse=True)
     total = sum(db.values())
     now = time.strftime("%Y-%m-%d %H:%M %Z")
     rows = []
@@ -229,7 +243,9 @@ class Handler(BaseHTTPRequestHandler):
             if path.endswith(".json"):
                 return self._json(200, {
                     "total": sum(db.values()),
-                    "versions": dict(sorted(db.items(), key=lambda kv: -kv[1])),
+                    "versions": dict(sorted(db.items(),
+                                            key=lambda kv: _version_key(kv[0]),
+                                            reverse=True)),
                 })
             return self._html(200, _stats_html(db))
 

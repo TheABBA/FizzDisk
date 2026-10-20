@@ -50,6 +50,29 @@ def cmd_mux(args):
         produced = engine.disc_rip(args.path, title.index, out_dir)
         print("produced:", produced)
         return 0 if produced else 1
+    # BD / drive sources: use the server-side libaacs+libbdplus decrypt path
+    # (ffutil.remux feeds the raw, possibly BD+-scrambled m2ts to ffmpeg).
+    if res.source_kind in ("bd",) and (title.info or {}).get("bd_playlist") is not None:
+        from . import bdlib
+
+        def _prog(f):
+            print(f"\r   {int((f or 0) * 100)}%", end="", flush=True)
+        try:
+            rc = bdlib.rip_bd(args.path, title, out, video=video,
+                              audio_idx=audio_idx, sub_idx=sub_idx,
+                              copy_codecs=not args.no_video,
+                              progress_cb=_prog,
+                              total_bytes=(title.size_bytes or 0))
+            print()
+            print("bd rip rc:", rc)
+            if rc == 0 and os.path.exists(out):
+                val = ffutil.validate_mkv(out)
+                print("validate:", {k: val[k] for k in ("ok", "duration")},
+                      "streams:", [(s.codec_type, s.codec_name) for s in val["streams"]])
+            return 0 if rc == 0 else 1
+        except bdlib.BDPlusError as e:
+            print("BDPlusError:", e)
+            return 1
     rc = ffutil.remux(title, out, video=video, audio_idx=audio_idx, sub_idx=sub_idx)
     print("ffmpeg rc:", rc)
     if rc == 0:

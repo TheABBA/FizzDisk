@@ -285,7 +285,8 @@ def _dvd_copy_complete(dst: str, expected: dict) -> bool:
 
 
 def _copy_dvd_to_disk(drive_dir: str,
-                      on_progress: Optional[Callable[[float], None]] = None) -> Optional[str]:
+                      on_progress: Optional[Callable[[float], None]] = None,
+                      stop_event: Optional[threading.Event] = None) -> Optional[str]:
     """Copy a physical DVD's VIDEO_TS folder to a fresh temp dir.
 
     libdvdnav navigating the LIVE optical drive can abort on a disc whose cell
@@ -343,6 +344,13 @@ def _copy_dvd_to_disk(drive_dir: str,
                     proc.wait(timeout=0.6)
                     break
                 except subprocess.TimeoutExpired:
+                    if stop_event and stop_event.is_set():
+                        proc.terminate()
+                        try:
+                            proc.wait(timeout=5)
+                        except Exception:
+                            proc.kill()
+                        break
                     if time.time() - start > 1800:
                         proc.terminate()
                         proc.wait()
@@ -488,29 +496,57 @@ def build_title_from_streams(idx: int, name: str, clips: List[Clip], info: dict,
 
 
 # ---- ffmpeg remux ----------------------------------------------------------
-def copy_audio_flags(title: "Title", audio_idx: Optional[List[int]]) -> List[str]:
-    """FFmpeg args to copy the selected audio streams, transcoding LPCM (the
-    pcm_bluray codec on Blu-rays) losslessly to FLAC.
+MKV_SAFE_AUDIO = {
+    "ac3", "eac3", "dts", "truehd", "mlp", "aac", "mp3", "mp2", "flac",
+    "opus", "vorbis", "alac", "pcm_s16le", "pcm_s24le",
+}
+
+
+def copy_audio_flags(title: "Title", audio_idx: Optional[List[int]],
+                     real_codecs: Optional[List[str]] = None) -> List[str]:
+    """FFmpeg args to copy the selected audio streams, transcoding anything
+    Matroska cannot carry (LPCM / ``pcm_bluray`` above all) losslessly to FLAC.
 
     Matroska cannot carry a ``pcm_bluray`` track directly (``No wav codec tag
     found for codec pcm_bluray``) and refuses to write the MKV header, so any
-    LPCM stream must be re-encoded. FLAC is lossless, natively supported by
-    Matroska, and preserves the audio bit-exactly. All other audio is copied.
+    such stream must be re-encoded. FLAC is lossless, natively supported by
+    Matroska, and preserves the audio bit-exactly.
+
+    ``real_codecs`` is the codec list ffprobe reported for the RIP INPUT, in
+    demuxer order. It is authoritative and must be preferred over the title's
+    scan-time stream list: the two routinely disagree (a DVD's VOB
+    program-stream union vs the selected PGC's real tracks, a Blu-ray
+    playlist's declared table vs the TS libbluray actually delivers), and
+    trusting the scan list applies ``copy`` to a track that is really LPCM,
+    which kills the rip at header time with EINVAL (-22 / 4294967274).
+
+    Decisions are made by WHITELIST: a codec is only stream-copied when it is
+    known to be Matroska-safe, so an unfamiliar codec degrades to a lossless
+    FLAC transcode instead of failing the whole rip.
     """
+    real = [c.lower() for c in (real_codecs or [])]
     aud = list(audio_idx or [])
     if not aud:
-        return ["-c:a", "copy"]
+        # No explicit selection — ffmpeg will map all audio itself, so the
+        # codec decision has to cover every track the input exposes.
+        codecs = real or [(a.codec_name or "").lower() for a in title.audio]
+        if codecs and all(c in MKV_SAFE_AUDIO for c in codecs):
+            return ["-c:a", "copy"]
+        if not codecs:
+            return ["-c:a", "copy"]
+        return ["-c:a", "flac"]
     flags: List[str] = []
     for j, ai in enumerate(aud):
         cn = ""
-        try:
-            cn = (title.audio[ai].codec_name or "").lower()
-        except (IndexError, AttributeError):
-            pass
-        if cn in ("lpcm", "pcm_bluray"):
-            flags += [f"-c:a:{j}", "flac"]
+        if 0 <= ai < len(real):
+            cn = real[ai]
         else:
-            flags += [f"-c:a:{j}", "copy"]
+            try:
+                cn = (title.audio[ai].codec_name or "").lower()
+            except (IndexError, AttributeError):
+                pass
+        # Unknown/unreadable codec -> transcode; copying is the risky choice.
+        flags += [f"-c:a:{j}", "copy" if cn in MKV_SAFE_AUDIO else "flac"]
     return flags
 
 
@@ -536,11 +572,20 @@ def _input_stream_counts(inputs: Sequence[str]) -> dict:
     out: dict = {}
     try:
         data = ffprobe_json(list(inputs))
-        counts = {"video": 0, "audio": 0, "subtitle": 0}
+        counts: dict = {"video": 0, "audio": 0, "subtitle": 0}
+        # Record the REAL codec of each audio stream, in demuxer order. The
+        # title's scan-time stream list can disagree with the rip demuxer (a
+        # DVD's VOB union vs the PGC's actual tracks), so choosing copy-vs-
+        # transcode from the scan list can apply `copy` to a track that is in
+        # fact LPCM -- which Matroska refuses at header time (EINVAL/-22).
+        acodecs: List[str] = []
         for s in (data.get("streams") or []):
             t = s.get("codec_type")
             if t in counts:
                 counts[t] += 1
+            if t == "audio":
+                acodecs.append((s.get("codec_name") or "").lower())
+        counts["audio_codecs"] = acodecs
         out = counts
     except Exception as e:  # noqa: BLE001
         print(f"[remux] could not enumerate input streams ({e}); not clamping maps",
@@ -554,11 +599,15 @@ def remux(title: Title, out_path: str, video: bool = True,
           audio_idx: Optional[List[int]] = None, sub_idx: Optional[List[int]] = None,
           copy_codecs: bool = True, video_codec: Optional[str] = None,
           audio_codec: Optional[str] = None, progress_cb: Optional[Callable[[dict], None]] = None,
-          extra_map: Optional[List[int]] = None) -> int:
+          extra_map: Optional[List[int]] = None,
+          stop_event: Optional[threading.Event] = None) -> int:
     """Remux a title to an MKV. Returns ffmpeg returncode (0 == success).
 
     audio_idx / sub_idx are ORDINALS within the title's audio / subtitle lists
     (0-based) that the user selected. video selects the video track.
+
+    ``stop_event`` (if given) is checked during the rip and the disc-copy
+    fallback; if set, ffmpeg/robocopy are killed and the rip aborts.
     """
     inputs: List[str] = []
     list_path = None
@@ -615,8 +664,10 @@ def remux(title: Title, out_path: str, video: bool = True,
         # actually has, and never emit a map we know cannot resolve.
         a_sel, s_sel = list(audio_idx or []), list(sub_idx or [])
         avail = _input_stream_counts(inputs)
+        real_acodecs: List[str] = []
         if avail:
             n_a, n_s = avail.get("audio", 0), avail.get("subtitle", 0)
+            real_acodecs = list(avail.get("audio_codecs") or [])
             a_keep = [i for i in a_sel if i < n_a]
             s_keep = [i for i in s_sel if i < n_s]
             if len(a_keep) != len(a_sel) or len(s_keep) != len(s_sel):
@@ -624,21 +675,32 @@ def remux(title: Title, out_path: str, video: bool = True,
                       f"(have {n_a}), subs {s_sel}->{s_keep} (have {n_s})", flush=True)
             a_sel, s_sel = a_keep, s_keep
         print("[remux] ffmpeg:", " ".join(cmd[:40]), flush=True)
-        # maps
-        cmd += ["-map", "0:v:0"] if video else []
+        # maps. Every map carries a trailing '?' so that a stream which the
+        # probe saw but this run does not expose (flaky optical read, a
+        # fallback input built from a disc copy) is skipped instead of
+        # aborting the entire rip at option-parse time with rc=-22.
+        cmd += ["-map", "0:v:0?"] if video else []
         for i in a_sel:
-            cmd += ["-map", f"0:a:{i}"]
+            cmd += ["-map", f"0:a:{i}?"]
         for i in s_sel:
-            cmd += ["-map", f"0:s:{i}"]
+            cmd += ["-map", f"0:s:{i}?"]
         for i in (extra_map or []):
-            cmd += ["-map", f"0:{i}"]
+            cmd += ["-map", f"0:{i}?"]
 
         if copy_codecs and video_codec is None and video and audio_idx is None:
-            cmd += ["-c", "copy"]
+            # Blanket '-c copy' is only safe when every audio track the input
+            # exposes is a codec Matroska can carry; an LPCM track makes the
+            # muxer reject the header before any frame is written.
+            if real_acodecs and not all(c in MKV_SAFE_AUDIO for c in real_acodecs):
+                cmd += ["-c:v", "copy", "-c:s", "copy"]
+                for j, c in enumerate(real_acodecs):
+                    cmd += [f"-c:a:{j}", "copy" if c in MKV_SAFE_AUDIO else "flac"]
+            else:
+                cmd += ["-c", "copy"]
         elif copy_codecs:
             cmd += ["-c:v", "copy" if video and not video_codec else (video_codec or "copy")]
             if audio_codec is None:
-                cmd += copy_audio_flags(title, audio_idx)
+                cmd += copy_audio_flags(title, audio_idx, real_acodecs)
             else:
                 cmd += ["-c:a", audio_codec]
         else:
@@ -659,6 +721,13 @@ def remux(title: Title, out_path: str, video: bool = True,
         last_time = 0.0
         try:
             for line in proc.stderr:
+                if stop_event and stop_event.is_set():
+                    proc.terminate()
+                    try:
+                        proc.wait(timeout=5)
+                    except Exception:
+                        proc.kill()
+                    break
                 line = line.strip()
                 if line.startswith("frame=") or "time=" in line:
                     m = re.search(r"time=(\d+):(\d+):(\d+)\.(\d+)", line)
@@ -748,8 +817,14 @@ def remux(title: Title, out_path: str, video: bool = True,
                     except Exception:
                         pass
 
-            dvd_base = _copy_dvd_to_disk(dvd_dir, on_progress=_copy_prog) if dvd_dir else None
+            dvd_base = _copy_dvd_to_disk(dvd_dir, on_progress=_copy_prog,
+                                        stop_event=stop_event) if dvd_dir else None
             if dvd_base:
+                if stop_event and stop_event.is_set():
+                    shutil.rmtree(dvd_base, ignore_errors=True)
+                    print("[remux] stopped during disc-copy fallback — aborting", flush=True)
+                    _safe_unlink(list_path)
+                    return rc
                 try:
                     fb_inputs = ["-analyzeduration", "20000000", "-probesize", "20000000",
                                  "-f", "dvdvideo", "-title", str(dvd_title_no),

@@ -28,6 +28,16 @@ from typing import Callable, List, Optional
 
 _NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
+
+class BDPlusError(RuntimeError):
+    """The disc is BD+ protected and cannot be decoded.
+
+    A distinct type (not a bare RuntimeError) because the GUI must NOT treat
+    it as "this decoder failed, try the fallback ripper": no bundled fallback
+    can strip BD+ either, so retrying only burns minutes of drive time before
+    failing the same way. It is a terminal, explainable condition.
+    """
+
 from . import ffutil
 from .model import Stream, Title
 
@@ -239,6 +249,19 @@ def update_keydb(force: bool = False) -> Optional[str]:
 def open_disc(path: str) -> int:
     """Open a Blu-ray disc/ISO/folder. Returns the BLURAY* handle (int)."""
     ensure_loaded()
+    # BD+ discs: libbdplus aborts with "VM configuration not found" unless a
+    # vm0 config directory exists, and never reaches its cached
+    # conversion-table loader. Create the (key-free) scaffold first so a disc
+    # whose table the user has installed can actually be repaired.
+    try:
+        from . import bdplus as _bdp
+        if disc_has_bdplus(path):
+            _bdp.ensure_vm0()
+    except Exception:
+        pass
+    # Automatic BD+ repair: obtain the cached conversion table for this
+    # disc's media key now, so the rip below succeeds without user steps.
+    bdplus_ensure(path)
     bdir = _bin_dir()
     # Prefer an auto-refreshed, user-owned keydb (newer discs) over the bundled
     # snapshot; fall back to the bundled one if no refresh was done.
@@ -368,6 +391,119 @@ def _has_no_audio(ti: _TitleInfo) -> bool:
 # ---------------------------------------------------------------------------
 # ripping: stream decrypted TS from libbluray into ffmpeg -> MKV
 # ---------------------------------------------------------------------------
+_PROBE_HEAD_BYTES = 24 * 1024 * 1024
+
+
+def _probe_ts_head(head: bytes) -> dict:
+    """ffprobe a buffered head of the decrypted TS to learn its REAL layout.
+
+    libbluray's playlist stream table (``bd_get_title_info`` -> clip[0]) is a
+    *declaration*, not a guarantee: the TS actually delivered by ``bd_read``
+    routinely exposes fewer streams (secondary//dependent audio that never
+    starts, PGS tracks declared but absent) and in a different order than the
+    table lists.  Building ``-map 0:a:N`` / ``-c:a:N`` from the declaration then
+    either points at a stream that does not exist -- ffmpeg aborts at option
+    parse time with ``Stream map '' matches no streams`` / EINVAL (-22, shown
+    unsigned as 4294967274) before a single frame is written -- or applies
+    ``copy`` to a track that is really LPCM, which Matroska cannot carry.
+
+    Returns ``{"audio": [codec_name, ...], "subtitle": [...], "video": n}``
+    describing what is genuinely demuxable, or ``{}`` if the probe fails (in
+    which case the caller must fall back to permissive optional maps).
+    """
+    tmp = ""
+    try:
+        import tempfile
+        fd, tmp = tempfile.mkstemp(suffix=".ts", prefix="fizzdisk_probe_")
+        with os.fdopen(fd, "wb") as f:
+            f.write(head)
+        data = ffutil.ffprobe_json([
+            "-f", "mpegts",
+            "-probesize", "50M", "-analyzeduration", "50M",
+            "-i", _native(tmp),
+        ])
+    except Exception:
+        return {}
+    finally:
+        if tmp:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+    out = {"audio": [], "subtitle": [], "video": 0}
+    for s in (data.get("streams") or []):
+        kind = s.get("codec_type")
+        if kind == "video":
+            out["video"] += 1
+        elif kind == "audio":
+            out["audio"].append((s.get("codec_name") or "").lower())
+        elif kind == "subtitle":
+            out["subtitle"].append((s.get("codec_name") or "").lower())
+    return out
+
+
+# Audio codecs Matroska can carry as-is lives in ffutil (single source of
+# truth, shared with the file/ISO/DVD remux path). Anything NOT on that list
+# (LPCM / pcm_bluray above all) is transcoded to FLAC, which is lossless and
+# Matroska-native. Whitelist, never blacklist: an unknown codec that MKV
+# cannot mux would otherwise kill the whole rip at header time.
+_MKV_SAFE_AUDIO = ffutil.MKV_SAFE_AUDIO
+
+
+def _bd_stream_flags(real: dict, title: Title,
+                     audio_idx: Optional[List[int]],
+                     sub_idx: Optional[List[int]]) -> tuple:
+    """Build (map_args, audio_codec_args) from the PROBED stream layout.
+
+    Requested indices are clamped to what the TS really exposes, so no map can
+    reference a missing stream, and each output audio stream gets its codec
+    decided by the codec ffprobe actually reported for it.
+
+    Every map is emitted with a trailing ``?`` (optional). Clamping and the
+    optional marker are belt-and-braces on purpose: the probe only saw the
+    HEAD of the title, so a stream it missed must never abort the rip.
+    """
+    real_audio = real.get("audio") or []
+    real_subs = real.get("subtitle") or []
+    # Requested selection, defaulting to "everything the TS really has".
+    want_a = list(audio_idx) if audio_idx else list(range(len(real_audio)))
+    want_s = list(sub_idx) if sub_idx else []
+    # Clamp: drop any index the real TS does not have.
+    keep_a = [i for i in want_a if 0 <= i < len(real_audio)]
+    keep_s = [i for i in want_s if 0 <= i < len(real_subs)]
+    maps: List[str] = []
+    codecs: List[str] = []
+    for j, i in enumerate(keep_a):
+        maps += ["-map", f"0:a:{i}?"]
+        cn = real_audio[i]
+        codecs += [f"-c:a:{j}", "copy" if cn in _MKV_SAFE_AUDIO else "flac"]
+    for i in keep_s:
+        maps += ["-map", f"0:s:{i}?"]
+    return maps, codecs
+
+
+def _probe_is_trustworthy(real: dict, title: Title) -> bool:
+    """Is the head-probe's stream list safe to build the rip command from?
+
+    A probe that found NO audio while the disc's playlist table declares audio
+    has not understood the stream (e.g. an LPCM/HDMV track the demuxer only
+    recognises once it sees the HDMV registration descriptor, or audio that
+    simply has not started within the buffered head). Building maps from it
+    would silently produce a VIDEO-ONLY MKV and report success -- far worse
+    than the crash we are fixing, because the user only finds out on playback.
+    In that case the caller must use the permissive fallback instead.
+    """
+    if not real:
+        return False
+    if not real.get("video"):
+        return False
+    declared_audio = len(title.audio or [])
+    found_audio = len(real.get("audio") or [])
+    if declared_audio and not found_audio:
+        return False
+    return True
+
+
 def rip_bd(path: str, title: Title, out_path: str,
            video: bool = True, audio_idx: Optional[List[int]] = None,
            sub_idx: Optional[List[int]] = None, copy_codecs: bool = True,
@@ -393,15 +529,58 @@ def rip_bd(path: str, title: Title, out_path: str,
         if sel != 1:
             raise RuntimeError(f"libbluray: select playlist {playlist} failed")
 
+        read_buf = (ctypes.c_ubyte * (256 * 1024))()
+
+        # --- Buffer the head of the decrypted TS and probe it -----------------
+        # This costs a few seconds of disc read and is the only reliable way to
+        # know which streams exist and what they really are. The buffer is NOT
+        # discarded: it is pushed into ffmpeg first, so nothing is re-read.
+        head = bytearray()
+        while len(head) < _PROBE_HEAD_BYTES:
+            if stop_event is not None and stop_event.is_set():
+                break
+            r = _BLURAY.bd_read(ctypes.c_void_p(bd), read_buf, len(read_buf))
+            if r <= 0:
+                break
+            head += bytes(read_buf[:r])
+        real = _probe_ts_head(bytes(head)) if head else {}
+
         cmd = [ffutil.FFMPEG, "-y", "-hide_banner", "-nostdin", "-loglevel", "info",
-               "-f", "mpegts", "-i", "pipe:0"]
+               "-f", "mpegts",
+               # The pipe is unseekable, so ffmpeg only ever sees what it has
+               # read; the defaults are too small to find every BD stream.
+               "-probesize", "50M", "-analyzeduration", "50M",
+               "-i", "pipe:0"]
         cmd += ["-map", "0:v:0"] if video else []
-        for i in (audio_idx or []):
-            cmd += ["-map", f"0:a:{i}"]
-        for i in (sub_idx or []):
-            cmd += ["-map", f"0:s:{i}"]
+        if _probe_is_trustworthy(real, title):
+            maps, acodecs = _bd_stream_flags(real, title, audio_idx, sub_idx)
+            print(f"[fizz] probed TS: {len(real.get('audio') or [])} audio, "
+                  f"{len(real.get('subtitle') or [])} subs "
+                  f"(playlist declared {len(title.audio or [])}/"
+                  f"{len(title.subtitles or [])})",
+                  file=sys.stderr, flush=True)
+        else:
+            # The probe could not be trusted (it saw no audio although the
+            # playlist declares some, or it failed outright). Fall back to the
+            # declared table, but make every map OPTIONAL ("?") so a
+            # declared-but-absent stream is skipped instead of aborting the
+            # rip, and transcode ALL audio to FLAC: we cannot tell which track
+            # is LPCM, and FLAC is lossless so nothing is lost by being safe.
+            ai = list(audio_idx) if audio_idx else list(range(len(title.audio)))
+            maps = []
+            for i in ai:
+                maps += ["-map", f"0:a:{i}?"]
+            for i in (sub_idx or []):
+                maps += ["-map", f"0:s:{i}?"]
+            declared = [(a.codec_name or "").lower() for a in (title.audio or [])]
+            all_safe = bool(declared) and all(c in _MKV_SAFE_AUDIO for c in declared)
+            acodecs = ["-c:a", "copy" if all_safe else "flac"]
+            print(f"[fizz] head-probe inconclusive; using declared streams with "
+                  f"optional maps and -c:a {acodecs[1]}",
+                  file=sys.stderr, flush=True)
+        cmd += maps
         if copy_codecs and video_codec is None:
-            cmd += ["-c:v", "copy", "-c:s", "copy"] + ffutil.copy_audio_flags(title, audio_idx)
+            cmd += ["-c:v", "copy", "-c:s", "copy"] + acodecs
         else:
             cmd += ["-c:v", video_codec or ("libx264" if not copy_codecs else "copy")]
             if video_codec == "libx264" or (not copy_codecs and video_codec is None):
@@ -409,7 +588,7 @@ def rip_bd(path: str, title: Title, out_path: str,
             if audio_codec:
                 cmd += ["-c:a", audio_codec]
             elif copy_codecs:
-                cmd += ffutil.copy_audio_flags(title, audio_idx)
+                cmd += acodecs
             else:
                 cmd += ["-c:a", "aac"]
             cmd += ["-c:s", "copy"]
@@ -431,7 +610,10 @@ def rip_bd(path: str, title: Title, out_path: str,
             try:
                 for raw in proc.stderr:
                     line = raw.decode("utf-8", "replace").strip()
-                    if line and ("Error" in line or "Invalid" in line or "failed" in line.lower()):
+                    if line and ("Error" in line or "Invalid" in line
+                                 or "matches no streams" in line
+                                 or "Could not write header" in line
+                                 or "failed" in line.lower()):
                         err_buf.append(line)
             except Exception:
                 pass
@@ -439,11 +621,17 @@ def rip_bd(path: str, title: Title, out_path: str,
         t = threading.Thread(target=_drain_stderr, daemon=True)
         t.start()
 
-        read_buf = (ctypes.c_ubyte * (256 * 1024))()
         written = 0
         last_frac = -1.0
         recover_rounds = 0
         try:
+            # Push the probe buffer in first — it is real title data.
+            if head:
+                try:
+                    proc.stdin.write(bytes(head))
+                    written += len(head)
+                except (BrokenPipeError, OSError):
+                    pass
             while True:
                 if stop_event is not None and stop_event.is_set():
                     stopped[0] = True
@@ -505,11 +693,90 @@ def rip_bd(path: str, title: Title, out_path: str,
                 "keydb.cfg. FizzDisk will fall back to its bundled ripper if "
                 "this decoder can't handle it.")
         if rc != 0 and not stopped[0]:
+            # A BD+ disc decrypts its AACS layer fine and then feeds us video
+            # that is still scrambled: ffmpeg muxes a little, hits the first
+            # packet whose timestamp the mangled stream destroyed, and the
+            # Matroska muxer aborts with EINVAL (-22). Blaming ffmpeg here
+            # sends the user chasing a codec bug that does not exist, so name
+            # the real cause when the disc carries BD+.
+            if disc_has_bdplus(path) and not bdplus_ready(path):
+                raise BDPlusError(_BDPLUS_MESSAGE)
             raise RuntimeError(
                 f"ffmpeg exited {rc} for {title.name}: " + " | ".join(err_buf[-3:]))
     finally:
         close_disc(bd)
     return rc
+
+
+def disc_has_bdplus(path: str) -> bool:
+    """True if the disc carries BD+ protection (a BDSVM folder of .svm files).
+
+    BD+ is a SECOND layer on top of AACS: even with the AACS keys correct and
+    ``bd_read`` returning cleanly, the video elementary stream stays mangled
+    until a BD+ virtual machine un-munges it. libbdplus needs a VM
+    configuration (device keys / conversion tables) that we do not ship, so on
+    these discs it logs ``bdplus_init() failed`` + ``VM configuration not
+    found`` and libbluray hands back video that merely LOOKS like valid H.264.
+
+    The tell-tale symptom is lopsided: AUDIO decodes perfectly (BD+ does not
+    touch it) while VIDEO throws continuous ``error while decoding MB`` /
+    ``non-existing PPS`` and eventually yields a packet with no timestamp that
+    the Matroska muxer rejects with EINVAL (-22). Detecting the folder lets us
+    say so plainly instead of blaming ffmpeg or, far worse, writing a
+    corrupt-but-playable file and calling it a success.
+    """
+    try:
+        m = re.match(r"^([A-Za-z]):[/\\]?$", path)
+        root = (m.group(1) + ":\\") if m else path
+        svm = os.path.join(root, "BDSVM")
+        if not os.path.isdir(svm):
+            return False
+        return any(f.lower().endswith(".svm") for f in os.listdir(svm))
+    except Exception:
+        return False
+
+
+_BDPLUS_MESSAGE = (
+    "This disc uses BD+ copy protection and no conversion table for it is "
+    "installed yet.\n\n"
+    "The disc's AACS encryption was unlocked correctly, but BD+ is a second "
+    "layer that deliberately corrupts the picture; a 'conversion table' for "
+    "this exact disc is needed to repair it. That is why the audio is perfect "
+    "while the video breaks up and the rip fails partway through.\n\n"
+    "FizzDisk can use a conversion table once you install one. Open "
+    "Settings \u2192 BD+ to see this disc's ID and add its table. Without it, "
+    "this title cannot be ripped correctly.\n\n"
+    "Nothing is wrong with your disc, your drive, or your computer."
+)
+
+
+def bdplus_ready(path: str) -> bool:
+    """True if this BD+ disc has an installed conversion table.
+
+    When True the rip can proceed normally: libbdplus loads the cached table
+    and repairs the video, even though its VM cannot run this disc's BD+
+    generation (the cached-table path is independent of the VM).
+    """
+    try:
+        from . import bdplus as _bdp
+        return bool(_bdp.status(path).get("ready"))
+    except Exception:
+        return False
+
+
+def bdplus_ensure(path: str, progress_cb=None) -> bool:
+    """Proactively make a BD+ disc rip-able by obtaining its conversion table.
+
+    If the disc is not BD+ (or already has a table), returns True immediately.
+    Otherwise it downloads the cached table for the disc's media key from the
+    Doom9 archive and installs it, so the rip is automatic. If nothing can be
+    obtained it returns False and the caller surfaces the BD+ error.
+    """
+    try:
+        from . import bdplus as _bdp
+        return bool(_bdp.ensure_table(path, progress_cb=progress_cb))
+    except Exception:
+        return False
 
 
 def _native(p: str) -> str:

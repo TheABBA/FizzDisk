@@ -20,7 +20,6 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
-LicenseFile=license.txt
 ; One UAC prompt on install (the "run as admin" step the user asked for)
 PrivilegesRequired=admin
 OutputDir=..\dist
@@ -80,16 +79,4 @@ Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; \
 [Code]
 procedure InitializeWizard();
 begin
-  { Pin a reassuring pre-install note about the certificate (SmartScreen) on
-    the Welcome page, so the user knows the "unknown publisher" warning is
-    expected while our code-signing certificate is being finalized. }
-  WizardForm.WelcomeLabel2.Caption :=
-      WizardForm.WelcomeLabel2.Caption + #13#10#13#10 +
-      'Note: FizzDisk''s code-signing certificate is still being finished, so ' +
-      'the first time you open this installer Microsoft''s "Windows protected ' +
-      'your PC" screen may list the publisher as "unknown". That''s normal ' +
-      'while we sign the app - click "More info" then "Run anyway" to continue. ' +
-      'If Windows will not open the downloaded file at all, right-click it, ' +
-      'choose Properties, and under General click "Unblock". This warning ' +
-      'disappears once our certificate has been approved.';
 end;

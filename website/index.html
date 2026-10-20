@@ -4,82 +4,55 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FizzDisk — Back up your Blu-ray, DVD &amp; CDs</title>
-<meta name="description" content="FizzDisk is a backup tool for Windows. Back up your Blu-ray UHD movies, DVDs and CDs — scan every title and stream and save them losslessly to MKV. 50 free backups, then a one-time license. Fully standalone.">
+<meta name="description" content="FizzDisk is a free backup tool for Windows. Back up your Blu-ray UHD movies, DVDs and CDs — scan every title and stream and save them losslessly to MKV. Fully standalone.">
 <link rel="icon" href="assets/fizzdisk.ico">
 <link rel="stylesheet" href="assets/app.css">
 <style>
-  /* Download buttons temporarily disabled while a release is finalized. */
   a.is-disabled { opacity:.55; cursor:not-allowed; pointer-events:none; }
 </style>
 <script src="assets/config.js"></script>
 </head>
 <body>
-
-<!-- ============ NAV ============ -->
+<!-- NAV -->
 <nav class="nav">
   <div class="nav-inner">
     <a class="brand" href="#top">
-      <span class="brand-mark" aria-hidden="true">
-        <img src="assets/fizzdisk_icon.png" alt="" width="26" height="26">
-      </span>
+      <span class="brand-mark" aria-hidden="true"><img src="assets/fizzdisk_icon.png" alt="" width="26" height="26"></span>
       <span class="brand-name">Fizz<span class="brand-hl">Disk</span></span>
     </a>
     <div class="nav-links">
-      <a href="#features">Features</a>
-      <a href="#how">How it works</a>
-      <a href="#streams">Streams</a>
-      <a href="#buy">Buy</a>
-      <a href="#download">Download</a>
+      <a href="#features">Features</a><a href="#how">How it works</a><a href="#streams">Streams</a><a data-donate href="#" target="_blank" rel="noopener">Support us</a><a href="#download">Download</a>
     </div>
     <a class="btn btn-primary nav-cta" href="#download">Get FizzDisk</a>
   </div>
 </nav>
-
-<!-- ============ HERO ============ -->
+<!-- HERO -->
 <header class="hero" id="top">
   <div class="hero-glow" aria-hidden="true"></div>
   <div class="hero-inner">
-    <span class="pill">For Windows 10/11 · 50 free backups</span>
+    <span class="pill">For Windows 10/11 · Free forever · No license needed</span>
     <h1>Back up your discs,<br><span class="hl">the FizzDisk way.</span></h1>
-    <p class="lead">FizzDisk is a modern backup tool for Windows. Back up your
-    Blu-ray UHD movies, DVDs and CDs — scan every title and stream and save them
-    <strong>losslessly</strong> to MKV and FLAC with no effort, all in seconds. Fully standalone:
-    its own disc parsers, bundled decryption and ffmpeg, nothing else to install.</p>
-    <div class="chips">
-      <span class="chip">Blu-ray</span><span class="chip">UHD 4K</span><span class="chip">DVD</span><span class="chip">CDs</span>
-    </div>
+    <p class="lead">FizzDisk is a modern backup tool for Windows. Back up your Blu-ray UHD movies, DVDs and CDs — scan every title and stream and save them <strong>losslessly</strong> to MKV and FLAC with no effort, all in seconds. Fully standalone: its own disc parsers, bundled decryption and ffmpeg, nothing else to install.</p>
+    <div class="chips"><span class="chip">Blu-ray</span><span class="chip">UHD 4K</span><span class="chip">DVD</span><span class="chip">CDs</span></div>
     <div class="hero-cta">
       <a class="btn btn-primary btn-lg" href="download/FizzDiskSetup.exe">⬇  Download for Windows</a>
-      <a class="btn btn-ghost btn-lg" data-buy href="#">Buy license — $65</a>
-      <a class="btn btn-ghost btn-lg" href="#download">How it works</a>
+      <a class="btn btn-ghost btn-lg" data-donate href="#" target="_blank" rel="noopener">☕ Help me pay for my DGX Sparks!</a>
+      <a class="btn btn-ghost btn-lg" href="#how">How it works</a>
     </div>
     <div class="hero-meta">
-      <span>One app · every disc</span>
-      <span class="dot">•</span>
-      <span>No other software needed</span>
-      <span class="dot">•</span>
-      <span>Everything's built in</span>
-      <span class="dot">•</span>
+      <span>One app · every disc</span><span class="dot">•</span>
+      <span>No other software needed</span><span class="dot">•</span>
+      <span>Everything's built in</span><span class="dot">•</span>
       <span>Lossless stream-copy</span>
     </div>
   </div>
 </header>
-
-<!-- ============ APP MOCK (built from gui.py layout) ============ -->
+<!-- APP MOCK -->
 <section class="mock-section" id="streams">
   <div class="mock-window" role="img" aria-label="FizzDisk application window">
-    <div class="mock-titlebar">
-      <span class="mock-dots"><i></i><i></i><i></i></span>
-      <span class="mock-title">FizzDisk</span>
-      <span class="mock-badge">AACS · Ready</span>
-    </div>
+    <div class="mock-titlebar"><span class="mock-dots"><i></i><i></i><i></i></span><span class="mock-title">FizzDisk</span><span class="mock-badge">AACS · Ready</span></div>
     <div class="mock-source">
-      <label>Source:</label>
-      <span class="mock-combo">BDMV — E:\&nbsp;▾</span>
-      <span class="mock-btn">Browse…</span>
-      <span class="mock-btn mock-btn-accent">Scan</span>
-      <span class="mock-btn">Refresh Drives</span>
-      <span class="mock-toggle">🌙</span>
+      <label>Source:</label><span class="mock-combo">BDMV — E:\&nbsp;▾</span><span class="mock-btn">Browse…</span><span class="mock-btn mock-btn-accent">Scan</span><span class="mock-btn">Refresh Drives</span><span class="mock-toggle">🌙</span>
     </div>
     <div class="mock-body">
       <div class="mock-left">
@@ -107,50 +80,34 @@
         </div>
       </div>
     </div>
-    <div class="mock-bar">
-      <div class="mock-progress"><span style="width:63%"></span></div>
-      <span class="mock-eta">Remaining: 00:01:42 · 63%</span>
-    </div>
+    <div class="mock-bar"><div class="mock-progress"><span style="width:63%"></span></div><span class="mock-eta">Remaining: 00:01:42 · 63%</span></div>
     <div class="mock-log">[info] Title 1 selected · main feature (1:56:30)<br>[info] Copy title 1 to MKV … stream copy (lossless)<br><span class="mock-ok">[done] Written C:\Users\Abba\Videos\The Movie (2026).mkv</span></div>
   </div>
 </section>
-
-<!-- ============ AUTO CATALOGING (data, posters, Jellyfin structure) ============ -->
+<!-- AUTO CATALOGING -->
 <section class="callout" id="autometa">
   <div class="callout-inner">
     <div class="callout-ico" aria-hidden="true">🎬</div>
     <div class="callout-body">
       <h3>Automatically cataloged &amp; organized for you</h3>
-      <p>No sorting, no typing. FizzDisk fetches the movie title, year and poster from the disc,
-      names your files <code>Title (Year)</code>, saves the poster alongside — and drops every backup
-      into a <strong>Jellyfin-ready folder structure automatically</strong>, so it's ready to stream
-      with zero manual organizing.</p>
+      <p>No sorting, no typing. FizzDisk fetches the movie title, year and poster from the disc, names your files <code>Title (Year)</code>, saves the poster alongside — and drops every backup into a <strong>Jellyfin-ready folder structure automatically</strong>, so it's ready to stream with zero manual organizing.</p>
     </div>
   </div>
 </section>
-
-<!-- ============ ONE APP DOES IT ALL ============ -->
+<!-- ONE APP -->
 <section class="callout" id="oneapp">
   <div class="callout-inner">
     <div class="callout-ico" aria-hidden="true">🎯</div>
     <div class="callout-body">
       <h3>One app does it all — no more installing five tools</h3>
-      <p>Ripping discs used to mean juggling a separate ripper, a decryptor, an
-      encoder and a metadata scraper. <strong>FizzDisk replaces that whole stack.</strong>
-      One installer reads your Blu-rays, DVDs and CDs, decrypts protected discs, rips exactly
-      the video, audio and subtitle tracks you choose, and outputs MKV or FLAC/MP3 — all in
-      one place. One app, every disc, nothing else to install.</p>
+      <p>Ripping discs used to mean juggling a separate ripper, a decryptor, an encoder and a metadata scraper. <strong>FizzDisk replaces that whole stack.</strong> One installer reads your Blu-rays, DVDs and CDs, decrypts protected discs, rips exactly the video, audio and subtitle tracks you choose, and outputs MKV or FLAC/MP3 — all in one place. One app, every disc, nothing else to install.</p>
     </div>
   </div>
 </section>
-
-<!-- ============ FEATURES ============ -->
+<!-- FEATURES -->
 <section class="section" id="features">
   <h2 class="sec-title">Everything you need to back up your discs</h2>
-  <p class="sec-sub">FizzDisk is fully self-contained — its own disc
-  parsers, its own decryption libraries and a bundled ffmpeg. No commercial tools, no installed
-  runtimes, no accounts. <strong>One app does it all</strong> — you no longer need separate
-  apps to back up your Blu-rays, DVDs and CDs. Download, run, back up.</p>
+  <p class="sec-sub">FizzDisk is fully self-contained — its own disc parsers, its own decryption libraries and a bundled ffmpeg. No commercial tools, no installed runtimes, no accounts. <strong>One app does it all</strong> — you no longer need separate apps to back up your Blu-rays, DVDs and CDs. Download, run, back up.</p>
   <div class="grid">
     <div class="card"><div class="ico">💿</div><h3>Back up any disc</h3><p>Blu-ray, UHD 4K, DVD and CDs — a real drive, an ISO image, a <code>VIDEO_TS</code>/<code>BDMV</code> folder, or a single media file.</p></div>
     <div class="card"><div class="ico">🧩</div><h3>Clean-room parsers</h3><p>Hand-written DVD IFO (<code>TT_SRPT</code>/<code>VTS_PGCIT</code>) and Blu-ray MPLS playlist parsers scan the disc structure from scratch — no other project's parser code.</p></div>
@@ -160,8 +117,7 @@
     <div class="card"><div class="ico">🎞️</div><h3>Compress as you rip</h3><p>Encode your video (H.264 / x264) and audio (AAC, MP3, FLAC) right during the rip — every encoder is bundled, so you get much smaller files with <strong>no additional software to install</strong>.</p></div>
   </div>
 </section>
-
-<!-- ============ HOW IT WORKS ============ -->
+<!-- HOW IT WORKS -->
 <section class="section alt" id="how">
   <h2 class="sec-title">Four steps to a perfect backup</h2>
   <div class="steps">
@@ -171,39 +127,20 @@
     <div class="step"><span class="n">4</span><h3>Click Start</h3><p>Set the output folder and file-name template, then hit <b>Start</b>. Watch progress in the log.</p></div>
   </div>
 </section>
-
-<!-- ============ BUY / LICENSE ============ -->
-<section class="section" id="buy">
-  <h2 class="sec-title">Unlimited backups for a one-time <span id="buy-price">$65</span></h2>
-  <p class="sec-sub">Your first <b>50 backups are free</b> — no account, no sign-up. After that, a
-  product key unlocks unlimited backups and lifetime updates for <b>every disc type in one app</b>.
-  Pay once, own it forever. No subscription and no per-disc fees.</p>
-  <div class="grid" style="margin-top:3rem">
-    <div class="card"><div class="ico">🎉</div><h3>50 free backups</h3><p>Try every feature with no credit card needed. FizzDisk counts your rips and only nudges you once you've used all 50.</p></div>
-    <div class="card"><div class="ico">🔑</div><h3>One key, lifetime</h3><p>A single product key removes the limit for good. It's licensed to <b>one device at a time</b> — move it to another PC any time with one click (Settings → "Move to another machine?").</p></div>
-    <div class="card"><div class="ico">🛡️</div><h3>Survives reinstall</h3><p>Your key is stored on this device, so reinstalling FizzDisk never asks for it again. To use it on another PC, release it first from Settings.</p></div>
-  </div>
+<!-- DONATE -->
+<section class="section" id="donate">
+  <h2 class="sec-title">Help me pay for my DGX Sparks! ☕</h2>
+  <p class="sec-sub">FizzDisk is <strong>free and open</strong> — no trial, no license key, no limits. If it saved you time (and it probably saved you from installing five separate tools), consider buying me a coffee. Every donation goes straight toward the NVIDIA DGX Spark GPUs that built this app — so your support literally keeps the lights on for the AI agents that wrote the code you're using right now.</p>
   <div class="hero-cta" style="margin-top:2.2rem">
-    <a class="btn btn-primary btn-lg" data-buy href="#">Buy a license — <span id="buy-price2">$65</span></a>
+    <a class="btn btn-primary btn-lg" data-donate href="#" target="_blank" rel="noopener">☕ Buy me a coffee</a>
   </div>
-  <p id="buy-status" class="how-note" style="margin-top:1.2rem;text-align:center;display:none"></p>
-  <p class="how-note" style="margin-top:1.7rem">How to activate: run FizzDisk → click the <b>gear icon</b>
-  (top-right, next to the theme toggle) → <b>Trial &amp; Registration</b> → paste your product key →
-  <b>Activate</b>. Unlimited backups and lifetime updates unlock immediately. Moving to a new PC?
-  On the old one, click <b>"Move to another machine?"</b> in Settings to release the license, then
-  activate with the same key on the new one.</p>
 </section>
-
-<!-- ============ DOWNLOAD ============ -->
+<!-- DOWNLOAD -->
 <section class="section alt" id="download">
   <div class="dl-card">
     <div class="dl-left">
       <h2>Get FizzDisk</h2>
-      <p>Fully standalone — Python, ffmpeg and the AACS libraries are all
-      bundled in a single installer. No accounts, no extra runtimes. Your first
-      50 backups are free; a <b>one-time $65 license</b> afterwards unlocks
-      unlimited backups and lifetime updates. <strong>One app does it all</strong> —
-      stop installing separate rippers, decryptors and encoders for each disc type.</p>
+      <p>Fully standalone — Python, ffmpeg and the AACS libraries are all bundled in a single installer. No accounts, no extra runtimes. <strong>Free — unlimited backups, no license needed.</strong> One app does it all — stop installing separate rippers, decryptors and encoders for each disc type.</p>
       <ul class="dl-list">
         <li>✔ <b>One-click installer</b> — Windows 10/11, single prompt, no admin needed</li>
         <li>✔ <b>ffmpeg + ffprobe bundled</b> in <code>bin\</code></li>
@@ -211,66 +148,53 @@
         <li>✔ <b>Blu-ray, DVD &amp; CDs</b> — with error correction and auto metadata</li>
         <li>✔ <b>One app for every disc type</b> — no more separate tools</li>
         <li>✔ <b>GUI and CLI</b> — back up interactively or via script</li>
-        <li>✔ <b>50 free backups</b> — then a one-time license with lifetime updates</li>
+        <li>✔ <b>Free &amp; unlimited</b> — no trial, no license key, no limits</li>
       </ul>
       <div class="dl-cta" style="justify-content:center;flex-direction:column;align-items:center">
-        <a class="btn btn-primary btn-lg" href="download/FizzDiskSetup.exe">⬇  Download for Windows (.exe)</a>
-        <a class="btn btn-ghost" data-buy href="#">Buy license — $65</a>
+        <a class="btn btn-primary btn-lg" data-donate href="#" target="_blank" rel="noopener">☕ Help me pay for my DGX Sparks!</a>
+        <a class="btn btn-ghost btn-lg" href="download/FizzDiskSetup.exe" style="margin-top:.8rem">⬇  Download for Windows (.exe)</a>
       </div>
-      <div style="background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem;margin-top:1.2rem;color:var(--muted);font-size:.85rem;line-height:1.5;text-align:left">
-        <strong style="color:var(--text)">Opening it for the first time?</strong>
-        Our code-signing certificate is being finalized, so Windows may show a
-        "Windows protected your PC" screen listing the publisher as
-        <em>unknown</em>. That's expected while we finish signing: click
-        <strong>More info</strong> → <strong>Run anyway</strong>. If Windows won't
-        open the file at all, right-click it → <strong>Properties</strong> →
+      <div style="background:var(--panel-2);border:1px solid #f59e0b;border-radius:12px;padding:.9rem 1rem;margin-top:1.2rem;color:var(--muted);font-size:.85rem;line-height:1.5;text-align:left">
+        <strong style="color:#f59e0b">⚠ Opening it for the first time?</strong>
+        Windows may show a "Windows protected your PC" screen because FizzDisk
+        isn't code-signed. That's normal — click <strong>More info</strong> →
+        <strong>Run anyway</strong> to continue. If Windows won't open the file
+        at all, right-click it → <strong>Properties</strong> →
         <strong>Unblock</strong>. And if the file <em>disappears</em> or Windows
         Defender flags it, open <strong>Windows Security → Virus &amp; threat
-        protection → Protection history</strong>, find <strong>FizzDiskSetup.exe</strong>,
-        and click <strong>Restore</strong> (then <strong>Allow on this device</strong>).
-        All of this goes away once our certificate is approved.
+        protection → Protection history</strong>, find
+        <strong>FizzDiskSetup.exe</strong>, and click <strong>Restore</strong>
+        (then <strong>Allow on this device</strong>).
       </div>
+
       <p id="dl-status" class="dl-min" style="text-align:center;display:none"></p>
       <div class="dl-support" style="justify-content:center;text-align:center">
         <a class="btn btn-reddit" href="https://www.reddit.com/r/FizzDisk/" target="_blank" rel="noopener">🥽  Contact &amp; support — r/FizzDisk</a>
         <span class="dl-support-note">Questions, requests and help — join us on Reddit.</span>
       </div>
-      <p class="dl-min" style="text-align:center">Minimal requirements: Windows 10/11. Your first 50 backups are free — no account needed.</p>
+      <p class="dl-min" style="text-align:center">Minimal requirements: Windows 10/11. Free — no account needed.</p>
     </div>
   </div>
 </section>
-
-<!-- ============ FOOTER ============ -->
+<!-- FOOTER -->
 <footer class="foot">
   <div class="foot-inner">
     <span>© 2026 FizzDisk · Disc backup for Windows · v<span id="foot-ver">1.0.0</span></span>
-    <span class="foot-links"><a href="#features">Features</a><a href="#how">How it works</a><a href="#buy">Buy</a><a href="#download">Download</a><a href="https://www.reddit.com/r/FizzDisk/" target="_blank" rel="noopener">r/FizzDisk</a><a href="agreement.html">User Agreement</a></span>
+    <span class="foot-links"><a href="#features">Features</a><a href="#how">How it works</a><a data-donate href="#" target="_blank" rel="noopener">Support us</a><a href="#download">Download</a><a href="https://www.reddit.com/r/FizzDisk/" target="_blank" rel="noopener">r/FizzDisk</a></span>
   </div>
 </footer>
-
 <script src="assets/app.js"></script>
 <script>
-  // Wire config values (see assets/config.js). BUY_URL is empty until the
-  // 2Checkout link is set; until then the Buy buttons open success.html which
-  // mints a product key client-side.
   (function(){
     var cfg = window.FIZZ_CONFIG || {};
-    if (cfg.PRICE) {
-      ['buy-price','buy-price2'].forEach(function(id){
-        var el=document.getElementById(id); if(el) el.textContent=cfg.PRICE;
-      });
-    }
     if (cfg.VERSION) { var v=document.getElementById('foot-ver'); if(v) v.textContent=cfg.VERSION; }
-    var buyUrl = (cfg.BUY_URL && String(cfg.BUY_URL).trim()) ? cfg.BUY_URL : cfg.SUCCESS_URL;
-    if (buyUrl) document.querySelectorAll('[data-buy]').forEach(function(b){ b.href = buyUrl; });
-    // Disable downloads while a release is being finalized (see config.js).
+    if (cfg.DONATE_URL) {
+      document.querySelectorAll('[data-donate]').forEach(function(a){ a.href = cfg.DONATE_URL; });
+    }
     if (cfg.DOWNLOAD_AVAILABLE === false) {
-      var note = cfg.DOWNLOAD_NOTE || 'A new build is on the way \u2014 check back shortly.';
+      var note = cfg.DOWNLOAD_NOTE || 'A new build is on the way.';
       document.querySelectorAll('a[href*="FizzDiskSetup.exe"]').forEach(function(a){
-        a.classList.add('is-disabled');
-        a.removeAttribute('download');
-        a.setAttribute('aria-disabled','true');
-        a.href = '#download';
+        a.classList.add('is-disabled'); a.removeAttribute('download'); a.setAttribute('aria-disabled','true'); a.href = '#download';
       });
       var heroBtn = document.querySelector('.hero-cta a[href*="FizzDiskSetup.exe"]');
       if (heroBtn) heroBtn.textContent = '\u23F1\uFE0F New build soon';
@@ -278,17 +202,6 @@
       if (dlBtn) dlBtn.textContent = '\u23F1\uFE0F ' + note;
       var st = document.getElementById('dl-status');
       if (st) { st.textContent = note; st.style.display = 'block'; }
-    }
-    // Disable Buy buttons while purchasing isn't open yet (see config.js).
-    if (cfg.BUY_AVAILABLE === false) {
-      var bnote = cfg.BUY_NOTE || 'Purchases open soon \u2014 check back shortly.';
-      document.querySelectorAll('[data-buy]').forEach(function(b){
-        b.classList.add('is-disabled');
-        b.setAttribute('aria-disabled','true');
-        b.href = '#buy';
-      });
-      var bs = document.getElementById('buy-status');
-      if (bs) { bs.textContent = bnote; bs.style.display = 'block'; }
     }
   })();
 </script>

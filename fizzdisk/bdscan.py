@@ -73,24 +73,88 @@ def scan_bd_folder(base_str: str) -> List[Title]:
     if not playlists:
         raise ValueError("No .mpls playlists found")
 
-    titles: List[Title] = []
+    # ---- Pass 1: enumerate playlists, estimate durations from file sizes ----
+    # The .mpls in/out times are often bogus (near-32-bit-max values on many
+    # discs, e.g. Black Mirror S01), so we use the m2ts file *size* as the
+    # primary duration estimate (BD average ~28 Mbps = 3.5 MB/s, but we use a
+    # conservative 4 MB/s to avoid over-estimating short extras).  This is only
+    # for ranking / selecting the main title and for the TV heuristic — the real
+    # duration comes from the ffprobe scan.
+    raw_entries: List[dict] = []
     for mpls in playlists:
         clips = _clips_for_playlist(base, mpls)
         if not clips:
             continue
-        name = f"Title {mpls.stem}"
-        file_list = [c["file"] for c in clips]
-        info = {"duration": 0.0, "chapters": [], "streams": []}
-        try:
-            info = scan_streams(file_list)
-        except Exception:
-            info = {"duration": 0.0, "chapters": [], "streams": []}
-        # Whole-clip extraction (no in/out trimming) is the safe default; the
-        # m2ts clips referenced by a playlist fully constitute the title.
-        clip_objs = [Clip(files=[c["file"]]) for c in clips]
+        total_bytes = 0
+        for c in clips:
+            try:
+                total_bytes += Path(c["file"]).stat().st_size
+            except OSError:
+                pass
+        # Estimate: ~4 MB/s average for BD (conservative; real varies 2-6 MB/s).
+        est_dur = total_bytes / (4 * 1024 * 1024) if total_bytes > 0 else 0.0
+        # Also compute .mpls in/out as a secondary estimate (may be valid on
+        # some discs; use it only if it's in a sane range).
+        mpls_dur = 0.0
+        for c in clips:
+            if c.get("in") is not None and c.get("out") is not None:
+                d = float(c["out"]) - float(c["in"])
+                # Sanity: 5 min to 4 hours per clip (300s to 14400s at 45kHz).
+                if 300 * 45000 < d < 14400 * 45000:
+                    mpls_dur += d / 45000.0
+        # Prefer the .mpls duration if it's sane; else the file-size estimate.
+        dur = mpls_dur if mpls_dur > 0 else est_dur
+        raw_entries.append({
+            "mpls": mpls, "clips": clips, "duration": dur,
+            "file_list": [c["file"] for c in clips],
+            "total_bytes": total_bytes,
+        })
+
+    if not raw_entries:
+        raise ValueError("BD scan: no playlists with valid clips")
+
+    # ---- Decide which titles to probe ----
+    # On a normal BD (movie or TV), there are 3-10 playlists.  We probe ALL of
+    # them — each probe is one ffprobe call on the m2ts, and 3-10 probes is
+    # fast and safe.  The drive-panic issue was from Lionsgate-style obfuscation
+    # discs with 100+ *identical* decoy playlists, each probing the same m2ts;
+    # for those we cap at the first 15 unique-m2ts playlists.
+    #
+    # Deduplicate by m2ts file list: playlists that reference the same m2ts
+    # set are duplicates (Lionsgate decoys).  Only probe one per unique set.
+    seen_clip_sets: set = set()
+    probe_set: set = set()
+    for i, entry in enumerate(raw_entries):
+        clip_key = tuple(sorted(entry["file_list"]))
+        if clip_key in seen_clip_sets:
+            continue
+        seen_clip_sets.add(clip_key)
+        probe_set.add(i)
+        if len(probe_set) >= 15:  # cap: never more than 15 probes
+            break
+
+    main_idx = max(range(len(raw_entries)), key=lambda i: raw_entries[i]["duration"])
+    # Make sure the main title is always in the probe set.
+    probe_set.add(main_idx)
+
+    titles: List[Title] = []
+    for i, entry in enumerate(raw_entries):
+        name = f"Title {entry['mpls'].stem}"
+        file_list = entry["file_list"]
+        if i in probe_set:
+            try:
+                info = scan_streams(file_list)
+            except Exception:
+                info = {"duration": entry["duration"], "streams": [],
+                        "chapters": []}
+        else:
+            info = {"duration": entry["duration"], "streams": [],
+                    "chapters": []}
+
+        clip_objs = [Clip(files=[c["file"]]) for c in entry["clips"]]
         title = Title(index=len(titles), name=name, clips=clip_objs,
-                      duration=info.get("duration", 0.0),
-                      source_kind="bd", is_main=(len(titles) == 0))
+                      duration=info.get("duration", entry["duration"]),
+                      source_kind="bd", is_main=(i == main_idx))
         for s in info.get("streams", []):
             if s.codec_type == "video" and title.video is None:
                 title.video = s

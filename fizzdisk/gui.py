@@ -35,7 +35,7 @@ try:
 except ImportError:  # pillow optional: poster preview just won't show
     HAS_PIL = False
 
-from . import engine, ffutil, bdlib, movie, prefs
+from . import engine, ffutil, bdlib, movie, prefs, tvdb
 from . import license as lic
 from .version import APP_NAME as _APP_NAME, __version__ as _APP_VERSION
 from .model import Title
@@ -49,6 +49,13 @@ _LIGHT = {"text_bg": "#ffffff", "text_fg": "#20242a", "err": "#b00020"}
 _BRAND_ORANGE = "#f59e0b"
 _BRAND_ORANGE_HOVER = "#d98e09"
 _BRAND_BLUE = "#3b82f6"
+
+# Sentinel return values for the movie/TV confirm popups: when the user clicks
+# the "this is actually the other kind of disc" button, the popup returns one
+# of these so the flow can switch to the opposite identifier instead of
+# committing to the wrong one.
+_SWITCH_TO_TV = "@@switch_to_tv@@"
+_SWITCH_TO_MOVIE = "@@switch_to_movie@@"
 _BRAND_BLUE_HOVER = "#2563eb"
 
 # ---------------------------------------------------------------------------
@@ -163,6 +170,7 @@ class FizzDiskApp(ctk.CTk):
         self.output_dir = str(Path.home() / "Videos")
         self._audio_vars: dict = {}
         self._stopping = threading.Event()   # set by Stop button / window close
+        self._rip_active = False             # True while a rip worker is running
         # movie metadata lookup (title/year/poster) from the disc
         self.movie_info: Optional[dict] = None
         self.movie_candidates: List[dict] = []
@@ -173,6 +181,10 @@ class FizzDiskApp(ctk.CTk):
         # special-features disc detection (no title matches the movie runtime)
         self.special_features = False
         self._sf_prompted = False
+        # TV show identification (multi-episode disc)
+        self.is_tv = False
+        self.tv_info: Optional[dict] = None     # tvdb.identify_tv_disc() result
+        self._tv_prompted = False
         # audio-CD state
         self.cd_mode = False
         self.cd_meta: Optional[dict] = None
@@ -442,6 +454,16 @@ class FizzDiskApp(ctk.CTk):
         # same drive all hang past 90s and leave unkillable children behind.
         if getattr(self, "_scan_in_flight", False):
             return
+        # Also block scanning while a rip is in progress — the rip worker
+        # uses the same optical drive and concurrent scan probes wedge it.
+        if not self._stopping.is_set() and getattr(self, "_rip_active", False):
+            self.log("Wait for the current rip to finish before scanning.")
+            return
+        # Clear any stale _stopping flag from a previous rip/stop so the
+        # scan worker doesn't immediately bail out with "Scan cancelled."
+        # (_stopping is set by on_stop and cleared by _rip_done, but if
+        # _rip_done didn't run — e.g. the rip thread crashed — it can stick.)
+        self._stopping.clear()
         src = self.var_source.get().strip()
         if not src:
             messagebox.showinfo("FizzDisk", "Choose a source first.")
@@ -458,6 +480,44 @@ class FizzDiskApp(ctk.CTk):
         threading.Thread(target=self._scan_worker, args=(src,), daemon=True).start()
 
     def _scan_worker(self, src):
+        # Wait for Windows to finish mounting the disc before probing.
+        # When a disc is inserted, Windows takes 2-5 seconds to mount the
+        # filesystem (UDF/ISO9660).  Probing before the mount completes
+        # causes I/O errors and drive retries that look like a read storm.
+        # We poll for the BDMV/VIDEO_TS directory to appear, up to 10 seconds.
+        m = re.match(r"^([A-Za-z]):[/\\]?$", src.strip())
+        if m:
+            drive = m.group(1).upper()
+            root = f"{drive}:\\"
+            waited = 0
+            ready = False
+            while waited < 10 and not self._stopping.is_set():
+                try:
+                    if os.path.isdir(root):
+                        if (Path(root) / "BDMV").is_dir() or \
+                           (Path(root) / "VIDEO_TS").is_dir() or \
+                           (Path(root) / "AACS").is_dir():
+                            ready = True
+                            break
+                        # For audio CDs there may be no video folders, but
+                        # the drive is still accessible — check it's readable.
+                        try:
+                            os.listdir(root)
+                            ready = True
+                            break
+                        except OSError:
+                            pass
+                except OSError:
+                    pass
+                time.sleep(0.5)
+                waited += 0.5
+            if not ready and not self._stopping.is_set():
+                # Drive not ready after 10s — try anyway (the scan may
+                # still succeed, or it'll produce a clear error).
+                pass
+        if self._stopping.is_set():
+            self.after(0, lambda: self._scan_done_error("Scan cancelled."))
+            return
         try:
             res = engine.scan_source(src)
         except Exception as e:  # noqa: BLE001
@@ -471,12 +531,28 @@ class FizzDiskApp(ctk.CTk):
         self.titles = titles
         self.special_features = False
         self._sf_prompted = False
+        # reset TV show state for each new scan
+        self.is_tv = False
+        self.tv_info = None
+        self._tv_prompted = False
+        # invalidate the cached disc-name so a new disc is re-read
+        self._cached_disc_name = None
         if titles:
             self._scan_pending()
         else:
             self._scan_idle()
         self._set_status(f"Scan complete \u2014 {len(titles)} title(s)")
         self.log(info)
+        # Warn about BD+ UP FRONT, right after the scan, rather than letting the
+        # user queue a rip that is guaranteed to die partway through. The scan
+        # itself succeeds on these discs (index/playlist files are not BD+
+        # protected), so this is the first moment we can say anything useful.
+        try:
+            if (source_kind != "cd" and bdlib.disc_has_bdplus(self.source)
+                    and not bdlib.bdplus_ready(self.source)):
+                self._warn_bdplus(bdlib._BDPLUS_MESSAGE)
+        except Exception:
+            pass
         self.cd_mode = (source_kind == "cd")
         self.cd_meta = meta or None
         self._set_cd_mode(self.cd_mode)
@@ -527,10 +603,25 @@ class FizzDiskApp(ctk.CTk):
             except Exception:
                 traceback.print_exc()
         else:
-            try:
-                self._lookup_movie_async()
-            except Exception:
-                traceback.print_exc()
+            # Check if this disc looks like a TV show (multiple episode-length
+            # titles) before falling back to the movie lookup.
+            disc_dicts = [{"index": t.index, "name": t.name,
+                           "duration": t.duration or 0} for t in titles]
+            if tvdb.looks_like_tv(disc_dicts):
+                try:
+                    self._lookup_tv_async()
+                except Exception:
+                    traceback.print_exc()
+                    # fall back to movie lookup
+                    try:
+                        self._lookup_movie_async()
+                    except Exception:
+                        traceback.print_exc()
+            else:
+                try:
+                    self._lookup_movie_async()
+                except Exception:
+                    traceback.print_exc()
 
     def _scan_done_error(self, msg):
         self._scan_in_flight = False
@@ -652,41 +743,239 @@ class FizzDiskApp(ctk.CTk):
             pass
 
     def _edit_cd_album(self):
+        """Search for the album by artist/name, show cover thumbnails to pick,
+        then fill in the track names. Falls back to manual entry if no results."""
         dlg = ctk.CTkToplevel(self)
-        dlg.title("Artist & album")
+        dlg.title("Search for album")
         dlg.transient(self)
         dlg.grab_set()
+        dlg.attributes("-topmost", True)
+        dlg.geometry("560x520")
+        dlg.resizable(True, True)
         frame = ctk.CTkFrame(dlg, corner_radius=14)
         frame.pack(fill="both", expand=True, padx=12, pady=12)
-        ctk.CTkLabel(frame, text="Enter the artist and album:", anchor="w",
-                     font=("Segoe UI", 10, "bold")).grid(row=0, column=0, columnspan=2,
-                                                         sticky="w", padx=8, pady=(6, 8))
-        ctk.CTkLabel(frame, text="Artist:").grid(row=1, column=0, sticky="e", pady=2)
-        ar = ctk.CTkEntry(frame, width=320, corner_radius=8)
-        ar.insert(0, self._cd_artist or "")
-        ar.grid(row=1, column=1, sticky="w", padx=6, pady=2)
-        ctk.CTkLabel(frame, text="Album:").grid(row=2, column=0, sticky="e", pady=2)
-        al = ctk.CTkEntry(frame, width=320, corner_radius=8)
-        al.insert(0, self._cd_album or "")
-        al.grid(row=2, column=1, sticky="w", padx=6, pady=2)
-        res = {"v": None}
+
+        ctk.CTkLabel(frame, text="Search for your album",
+                     font=("Segoe UI", 12, "bold"), anchor="w"
+                     ).pack(anchor="w", padx=12, pady=(10, 4))
+
+        row = ctk.CTkFrame(frame, fg_color="transparent")
+        row.pack(fill="x", padx=12, pady=(0, 4))
+        ar_var = tk.StringVar(value=self._cd_artist or "")
+        al_var = tk.StringVar(value=self._cd_album or "")
+        ctk.CTkLabel(row, text="Artist:").pack(side="left", padx=(0, 4))
+        ctk.CTkEntry(row, width=160, textvariable=ar_var,
+                     placeholder_text="Artist").pack(side="left", padx=(0, 8))
+        ctk.CTkLabel(row, text="Album:").pack(side="left", padx=(0, 4))
+        ctk.CTkEntry(row, width=160, textvariable=al_var,
+                     placeholder_text="Album").pack(side="left", padx=(0, 8))
+
+        result = {"v": None}  # holds the chosen meta dict or "manual"
+
+        # Scrollable results area
+        results_frame = ctk.CTkScrollableFrame(frame, corner_radius=10)
+        results_frame.pack(fill="both", expand=True, padx=12, pady=(4, 8))
+
+        status_var = tk.StringVar(value="")
+        ctk.CTkLabel(frame, textvariable=status_var, text_color="gray",
+                     font=("Segoe UI", 10), anchor="w"
+                     ).pack(anchor="w", padx=12)
+
+        # ---- Worker: search MusicBrainz ----
+        def do_search():
+            a = ar_var.get().strip()
+            b = al_var.get().strip()
+            if not a and not b:
+                status_var.set("Enter an artist or album name to search.")
+                return
+            status_var.set("Searching\u2026")
+            # Clear previous results
+            for w in results_frame.winfo_children():
+                w.destroy()
+            self._cd_search_photos = []
+
+            def work():
+                try:
+                    from . import musicdisc as _md
+                    cands = _md.search_albums(a, b, limit=8)
+                except Exception:
+                    cands = []
+                self.after(0, lambda: _show_results(cands))
+
+            threading.Thread(target=work, daemon=True).start()
+
+        def _show_results(cands):
+            if not cands:
+                status_var.set("No results \u2014 click \"Enter manually\" to type the names yourself.")
+                return
+            status_var.set(f"{len(cands)} album(s) found \u2014 click one to select it.")
+
+            for cand in cands:
+                row_f = ctk.CTkFrame(results_frame, corner_radius=8, fg_color=("#f0f2f6", "#272a30"))
+                row_f.pack(fill="x", padx=4, pady=2)
+
+                # Cover thumbnail (if available and PIL is installed)
+                cover_url = cand.get("cover_url")
+                if cover_url and HAS_PIL:
+                    def _load_thumb(url, rf=row_f, c=cand):
+                        try:
+                            req = urllib.request.Request(url, headers={"User-Agent": "FizzDisk/1.0"})
+                            with urllib.request.urlopen(req, timeout=10) as resp:
+                                data = resp.read()
+                            import io as _io
+                            img = Image.open(_io.BytesIO(data))
+                            img.thumbnail((60, 60), Image.LANCZOS)
+                            if img.mode not in ("RGB", "RGBA"):
+                                img = img.convert("RGB")
+                            cimg = ctk.CTkImage(light_image=img, dark_image=img, size=img.size)
+                            lbl = ctk.CTkLabel(rf, image=cimg, text="")
+                            lbl.image = cimg
+                            lbl.pack(side="left", padx=6, pady=4)
+                            self._cd_search_photos.append(cimg)
+                        except Exception:
+                            pass
+                    threading.Thread(target=_load_thumb, args=(cover_url,), daemon=True).start()
+
+                # Album info
+                info_text = f"{cand.get('artist', '?')} \u2014 {cand.get('album', '?')}"
+                if cand.get("year"):
+                    info_text += f" ({cand['year']})"
+                tracks = cand.get("tracks") or []
+                if tracks:
+                    info_text += f"  ({len(tracks)} tracks)"
+                ctk.CTkLabel(row_f, text=info_text, anchor="w", justify="left",
+                             wraplength=380, font=("Segoe UI", 11)
+                             ).pack(side="left", fill="x", expand=True, padx=6, pady=4)
+
+                def pick(c=cand):
+                    result["v"] = c
+                    dlg.destroy()
+
+                ctk.CTkButton(row_f, text="Select", width=70, corner_radius=8,
+                              fg_color=_BRAND_ORANGE, hover_color=_BRAND_ORANGE_HOVER,
+                              text_color="#ffffff", command=pick
+                              ).pack(side="right", padx=6, pady=4)
+
+        # ---- Buttons ----
+        btns = ctk.CTkFrame(frame, fg_color="transparent")
+        btns.pack(fill="x", padx=12, pady=(0, 8))
+        ctk.CTkButton(btns, text="Search", width=90, corner_radius=10,
+                      fg_color=_BRAND_ORANGE, hover_color=_BRAND_ORANGE_HOVER,
+                      text_color="#ffffff", command=do_search
+                      ).pack(side="left", padx=(0, 8))
+        ctk.CTkButton(btns, text="Enter manually", corner_radius=10,
+                      fg_color="transparent", border_width=1,
+                      command=lambda: (result.__setitem__("v", "manual"), dlg.destroy())
+                      ).pack(side="left")
+        ctk.CTkButton(btns, text="Cancel", corner_radius=10,
+                      fg_color="transparent", border_width=1,
+                      command=dlg.destroy).pack(side="right")
+
+        # Auto-search if we already have an artist or album
+        if self._cd_artist or self._cd_album:
+            self.after(300, do_search)
+
+        dlg.bind("<Return>", lambda e: do_search())
+        dlg.bind("<Escape>", lambda e: dlg.destroy())
+        self.wait_window(dlg)
+
+        chosen = result["v"]
+        if chosen == "manual":
+            self._manual_cd_entry()
+        elif chosen and isinstance(chosen, dict):
+            # Fill in the artist, album, track names, cover, and MBIDs.
+            self._cd_artist = chosen.get("artist") or "Unknown Artist"
+            self._cd_album = chosen.get("album") or "Unknown Album"
+            self._cd_release_mbid = chosen.get("release_mbid") or ""
+            self._cd_release_group_mbid = chosen.get("release_group_mbid") or ""
+            self.cd_meta = chosen
+            # Rename the disc titles to the matched track names.
+            mb_tracks = {t.get("position"): t.get("title", "")
+                         for t in (chosen.get("tracks") or [])}
+            for t in self.titles:
+                num = (t.info or {}).get("cd_number")
+                title = mb_tracks.get(num, "") if num else ""
+                if title:
+                    t.name = f"{num:02d} - {title}"
+                    t.info["cd_title"] = title
+            self.log(f"CD identified: {self._cd_artist} \u2014 {self._cd_album}")
+            self._populate_tree()
+            self._prefill_cd_folder()
+            self._show_cd_album()
+
+    def _manual_cd_entry(self):
+        """Let the user type the artist, album, and each track name manually."""
+        dlg = ctk.CTkToplevel(self)
+        dlg.title("Enter album manually")
+        dlg.transient(self)
+        dlg.grab_set()
+        dlg.attributes("-topmost", True)
+        dlg.geometry("480x440")
+        dlg.resizable(True, True)
+        frame = ctk.CTkFrame(dlg, corner_radius=14)
+        frame.pack(fill="both", expand=True, padx=12, pady=12)
+        sc = ctk.CTkScrollableFrame(frame, corner_radius=10)
+        sc.pack(fill="both", expand=True, padx=4, pady=4)
+
+        ctk.CTkLabel(sc, text="Artist:", anchor="w").pack(anchor="w", padx=8, pady=(8, 0))
+        ar = tk.StringVar(value=self._cd_artist or "")
+        ctk.CTkEntry(sc, textvariable=ar, width=380,
+                     placeholder_text="Artist name").pack(anchor="w", padx=8, pady=(0, 6))
+
+        ctk.CTkLabel(sc, text="Album:", anchor="w").pack(anchor="w", padx=8)
+        al = tk.StringVar(value=self._cd_album or "")
+        ctk.CTkEntry(sc, textvariable=al, width=380,
+                     placeholder_text="Album name").pack(anchor="w", padx=8, pady=(0, 10))
+
+        ctk.CTkLabel(sc, text="Track names:", anchor="w",
+                     font=("Segoe UI", 10, "bold")).pack(anchor="w", padx=8, pady=(0, 4))
+
+        track_vars = []
+        for t in self.titles:
+            num = (t.info or {}).get("cd_number") or (t.index + 1)
+            row = ctk.CTkFrame(sc, fg_color="transparent")
+            row.pack(fill="x", padx=8, pady=1)
+            ctk.CTkLabel(row, text=f"#{int(num):02d}", width=30,
+                         anchor="e").pack(side="left", padx=(0, 6))
+            v = tk.StringVar(value=(t.info or {}).get("cd_title") or "")
+            track_vars.append((num, v))
+            ctk.CTkEntry(row, textvariable=v, width=320,
+                         placeholder_text=f"Track {int(num)}").pack(side="left", fill="x", expand=True)
+
+        res = {"ok": False}
 
         def ok():
-            self._cd_artist = ar.get().strip() or "Unknown Artist"
-            self._cd_album = al.get().strip() or "Unknown Album"
-            res["v"] = (self._cd_artist, self._cd_album)
+            res["ok"] = True
             dlg.destroy()
 
-        btns = ctk.CTkFrame(frame, fg_color="transparent")
-        btns.grid(row=3, column=1, sticky="e", padx=6, pady=10)
-        ctk.CTkButton(btns, text="OK", corner_radius=10, command=ok).pack(side="left")
-        ctk.CTkButton(btns, text="Cancel", corner_radius=10,
-                      fg_color="transparent", border_width=1, command=dlg.destroy).pack(side="left", padx=8)
+        ctk.CTkButton(frame, text="Save", width=90, corner_radius=10,
+                       fg_color=_BRAND_ORANGE, hover_color=_BRAND_ORANGE_HOVER,
+                       text_color="#ffffff", command=ok).pack(side="right", padx=12, pady=(0, 10))
+        ctk.CTkButton(frame, text="Cancel", corner_radius=10,
+                       fg_color="transparent", border_width=1,
+                       command=dlg.destroy).pack(side="right", padx=(0, 8))
         dlg.bind("<Return>", lambda e: ok())
         dlg.bind("<Escape>", lambda e: dlg.destroy())
         self.wait_window(dlg)
-        if res["v"]:
+
+        if res["ok"]:
+            self._cd_artist = ar.get().strip() or "Unknown Artist"
+            self._cd_album = al.get().strip() or "Unknown Album"
+            self._cd_release_mbid = ""
+            self._cd_release_group_mbid = ""
+            for num, v in track_vars:
+                title = v.get().strip()
+                if not title:
+                    title = f"Track {int(num)}"
+                for t in self.titles:
+                    if (t.info or {}).get("cd_number") == num:
+                        t.name = f"{int(num):02d} - {title}"
+                        t.info["cd_title"] = title
+                        break
             self.log(f"CD saved as: {self._cd_artist} \u2014 {self._cd_album}")
+            self._populate_tree()
+            self._prefill_cd_folder()
+            self._show_cd_album()
 
     # ------------------------------------------------- movie metadata lookup
     @staticmethod
@@ -702,6 +991,13 @@ class FizzDiskApp(ctk.CTk):
             return ""
 
     def _source_term(self) -> str:
+        # Cache the disc-metadata name from the first call so we never re-open
+        # the raw device (``//./D:``) after the scan — a second raw-device read
+        # while the drive is still settling from the scan probe can wedge it.
+        if hasattr(self, "_cached_disc_name") and self._cached_disc_name is not None:
+            cached = self._cached_disc_name
+            if cached and movie.name_is_useful(cached):
+                return cached
         src = (self.source or "").strip()
         m = re.match(r"^([A-Za-z]):", src)
         if m:
@@ -712,6 +1008,7 @@ class FizzDiskApp(ctk.CTk):
             # 'BLURAY'/'LOGICAL_VOLUME_ID' that searches fail on even though the
             # real title is present on the media.
             name = movie.disc_metadata_name(src)
+            self._cached_disc_name = name or label
             if movie.name_is_useful(name):
                 return name
             if movie.name_is_useful(label):
@@ -719,6 +1016,7 @@ class FizzDiskApp(ctk.CTk):
             return name or label or src
         base = os.path.basename(src.rstrip("\\/"))
         name = movie.disc_metadata_name(src)
+        self._cached_disc_name = name or base
         if movie.name_is_useful(name):
             return name
         if movie.name_is_useful(base):
@@ -747,6 +1045,381 @@ class FizzDiskApp(ctk.CTk):
 
         threading.Thread(target=work, daemon=True).start()
 
+    # ----------------------------------------------------------- TV show flow
+    def _lookup_tv_async(self):
+        """Identify a TV show disc: search TMDb for the show, then match
+        disc titles to episodes by duration + order.  Runs in a background
+        thread, marshals the result to ``_tv_done`` on the main thread."""
+        term = self._source_term()
+        self.log("Looking up TV show: " + (term or "(unknown)"))
+        disc_dicts = [{"index": t.index, "name": t.name,
+                       "duration": t.duration or 0} for t in self.titles]
+
+        def work():
+            try:
+                result = tvdb.identify_tv_disc(term, disc_dicts)
+                err = None
+            except Exception as e:  # noqa: BLE001
+                result, err = None, str(e)
+            self.after(0, lambda: self._tv_done(result, term, err))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def _tv_done(self, result, term, err):
+        if not result:
+            self.log("TV show not found" + ((": " + err) if err else ""))
+            # Fall back to the movie identification flow.
+            self._lookup_movie_async()
+            return
+        self.log(f"TV show identified: {result['show']['name']} "
+                 f"({len(result['matches'])} title(s) matched)")
+        self.is_tv = True
+        self.tv_info = result
+        # Load the show poster (reuses the movie poster machinery).
+        poster_url = result["show"].get("poster")
+        if poster_url:
+            self._load_poster(poster_url)
+        # Ask the user to confirm this is the right show.
+        self._ask_tv_show(result)
+
+    def _ask_tv_show(self, result):
+        """Confirm the identified TV show + season with the user.
+
+        Shows the show name and a season dropdown (pre-filled with the
+        matcher's best guess).  The user can:
+          * Confirm the show + season -> apply episode matches
+          * Change the season -> re-match against that season's episodes
+          * Search for a different show -> text entry + TMDb search + picker
+        """
+        if self._tv_prompted:
+            return
+        self._tv_prompted = True
+        show = result["show"]
+        # Determine the matched season from the first matched episode.
+        matched_season = None
+        for m in result["matches"]:
+            if m["episode"] is not None:
+                matched_season = m["season"]
+                break
+        if matched_season is None:
+            matched_season = 1
+
+        # Get the list of available seasons from the show.
+        seasons = [s["season_number"] for s in (show.get("seasons") or [])
+                    if s["season_number"] != 0]  # skip specials
+        if not seasons:
+            seasons = [1]
+        if matched_season not in seasons:
+            seasons.insert(0, matched_season)
+
+        # Show the confirmation dialog.
+        chosen = self._confirm_tv_show_dialog(show["name"], seasons, matched_season)
+
+        if chosen == _SWITCH_TO_MOVIE:
+            # User says this disc is actually a movie.
+            self._switch_to_movie()
+            return
+
+        if chosen is None:
+            # User cancelled entirely — fall back to movie flow.
+            self.is_tv = False
+            self.tv_info = None
+            self._lookup_movie_async()
+            return
+
+        if isinstance(chosen, dict) and chosen.get("action") == "search":
+            # User wants to search for a different show.
+            new_name = chosen.get("name", "")
+            self._tv_search_different_show(new_name, result)
+            return
+
+        # chosen is a season number — apply it.
+        season = chosen if isinstance(chosen, int) else matched_season
+        self._apply_tv_match(result, show, season)
+
+    def _confirm_tv_show_dialog(self, show_name, seasons, default_season):
+        """Show the confirmation popup with a season dropdown.
+
+        Returns:
+          int (the chosen season number),
+          dict {"action": "search", "name": str} (search for a different show),
+          or None (cancelled).
+        """
+        res = {"v": None}
+        dlg = ctk.CTkToplevel(self)
+        dlg.title("Confirm TV show")
+        dlg.transient(self)
+        dlg.grab_set()
+        dlg.attributes("-topmost", True)
+        frame = ctk.CTkFrame(dlg, corner_radius=14)
+        frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        ctk.CTkLabel(
+            frame,
+            text=f"Is this the correct TV show?\n\n{show_name}",
+            font=("Segoe UI", 12), wraplength=460, justify="left",
+        ).pack(anchor="w", padx=12, pady=(12, 8))
+
+        # Season dropdown
+        season_row = ctk.CTkFrame(frame, fg_color="transparent")
+        season_row.pack(fill="x", padx=12, pady=(0, 8))
+        ctk.CTkLabel(season_row, text="Season:").pack(side="left", padx=(0, 6))
+        season_vals = [f"Season {s:02d}" for s in seasons]
+        default_val = f"Season {default_season:02d}"
+        season_var = tk.StringVar(value=default_val)
+        season_combo = ctk.CTkComboBox(season_row, values=season_vals,
+                                       variable=season_var, width=160)
+        season_combo.pack(side="left")
+
+        ctk.CTkLabel(
+            frame,
+            text="Episodes will be named and organized into\n"
+                 "  Show Name (Year) / Season XX / SxxExx - Episode Title.mkv",
+            font=("Segoe UI", 10), text_color="#888", wraplength=460,
+            justify="left",
+        ).pack(anchor="w", padx=12, pady=(0, 12))
+
+        btns = ctk.CTkFrame(frame, fg_color="transparent")
+        btns.pack(fill="x", padx=12, pady=(0, 12))
+
+        def confirm():
+            # Parse the season number from the dropdown value.
+            val = season_var.get()
+            import re as _re
+            m = _re.search(r"Season\s+(\d+)", val)
+            res["v"] = int(m.group(1)) if m else default_season
+            dlg.destroy()
+
+        def search_other():
+            res["v"] = {"action": "search", "name": ""}
+            dlg.destroy()
+
+        def to_movie():
+            res["v"] = _SWITCH_TO_MOVIE
+            dlg.destroy()
+
+        def cancel():
+            res["v"] = None
+            dlg.destroy()
+
+        ctk.CTkButton(btns, text="Yes, use this season", fg_color=_BRAND_ORANGE,
+                      hover_color=_BRAND_ORANGE_HOVER, text_color="#ffffff",
+                      command=confirm).pack(side="left", expand=True, fill="x",
+                                             padx=(0, 5))
+        ctk.CTkButton(btns, text="Search for a different show",
+                      fg_color="transparent", border_width=1,
+                      command=search_other).pack(side="left", padx=5)
+        ctk.CTkButton(btns, text="It's a movie", fg_color="transparent",
+                      border_width=1, command=to_movie).pack(side="left",
+                                                             padx=5)
+        ctk.CTkButton(btns, text="Cancel", fg_color="transparent",
+                      border_width=1, command=cancel).pack(side="left",
+                                                            padx=(5, 0))
+        try:
+            dlg.wait_window()
+        except Exception:
+            res["v"] = None
+        return res["v"]
+
+    def _tv_search_different_show(self, initial_name, old_result):
+        """Let the user search for a different show by name."""
+        dlg = ctk.CTkToplevel(self)
+        dlg.title("Search for TV show")
+        dlg.transient(self)
+        dlg.grab_set()
+        dlg.attributes("-topmost", True)
+        dlg.geometry("480x420")
+        dlg.resizable(True, True)
+        frame = ctk.CTkFrame(dlg, corner_radius=14)
+        frame.pack(fill="both", expand=True, padx=12, pady=12)
+
+        ctk.CTkLabel(frame, text="Search for your TV show",
+                     font=("Segoe UI", 12, "bold"), anchor="w"
+                     ).pack(anchor="w", padx=12, pady=(10, 4))
+
+        name_var = tk.StringVar(value=initial_name or "")
+        ctk.CTkEntry(frame, textvariable=name_var, width=380,
+                     placeholder_text="TV show name").pack(anchor="w", padx=12, pady=(0, 8))
+
+        results_frame = ctk.CTkScrollableFrame(frame, corner_radius=10)
+        results_frame.pack(fill="both", expand=True, padx=12, pady=(0, 8))
+
+        status_var = tk.StringVar(value="")
+        ctk.CTkLabel(frame, textvariable=status_var, text_color="gray",
+                     font=("Segoe UI", 10), anchor="w"
+                     ).pack(anchor="w", padx=12)
+
+        chosen = {"v": None}
+
+        def do_search():
+            q = name_var.get().strip()
+            if not q:
+                status_var.set("Enter a show name to search.")
+                return
+            status_var.set("Searching\u2026")
+            for w in results_frame.winfo_children():
+                w.destroy()
+
+            def work():
+                try:
+                    clean = tvdb.clean_tv_term(q)
+                    cands = tvdb.search_tv(clean or q)
+                except Exception:
+                    cands = []
+                self.after(0, lambda: show_results(cands))
+
+            threading.Thread(target=work, daemon=True).start()
+
+        def show_results(cands):
+            if not cands:
+                status_var.set("No results \u2014 try a different name.")
+                return
+            status_var.set(f"{len(cands)} show(s) found \u2014 click one to select.")
+            for cand in cands:
+                row_f = ctk.CTkFrame(results_frame, corner_radius=8,
+                                     fg_color=("#f0f2f6", "#272a30"))
+                row_f.pack(fill="x", padx=4, pady=2)
+                info = f"{cand.get('name', '?')}"
+                if cand.get("year"):
+                    info += f"  ({cand['year']})"
+                ctk.CTkLabel(row_f, text=info, anchor="w", justify="left",
+                             wraplength=340, font=("Segoe UI", 11)
+                             ).pack(side="left", fill="x", expand=True,
+                                    padx=6, pady=4)
+
+                def pick(c=cand):
+                    chosen["v"] = c
+                    dlg.destroy()
+
+                ctk.CTkButton(row_f, text="Select", width=70, corner_radius=8,
+                              fg_color=_BRAND_ORANGE, hover_color=_BRAND_ORANGE_HOVER,
+                              text_color="#ffffff", command=pick
+                              ).pack(side="right", padx=6, pady=4)
+
+        btns = ctk.CTkFrame(frame, fg_color="transparent")
+        btns.pack(fill="x", padx=12, pady=(0, 8))
+        ctk.CTkButton(btns, text="Search", width=90, corner_radius=10,
+                      fg_color=_BRAND_ORANGE, hover_color=_BRAND_ORANGE_HOVER,
+                      text_color="#ffffff", command=do_search
+                      ).pack(side="left", padx=(0, 8))
+        ctk.CTkButton(btns, text="It's a movie", width=100, corner_radius=10,
+                      fg_color="transparent", border_width=1,
+                      command=lambda: (chosen.__setitem__("v", _SWITCH_TO_MOVIE),
+                                       dlg.destroy())).pack(side="right", padx=(0, 8))
+        ctk.CTkButton(btns, text="Cancel", corner_radius=10,
+                      fg_color="transparent", border_width=1,
+                      command=dlg.destroy).pack(side="right")
+
+        if initial_name:
+            self.after(300, do_search)
+        dlg.bind("<Return>", lambda e: do_search())
+        dlg.bind("<Escape>", lambda e: dlg.destroy())
+        self.wait_window(dlg)
+
+        c = chosen["v"]
+        if c == _SWITCH_TO_MOVIE:
+            self._switch_to_movie()
+            return
+        if c is None:
+            # Cancelled — fall back to movie flow.
+            self.is_tv = False
+            self.tv_info = None
+            self._lookup_movie_async()
+            return
+
+        # User picked a show — fetch it, get seasons, re-match.
+        show_id = c.get("id")
+        if not show_id:
+            self.is_tv = False
+            self.tv_info = None
+            self._lookup_movie_async()
+            return
+
+        # Fetch the show + all episodes, then re-match against the disc titles.
+        disc_dicts = [{"index": t.index, "name": t.name,
+                       "duration": t.duration or 0} for t in self.titles]
+
+        def work():
+            try:
+                show = tvdb.get_show(show_id)
+                if not show:
+                    self.after(0, lambda: self._tv_done(None, "", "show not found"))
+                    return
+                all_eps = tvdb.get_all_episodes(show_id)
+                if not all_eps:
+                    self.after(0, lambda: self._tv_done(None, "", "no episodes found"))
+                    return
+                matches = tvdb.match_episodes(disc_dicts, all_eps)
+                # Determine the matched season.
+                matched_season = None
+                for m in matches:
+                    if m["episode"] is not None:
+                        matched_season = m["season"]
+                        break
+                if matched_season is None:
+                    matched_season = 1
+                # Build a new result dict.
+                new_result = {
+                    "show": show,
+                    "matches": matches,
+                    "folder": tvdb.build_tv_folder(show),
+                    "seasons": {},
+                    "special_features": [],
+                }
+                # Fill in seasons structure.
+                for m in matches:
+                    if m["episode"] is not None:
+                        sn = m["season"]
+                        if sn not in new_result["seasons"]:
+                            new_result["seasons"][sn] = {
+                                "folder": tvdb.build_season_folder(sn),
+                                "episodes": [],
+                            }
+                        new_result["seasons"][sn]["episodes"].append(m)
+                self.after(0, lambda: self._apply_tv_match(new_result, show, matched_season))
+            except Exception as e:
+                self.after(0, lambda e=e: self._tv_done(None, "", str(e)))
+
+        self.log(f"Searching TMDb for: {c.get('name')} ...")
+        threading.Thread(target=work, daemon=True).start()
+
+    def _apply_tv_match(self, result, show, season):
+        """Apply the matched TV show data to the GUI (rename titles, set folder, etc.)."""
+        self.is_tv = True
+        self.tv_info = result
+        folder = result.get("folder") or tvdb.build_tv_folder(show)
+        self._film_folder = _safe_name(folder)
+        # Rename matched titles to their episode names + select them.
+        matched_indices = set()
+        first_match = None
+        for m in result["matches"]:
+            if m["episode"] is not None:
+                di = m["disc_index"]
+                matched_indices.add(di)
+                if first_match is None:
+                    first_match = m
+                for t in self.titles:
+                    if t.index == di:
+                        sn = m["season"]
+                        ep_num = m["episode_number"]
+                        ep_name = m["name"] or f"Episode {ep_num}"
+                        t.name = f"S{sn:02d}E{ep_num:02d} - {ep_name}"
+                        break
+        if matched_indices:
+            self.selected = matched_indices
+        if first_match:
+            sn = first_match["season"]
+            ep_num = first_match["episode_number"]
+            ep_name = first_match["name"] or f"Episode {ep_num}"
+            tmpl = tvdb.build_episode_filename(sn, ep_num, ep_name)
+            self.var_tmpl.set(tmpl)
+        self.log(f"TV show: {show['name']} (Season {season:02d})  ->  "
+                 f"{self._film_folder}/Season {season:02d}/S{season:02d}Exx - Episode.mkv")
+        try:
+            self._populate_tree()
+        except Exception:
+            traceback.print_exc()
+
     def _movie_done(self, cands, term, err):
         self.movie_candidates = cands or []
         if self.movie_candidates:
@@ -754,6 +1427,30 @@ class FizzDiskApp(ctk.CTk):
         else:
             self.log("Movie not found" + ((": " + err) if err else ""))
         self._ask_movie()
+
+    def _switch_to_tv(self):
+        """User decided an identification popup is actually a TV show disc.
+
+        Resets the TV-prompt state so the TV flow can run fresh, then kicks
+        off the TV lookup.  Used from the movie confirm/pick popups.
+        """
+        self.log("Switching to TV show identification")
+        self.is_tv = False
+        self.tv_info = None
+        self._tv_prompted = False
+        self._lookup_tv_async()
+
+    def _switch_to_movie(self):
+        """User decided an identification popup is actually a movie disc.
+
+        Resets the TV state and kicks off the movie lookup.  Used from the
+        TV confirm popup when the disc isn't a TV show.
+        """
+        self.log("Switching to movie identification")
+        self.is_tv = False
+        self.tv_info = None
+        self._tv_prompted = False
+        self._lookup_movie_async()
 
     def _ask_movie(self):
         cands = list(getattr(self, "movie_candidates", None) or [])
@@ -770,12 +1467,18 @@ class FizzDiskApp(ctk.CTk):
                 except Exception:
                     traceback.print_exc()
                     ok = True
+                if ok == _SWITCH_TO_TV:
+                    self._switch_to_tv()
+                    return
                 if ok:
                     name = guess["name"]
                 else:
                     self.movie_info = guess
             else:
                 picked = self._pick_movie(cands)
+                if picked == _SWITCH_TO_TV:
+                    self._switch_to_tv()
+                    return
                 if isinstance(picked, dict):
                     self.movie_info = picked
                     if picked.get("poster"):
@@ -791,6 +1494,9 @@ class FizzDiskApp(ctk.CTk):
             except Exception:
                 traceback.print_exc()
                 name = None
+            if name == _SWITCH_TO_TV:
+                self._switch_to_tv()
+                return
             if not name:
                 name = self.movie_info["name"] if self.movie_info else self._fallback_name(self._source_term())
 
@@ -970,11 +1676,19 @@ class FizzDiskApp(ctk.CTk):
         def manual():
             res["v"] = "manual"
             dlg.destroy()
+
+        def to_tv():
+            res["v"] = _SWITCH_TO_TV
+            dlg.destroy()
+
         btns = ctk.CTkFrame(frame, fg_color="transparent")
         btns.pack(fill="x", padx=12, pady=10)
         ctk.CTkButton(btns, text="Use this one", corner_radius=10, command=use).pack(side="left")
         ctk.CTkButton(btns, text="Let me type it in", corner_radius=10,
                       fg_color="transparent", border_width=1, command=manual).pack(side="left", padx=8)
+        ctk.CTkButton(btns, text="It's a TV show", corner_radius=10,
+                      fg_color="transparent", border_width=1, command=to_tv
+                      ).pack(side="left", padx=(8, 0))
         dlg.bind("<Escape>", lambda e: dlg.destroy())
         self.wait_window(dlg)
         return res["v"]
@@ -1066,56 +1780,18 @@ class FizzDiskApp(ctk.CTk):
         self._open_settings()
 
     def _open_settings(self):
-        """Settings popup: trial/licensing + TheMovieDB API key, in two cards."""
+        """Settings popup: TheMovieDB API key (the only setting)."""
         dlg = ctk.CTkToplevel(self)
         dlg.title("Settings")
         dlg.transient(self)
-        dlg.geometry("560x560")
+        dlg.geometry("560x380")
         dlg.resizable(True, True)
         body = ctk.CTkFrame(dlg, corner_radius=14)
         body.pack(fill="both", expand=True, padx=12, pady=12)
         sc = ctk.CTkScrollableFrame(body, corner_radius=12)
         sc.pack(fill="both", expand=True, padx=4, pady=4)
 
-        # ---- Card 1: trial / product key ----
-        card1 = ctk.CTkFrame(sc, corner_radius=12, fg_color=("#f0f2f6", "#272a30"))
-        card1.pack(fill="x", anchor="w", padx=4, pady=(2, 10))
-        ctk.CTkLabel(card1, text="Trial & Registration", font=("Segoe UI", 12, "bold"),
-                     anchor="w").pack(anchor="w", padx=12, pady=(10, 2))
-        lic_status = tk.StringVar(value=lic.status_text())
-        ctk.CTkLabel(card1, textvariable=lic_status, wraplength=480, justify="left",
-                     anchor="w").pack(anchor="w", padx=12, pady=(0, 4))
-        prow = ctk.CTkFrame(card1, fg_color="transparent")
-        prow.pack(anchor="w", padx=12, pady=(4, 2))
-        ctk.CTkLabel(prow, text="Product key:", anchor="w").pack(side="left", padx=(0, 6))
-        pk = tk.StringVar(value=lic.format_key(lic._load().get("license_key", "")))
-        ctk.CTkEntry(prow, width=260, textvariable=pk,
-                     placeholder_text="FZFK-XXXX-XXXX-XXXX-XXXX").pack(side="left")
-        pk_status = tk.StringVar(value="")
-
-        def do_activate():
-            ok, msg = lic.activate(pk.get())
-            lic_status.set(lic.status_text())
-            pk_status.set(msg)
-            self.log("License: " + msg)
-
-        ctk.CTkButton(prow, text="Activate", width=90, corner_radius=10,
-                      command=do_activate).pack(side="left", padx=(8, 0))
-        ctk.CTkLabel(card1, textvariable=pk_status, text_color="#3b82f6",
-                     anchor="w").pack(anchor="w", padx=12, pady=(2, 10))
-
-        def do_deactivate():
-            ok, msg = lic.deactivate()
-            lic_status.set(lic.status_text())
-            pk_status.set(msg)
-            self.log("License: " + msg)
-
-        ctk.CTkButton(card1, text="Move to another machine? Click here", fg_color="transparent",
-                      border_width=1, corner_radius=10, command=do_deactivate,
-                      width=260).pack(anchor="w", padx=12, pady=(0, 10))
-
-
-        # ---- Card 2: TheMovieDB API key ----
+        # ---- TheMovieDB API key ----
         card2 = ctk.CTkFrame(sc, corner_radius=12, fg_color=("#f0f2f6", "#272a30"))
         card2.pack(fill="x", anchor="w", padx=4, pady=(2, 10))
         ctk.CTkLabel(card2, text="TheMovieDB API key (recommended)", font=("Segoe UI", 12, "bold"),
@@ -1165,6 +1841,101 @@ class FizzDiskApp(ctk.CTk):
         ctk.CTkLabel(card2, textvariable=status, text_color="#3b82f6", anchor="w").pack(
             anchor="w", padx=12, pady=(6, 10))
 
+
+        # ---- BD+ conversion tables ----
+        cardbd = ctk.CTkFrame(sc, corner_radius=12, fg_color=("#f0f2f6", "#272a30"))
+        cardbd.pack(fill="x", anchor="w", padx=4, pady=(2, 10))
+        ctk.CTkLabel(cardbd, text="BD+ protected discs", font=("Segoe UI", 12, "bold"),
+                     anchor="w").pack(anchor="w", padx=12, pady=(10, 2))
+        ctk.CTkLabel(cardbd, text=(
+            "A few Blu-rays add BD+ on top of AACS. BD+ deliberately corrupts the\n"
+            "picture, so these discs rip with perfect audio but broken video unless\n"
+            "a 'conversion table' for that exact disc is installed. Insert the disc\n"
+            "and scan it, then use the disc ID below to obtain its table and add it."),
+            justify="left", anchor="w", wraplength=470).pack(anchor="w", padx=12, pady=(0, 6))
+
+        bd_status = tk.StringVar(value="Insert a disc and press Scan to check.")
+        ctk.CTkLabel(cardbd, textvariable=bd_status, anchor="w", justify="left",
+                     wraplength=470, text_color="#3b82f6").pack(anchor="w", padx=12, pady=(0, 6))
+
+        def refresh_bd():
+            try:
+                from . import bdplus as _bdp
+                src = self.source or ""
+                if not src:
+                    bd_status.set("No disc selected.")
+                    return
+                st = _bdp.status(src)
+                if not st["bdplus"]:
+                    bd_status.set("This disc does not use BD+ \u2014 nothing needed.")
+                elif st["ready"]:
+                    bd_status.set(f"BD+ disc ID {st['media_key']}\n"
+                                  f"Conversion table INSTALLED \u2014 this disc can be ripped.")
+                elif st["media_key"]:
+                    bd_status.set(f"BD+ disc ID {st['media_key']}\n"
+                                  f"No conversion table installed for this disc yet.")
+                else:
+                    bd_status.set("BD+ disc, but its ID could not be read "
+                                  "(is the disc readable?).")
+            except Exception as e:  # noqa: BLE001
+                bd_status.set(f"Could not check: {e}")
+
+        def copy_id():
+            try:
+                from . import bdplus as _bdp
+                mk = _bdp.media_key(self.source or "")
+                if mk:
+                    self.clipboard_clear()
+                    self.clipboard_append(mk)
+                    bd_status.set(f"Disc ID copied to the clipboard:\n{mk}")
+                else:
+                    bd_status.set("Could not read this disc's ID.")
+            except Exception as e:  # noqa: BLE001
+                bd_status.set(f"Could not read the disc ID: {e}")
+
+        def add_table():
+            try:
+                from . import bdplus as _bdp
+                mk = _bdp.media_key(self.source or "")
+                if not mk:
+                    bd_status.set("Insert the BD+ disc first \u2014 its ID is needed "
+                                  "to name the table.")
+                    return
+                p = filedialog.askopenfilename(
+                    title="Select the conversion table for this disc",
+                    filetypes=[("Conversion table", "*.bin"), ("All files", "*.*")])
+                if not p:
+                    return
+                dst = _bdp.install_table(p, mk)
+                bd_status.set(f"Installed \u2014 {os.path.basename(dst)}\n"
+                              f"Scan the disc again and it should rip correctly.")
+                self.log("BD+ conversion table installed for this disc.")
+            except Exception as e:  # noqa: BLE001
+                bd_status.set(f"Could not install that file: {e}")
+
+        def open_folder():
+            try:
+                from . import bdplus as _bdp
+                _bdp.ensure_vm0()
+                os.startfile(_bdp.convtab_dir())   # noqa: S606
+            except Exception as e:  # noqa: BLE001
+                bd_status.set(f"Could not open the folder: {e}")
+
+        bdrow = ctk.CTkFrame(cardbd, fg_color="transparent")
+        bdrow.pack(anchor="w", padx=12, pady=(0, 10))
+        ctk.CTkButton(bdrow, text="Check this disc", width=120, corner_radius=10,
+                      command=refresh_bd).pack(side="left", padx=(0, 6))
+        ctk.CTkButton(bdrow, text="Copy disc ID", width=110, corner_radius=10,
+                      fg_color="transparent", border_width=1,
+                      command=copy_id).pack(side="left", padx=(0, 6))
+        ctk.CTkButton(bdrow, text="Add table\u2026", width=100, corner_radius=10,
+                      fg_color="transparent", border_width=1,
+                      command=add_table).pack(side="left", padx=(0, 6))
+        ctk.CTkButton(bdrow, text="Open folder", width=100, corner_radius=10,
+                      fg_color="transparent", border_width=1,
+                      command=open_folder).pack(side="left")
+        if self.source:
+            refresh_bd()
 
         # ---- Card 3: Ripping behaviour ----
         card3 = ctk.CTkFrame(sc, corner_radius=12, fg_color=("#f0f2f6", "#272a30"))
@@ -1217,6 +1988,10 @@ class FizzDiskApp(ctk.CTk):
                       command=lambda: (res.__setitem__("v", True), dlg.destroy())).pack(side="left")
         ctk.CTkButton(btns, text="No, it's wrong", corner_radius=10,
                       fg_color="transparent", border_width=1, command=dlg.destroy).pack(side="left", padx=8)
+        ctk.CTkButton(btns, text="It's a TV show", corner_radius=10,
+                      fg_color="transparent", border_width=1,
+                      command=lambda: (res.__setitem__("v", _SWITCH_TO_TV), dlg.destroy())
+                      ).pack(side="left", padx=(8, 0))
         dlg.bind("<Return>", lambda e: (res.__setitem__("v", True), dlg.destroy()))
         dlg.bind("<Escape>", lambda e: dlg.destroy())
 
@@ -1315,6 +2090,15 @@ class FizzDiskApp(ctk.CTk):
                                 "%s (%s)" % (picked.get("title"), picked.get("year"))
                                 if picked.get("title") else None)
                             self.movie_info = picked     # so the poster can resolve later
+                            # Mirror the auto-lookup flow: fetch this movie's poster
+                            # so it is available when the rip writes poster.jpg. The
+                            # chooser thumbnails live in _pick_photos (_start_thumb_load)
+                            # and are NOT the same as self._poster_bytes, so without
+                            # this the poster would show in the selector but never save.
+                            if picked.get("poster"):
+                                self._load_poster(movie.highres_poster(
+                                    picked.get("title"), picked.get("year"),
+                                    picked.get("poster")))
                             cancel.set()
                             state["open"] = False
                             dlg.destroy()
@@ -1346,9 +2130,17 @@ class FizzDiskApp(ctk.CTk):
             state["open"] = False
             dlg.destroy()
 
+        def to_tv():
+            res["v"] = _SWITCH_TO_TV
+            cancel.set()
+            state["open"] = False
+            dlg.destroy()
+
         btns = ctk.CTkFrame(frame, fg_color="transparent")
         btns.grid(row=4, column=0, columnspan=3, pady=(12, 4))     # centered across the form
         ctk.CTkButton(btns, text="Search Again", corner_radius=10, command=search_again,
+                      fg_color="transparent", border_width=1).pack(side="left", padx=4)
+        ctk.CTkButton(btns, text="It's a TV show", corner_radius=10, command=to_tv,
                       fg_color="transparent", border_width=1).pack(side="left", padx=4)
         ctk.CTkButton(btns, text="Save", corner_radius=10, command=ok).pack(side="left", padx=4)
         ctk.CTkButton(btns, text="Cancel", corner_radius=10,
@@ -1405,12 +2197,11 @@ class FizzDiskApp(ctk.CTk):
             label.pack(side="left", fill="x", expand=True, padx=6, pady=2)
 
             def _click(e, idx=t.index, lbl=label, s=src):
-                # Exclusive single-select for video: a plain click makes this
-                # the ONLY selected title (deselecting the auto-picked one).
-                # Ctrl/Shift click toggles additively so the user can still
-                # select several extras; 'Select All'/'Select None' remain too.
-                # Music CDs stay on plain toggling (users select multiple tracks).
-                if self.cd_mode or (e.state & (0x4 | 0x1)):   # CD, or Ctrl/Shift
+                # CD and TV show discs use additive toggling (users select
+                # multiple tracks/episodes).  Movie discs use exclusive
+                # single-select (one feature at a time) unless Ctrl/Shift
+                # is held.  'Select All'/'Select None' always work too.
+                if self.cd_mode or self.is_tv or (e.state & (0x4 | 0x1)):
                     self._toggle_rip(idx)
                 else:
                     self.selected = {idx}
@@ -1467,6 +2258,8 @@ class FizzDiskApp(ctk.CTk):
         self.audio_sel = set(range(len(title.audio)))
         self.sub_sel = set(range(len(title.subtitles)))
         self._clear_streams()
+        self.stream_frame.grid_columnconfigure(0, weight=1)
+        self.stream_frame.grid_columnconfigure(1, weight=0)
         r = 0
         if title.audio:
             ctk.CTkLabel(self.stream_frame, text="Audio:", font=("Segoe UI", 10, "bold"), anchor="w").grid(row=r, column=0, sticky="nw", padx=4, pady=2)
@@ -1474,7 +2267,7 @@ class FizzDiskApp(ctk.CTk):
             for i, a in enumerate(title.audio):
                 v = tk.BooleanVar(value=True)
                 cb = ctk.CTkCheckBox(self.stream_frame, text=a.label, corner_radius=6,
-                                     checkbox_width=13, checkbox_height=13, width=16,
+                                     checkbox_width=13, checkbox_height=13, width=300,
                                      variable=v, command=lambda i=i, v=v: self._toggle("a", i, v.get()))
                 cb.grid(row=r, column=0, columnspan=2, sticky="w", padx=10)
                 self._audio_vars[i] = v
@@ -1485,7 +2278,7 @@ class FizzDiskApp(ctk.CTk):
             for i, s in enumerate(title.subtitles):
                 v = tk.BooleanVar(value=True)
                 cb = ctk.CTkCheckBox(self.stream_frame, text=s.label, corner_radius=6,
-                                     checkbox_width=13, checkbox_height=13, width=16,
+                                     checkbox_width=13, checkbox_height=13, width=300,
                                      variable=v, command=lambda i=i, v=v: self._toggle("s", i, v.get()))
                 cb.grid(row=r, column=0, columnspan=2, sticky="w", padx=10)
                 r += 1
@@ -1509,6 +2302,9 @@ class FizzDiskApp(ctk.CTk):
         """Streams pane becomes album info + a small cover-art thumbnail."""
         self._clear_streams()
         meta = self.cd_meta or {}
+        # Reserve column 0 for text (wraps), column 1 for cover art (fixed).
+        self.stream_frame.grid_columnconfigure(0, weight=1)
+        self.stream_frame.grid_columnconfigure(1, weight=0, minsize=190)
         r = 0
         ctk.CTkLabel(self.stream_frame, text="Album", font=("Segoe UI", 10, "bold"),
                      anchor="w").grid(row=r, column=0, sticky="nw", padx=4, pady=(2, 2))
@@ -1521,7 +2317,8 @@ class FizzDiskApp(ctk.CTk):
         ]
         for k, v in rows:
             if v:
-                ctk.CTkLabel(self.stream_frame, text=f"{k}: {v}", anchor="w").grid(
+                ctk.CTkLabel(self.stream_frame, text=f"{k}: {v}", anchor="w",
+                             wraplength=260, justify="left").grid(
                     row=r, column=0, sticky="w", padx=10)
                 r += 1
         try:
@@ -1566,16 +2363,6 @@ class FizzDiskApp(ctk.CTk):
             messagebox.showinfo("FizzDisk", "Choose an output folder.")
             return
         os.makedirs(self.var_out.get().strip(), exist_ok=True)
-        # 50-backup trial: block ripping once the limit is reached (no license)
-        if not lic.can_rip():
-            self.log("Trial limit reached \u2014 a product key unlocks unlimited backups.")
-            messagebox.showinfo(
-                "FizzDisk",
-                "You've used all 50 trial backups.\n\n"
-                "Enter a product key in Settings (the gear icon) to unlock "
-                "unlimited backups and lifetime updates.")
-            self._open_settings()
-            return
         if self.cd_mode:
             jobs = [t for t in self.titles if t.index in self.selected]
             if not jobs:
@@ -1587,6 +2374,7 @@ class FizzDiskApp(ctk.CTk):
             fmts = self._selected_cd_formats()
             label = " + ".join(f.upper() for f in fmts)
             self._stopping.clear()
+            self._rip_active = True
             self._start_busy()
             self._stop_active()
             self.progress.set(0.0)
@@ -1605,6 +2393,7 @@ class FizzDiskApp(ctk.CTk):
             messagebox.showinfo("FizzDisk", "Select at least one title.")
             return
         self._stopping.clear()
+        self._rip_active = True
         self._start_busy()
         self._stop_active()
         self.progress.set(0.0)
@@ -1671,8 +2460,15 @@ class FizzDiskApp(ctk.CTk):
             self._prog_curdur = t.duration or 0.0
             self.after(0, lambda t=t: self._set_status(f"Ripping {t.name} ..."))
             try:
-                was_stopped = self._make_one(t, self._on_title_progress, len(jobs),
-                                             sf_index=(i + 1) if sf else None)
+                # In TV mode, _make_one_tv computes its own SF index; don't
+                # pass the movie-style sf_index.
+                if self.is_tv:
+                    was_stopped = self._make_one(t, self._on_title_progress,
+                                                 len(jobs))
+                else:
+                    was_stopped = self._make_one(t, self._on_title_progress,
+                                                 len(jobs),
+                                                 sf_index=(i + 1) if sf else None)
             except Exception as e:  # noqa: BLE001
                 if not self._stopping.is_set():
                     self.after(0, lambda e=e: self.log(f"ERROR: {e}", err=True))
@@ -1771,7 +2567,8 @@ class FizzDiskApp(ctk.CTk):
             return best, True
         return title, False
 
-    def _make_one(self, title, progress_cb=None, num_jobs=1, sf_index=None):
+    def _make_one(self, title, progress_cb=None, num_jobs=1, sf_index=None,
+                  _tv_delegated=False):
         # Obfuscated-disc guard: if we know the movie's runtime, prefer the title
         # whose duration matches it -- a decoy/truncated "main" playlist on
         # discs like Lionsgate otherwise loses scenes/credits from the end.
@@ -1781,6 +2578,12 @@ class FizzDiskApp(ctk.CTk):
             self.log(f"Disc title '{_safe_name(title.name)}' is closest to the "
                      f"known runtime ({rt} min) \u2014 using it.")
         out_dir = self.var_out.get().strip()
+
+        # ---- TV show: build Show Name (Year)/Season XX/SxxExx - Title.mkv ----
+        if self.is_tv and self.tv_info and not _tv_delegated:
+            return self._make_one_tv(title, out_dir, progress_cb, num_jobs,
+                                     sf_index)
+
         tmpl = self.var_tmpl.get().strip() or "{name}.mkv"
         if "{name}" not in tmpl and num_jobs > 1:
             stem, ext = os.path.splitext(tmpl)
@@ -1816,6 +2619,18 @@ class FizzDiskApp(ctk.CTk):
                                       progress_cb=progress_cb,
                                       stop_event=self._stopping,
                                       total_bytes=title.size_bytes)
+                except bdlib.BDPlusError as e:
+                    # BD+ is terminal: no bundled fallback can strip it either,
+                    # so do NOT burn minutes retrying. Delete the part-file so
+                    # no corrupt video is left looking like a usable rip, and
+                    # explain the real cause.
+                    try:
+                        if os.path.exists(out_path):
+                            os.remove(out_path)
+                    except OSError:
+                        pass
+                    self.after(0, lambda m=str(e): self._warn_bdplus(m))
+                    raise
                 except RuntimeError:
                     if self._stopping.is_set():
                         return True
@@ -1905,7 +2720,7 @@ class FizzDiskApp(ctk.CTk):
         cb = _cb
         rc = ffutil.remux(title, out_path, video=True, audio_idx=audio_idx,
                           sub_idx=sub_idx, copy_codecs=not self.var_encode.get(),
-                          progress_cb=cb)
+                          progress_cb=cb, stop_event=self._stopping)
         if rc != 0:
             if self._stopping.is_set():
                 return True
@@ -1917,6 +2732,79 @@ class FizzDiskApp(ctk.CTk):
             self.after(0, lambda p=out_path, t=title: self._warn_truncated(t, p))
         self.after(0, lambda p=out_path: self.log("Made " + p))
         return self._stopping.is_set()
+
+    def _make_one_tv(self, title, out_dir, progress_cb, num_jobs, sf_index):
+        """Rip one title from a TV show disc into the Show/Season/Episode structure.
+
+        Looks up this title's episode match in ``self.tv_info`` and builds:
+            out_dir/Show Name (Year)/Season XX/SxxExx - Episode Title.mkv
+        Unmatched titles (special features) go into:
+            out_dir/Show Name (Year)/Special Features/Show Name - SF N.mkv
+        """
+        show_folder = self._film_folder or "TV Show"
+        match = None
+        for m in self.tv_info["matches"]:
+            if m["disc_index"] == title.index:
+                match = m
+                break
+
+        if match and match["episode"] is not None:
+            # Matched episode: Show/Season/SxxExx - Title.mkv
+            season = match["season"]
+            ep_num = match["episode_number"]
+            ep_name = match["name"] or f"Episode {ep_num}"
+            season_dir = os.path.join(out_dir, show_folder,
+                                     tvdb.build_season_folder(season))
+            os.makedirs(season_dir, exist_ok=True)
+            fname = tvdb.build_episode_filename(season, ep_num, ep_name)
+            out_path = os.path.join(season_dir, fname)
+        else:
+            # Unmatched title (special feature / extra):
+            # Show/Special Features/Show - Special Features N.mkv
+            sf_dir = os.path.join(out_dir, show_folder, "Special Features")
+            os.makedirs(sf_dir, exist_ok=True)
+            # Compute the special-features index among unmatched titles.
+            sf_idx = 1
+            for m in self.tv_info["matches"]:
+                if m["disc_index"] == title.index:
+                    break
+                if m["episode"] is None:
+                    sf_idx += 1
+            show_name = self.tv_info["show"].get("title") or "TV Show"
+            fname = tvdb.build_special_features_filename(show_name, sf_idx)
+            out_path = os.path.join(sf_dir, fname)
+
+        # Save the show poster to the show folder (not the season folder).
+        if self._poster_bytes:
+            show_dir = os.path.join(out_dir, show_folder)
+            try:
+                with open(os.path.join(show_dir, "poster.jpg"), "wb") as pf:
+                    pf.write(self._poster_bytes)
+            except Exception:
+                pass
+
+        # Delegate the actual rip to the same engine as _make_one, but with
+        # our computed out_path.  We temporarily set _film_folder to the
+        # season subfolder and the template to the episode filename so the
+        # existing _make_one logic produces the same out_path.
+        if match and match["episode"] is not None:
+            season = match["season"]
+            rel_folder = os.path.join(show_folder,
+                                     tvdb.build_season_folder(season))
+        else:
+            rel_folder = os.path.join(show_folder, "Special Features")
+
+        saved_folder = self._film_folder
+        saved_tmpl = self.var_tmpl.get()
+        try:
+            self._film_folder = rel_folder
+            self.var_tmpl.set(os.path.basename(out_path))
+            return self._make_one(title, progress_cb=progress_cb,
+                                  num_jobs=num_jobs, sf_index=None,
+                                  _tv_delegated=True)
+        finally:
+            self._film_folder = saved_folder
+            self.var_tmpl.set(saved_tmpl)
 
     def _notify_verify_unavailable(self, d):
         """The rip completed but could not be verified because ffprobe is
@@ -2022,14 +2910,93 @@ class FizzDiskApp(ctk.CTk):
         except Exception:
             pass
 
+    def _warn_bdplus(self, msg: str):
+        """Explain a BD+ disc in plain language (themed popup, not a raw error).
+
+        This is NOT a FizzDisk malfunction, so it must not read like a crash:
+        the user needs to know the disc is unrippable by this tool and that
+        nothing is wrong with their hardware.
+        """
+        self.log_warn("BD+ protected disc \u2014 FizzDisk cannot rip this title.")
+        self._set_status("BD+ protected \u2014 cannot rip")
+        try:
+            dlg = ctk.CTkToplevel(self)
+            dlg.title("BD+ protected disc")
+            dlg.transient(self)
+            dlg.grab_set()
+            frame = ctk.CTkFrame(dlg, corner_radius=14)
+            frame.pack(fill="both", expand=True, padx=12, pady=12)
+            ctk.CTkLabel(frame, text="This disc is BD+ protected",
+                         font=("Segoe UI", 11, "bold"), text_color="#f59e0b",
+                         anchor="w").pack(anchor="w", padx=10, pady=(10, 4))
+            ctk.CTkLabel(frame, text=msg, justify="left", anchor="w",
+                         wraplength=430, font=("Segoe UI", 10)
+                         ).pack(anchor="w", padx=10, pady=(2, 8))
+            ok = ctk.CTkButton(frame, text="Got it", corner_radius=10,
+                               fg_color="#f59e0b", hover_color="#d98e09",
+                               text_color="#ffffff", command=dlg.destroy)
+            ok.pack(anchor="e", padx=10, pady=(4, 10))
+            dlg.bind("<Return>", lambda e: dlg.destroy())
+            dlg.bind("<Escape>", lambda e: dlg.destroy())
+        except Exception:
+            try:
+                messagebox.showwarning("BD+ protected disc", msg, parent=self)
+            except Exception:
+                pass
+
     def _rip_done(self, stopped=False):
-        self._start_ready()    # scan is complete + title chosen — Start is actionable again
         self._stop_idle()
         self._scan_idle()     # rip is over (done or stopped) — allow scanning again
+        self._rip_active = False
+        self._stopping.clear()  # clear the stop flag so the next scan can run
+        # ---- Clean reset of all disc/scan/identification state ----
+        # After a rip completes (or is stopped), the user will likely insert a
+        # new disc and scan it.  Stale titles, movie metadata, TV info, and the
+        # cached disc name from the *previous* disc must be cleared so the next
+        # scan starts fresh — otherwise the old state can interfere with the
+        # new disc's identification (e.g. the old movie runtime triggers
+        # _rationalize_selection on the new disc, or the TV flag sends new
+        # titles into the TV episode-matching path).
+        self.titles = []
+        self.selected.clear()
+        self._clear_tree()
+        self.movie_info = None
+        self.movie_candidates = []
+        self._film_folder = ""
+        self.is_tv = False
+        self.tv_info = None
+        self._tv_prompted = False
+        self.special_features = False
+        self._sf_prompted = False
+        self._cached_disc_name = None
+        self.detail_title = None
+        self._poster_bytes = None
+        self._poster_photo = None
+        self.cd_mode = False
+        self.cd_meta = None
+        self._cd_artist = ""
+        self._cd_album = ""
+        self._cd_release_mbid = ""
+        self._cd_release_group_mbid = ""
+        # Reset the output Folder field — a CD rip sets it to
+        # ~/Music/<Artist>/<Album> and a movie/BD rip sets it to the film
+        # folder; both must be cleared so the next disc starts at the default
+        # output directory, not the previous disc's folder.
+        self.var_out.set(self.output_dir)
+        # After the clean reset there are no titles to rip — the Start button
+        # goes back to the idle/disabled blue state (not amber/ready), since
+        # there's nothing to start until a new disc is scanned.
+        self._start_busy()
         if stopped:
             self.var_eta.set("Stopped")
             self._set_status("Stopped")
             self.log("Rip stopped.")
+            # If the rip was stopped during a disc-copy fallback (scratched/
+            # damaged disc), warn the user to check the disc before retrying.
+            if any(getattr(t, "_remux_truncated", False) for t in self.titles):
+                self.log_warn("The disc may be damaged or scratched \u2014 the rip "
+                              "was recovering via a disc copy when you stopped it. "
+                              "Clean the disc and try again, or try a different drive.")
         else:
             self.progress.set(1.0)
             self.var_eta.set("Done")
@@ -2175,9 +3142,84 @@ class FizzDiskApp(ctk.CTk):
         self.after(0, _append)
 
     def _on_close(self):
+        """Close the window IMMEDIATELY, then clean up in the background.
+
+        Everything this used to do ran on the Tk UI thread: ``terminate()`` on
+        the active ripper, then five synchronous ``taskkill`` calls. On an idle
+        machine that is ~0.5s, but the case that matters is the one that goes
+        wrong -- an ffmpeg/ffprobe wedged on a sick optical read sits in
+        UNINTERRUPTIBLE kernel I/O, so ``terminate()`` and ``taskkill`` both
+        stall on it for tens of seconds. While the UI thread is parked in that
+        call Tk pumps no events at all, so the window stops redrawing and
+        Windows paints the "not responding" ghost -- the freeze that forced
+        the user to kill FizzDisk from Task Manager.
+
+        So: hide the window first (the app LOOKS closed instantly), do the
+        killing on a daemon thread, and guarantee the process actually dies
+        with a watchdog, because a child that can never be reaped must not be
+        able to keep FizzDisk alive.
+        """
+        if getattr(self, "_closing", False):
+            return                      # ignore repeat X clicks
+        self._closing = True
+
+        # 1. Signal every background worker (rip + scan) to stop.
         self._stopping.set()
-        ffutil.stop_active_proc()
-        self.destroy()
+
+        # 2. Make the app disappear NOW, before any slow cleanup starts.
+        try:
+            self.withdraw()
+        except Exception:
+            pass
+
+        # 3. Kill child processes off the UI thread so a wedged child can
+        #    never block the shutdown.
+        def _reap():
+            try:
+                ffutil.stop_active_proc()
+            except Exception:
+                pass
+            # stop_active_proc only kills the *ripper*; the scan worker's
+            # ffprobe children are not tracked, so sweep them by name too.
+            import subprocess
+            for name in ("ffprobe.exe", "ffmpeg.exe", "cd-paranoia.exe",
+                         "makemkvcon64.exe", "fizzdisk-rip.exe"):
+                try:
+                    subprocess.run(["taskkill", "/F", "/IM", name],
+                                   capture_output=True, timeout=5,
+                                   creationflags=0x08000000)
+                except Exception:
+                    # A timeout here means the child is unreapable; the
+                    # watchdog below still guarantees we exit.
+                    pass
+
+        threading.Thread(target=_reap, daemon=True).start()
+
+        # 4. Watchdog: leave the grace period for a tidy Tk teardown, then
+        #    force the process out. Daemon threads die with the process, and
+        #    os._exit skips interpreter shutdown, which can itself block
+        #    joining a thread stuck in kernel I/O.
+        def _watchdog():
+            time.sleep(5.0)
+            os._exit(0)
+
+        threading.Thread(target=_watchdog, daemon=True).start()
+
+        # 5. Tear the UI down after a short beat so the kill sweep has a
+        #    chance to land first (orphaned ffprobe must not outlive the GUI
+        #    and keep reading the drive).
+        self.after(300, self._finish_close)
+
+    def _finish_close(self):
+        """Destroy the Tk app and end the process, never hanging on exit."""
+        try:
+            self.quit()        # make mainloop() return
+        except Exception:
+            pass
+        try:
+            self.destroy()
+        except Exception:
+            pass
 
 
 def _safe_name(s: str) -> str:
@@ -2204,6 +3246,11 @@ def main():
     except Exception:
         pass
     argv = sys.argv[1:] if len(sys.argv) > 1 else []
+    # Headless CLI: `FizzDisk.exe scan|mux|rip ...` routes to the CLI harness
+    # (used for testing the engine on machines with no Python installed).
+    if argv and argv[0] in ("scan", "mux", "rip"):
+        from . import cli as _cli
+        sys.exit(_cli.main() or 0)
     if argv:
         src = " ".join(argv)
         app.var_source.set(src)

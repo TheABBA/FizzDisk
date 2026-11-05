@@ -701,8 +701,11 @@ class FizzDiskApp(ctk.CTk):
                      anchor="w").pack(anchor="w", padx=8, pady=(10, 2))
         ctk.CTkLabel(frame, text=f"{artist} \u2014 {album}", text_color="#3b82f6",
                      font=("Segoe UI", 12)).pack(anchor="w", padx=8)
-        ctk.CTkLabel(frame, text=f"{track_count} tracks (will be saved as "
-                                 f"{artist} / {album} / files)",
+        dscr = f"{track_count} tracks (will be saved as "
+        if (meta.get("disc_count") or 1) > 1:
+            dscr += f"{meta.get('disc_number') or 1} of {meta.get('disc_count') or 1}, "
+        dscr += f"{artist} / {album} / files)"
+        ctk.CTkLabel(frame, text=dscr,
                      text_color="gray", font=("Segoe UI", 10)).pack(anchor="w", padx=8, pady=(2, 8))
         res = {"v": None}
 
@@ -1961,6 +1964,36 @@ class FizzDiskApp(ctk.CTk):
         eject_cb.configure(command=on_eject_toggle)
         eject_cb.pack(anchor="w", padx=12, pady=(2, 10))
 
+        # ---- Card 4: Multi-disc CD layout ----
+        card4 = ctk.CTkFrame(sc, corner_radius=12, fg_color=("#f0f2f6", "#272a30"))
+        card4.pack(fill="x", anchor="w", padx=4, pady=(2, 10))
+        ctk.CTkLabel(card4, text="Multi-disc CDs (albums on 2+ discs)",
+                     font=("Segoe UI", 12, "bold"), anchor="w"
+                     ).pack(anchor="w", padx=12, pady=(10, 2))
+        ctk.CTkLabel(card4, text=(
+            "When you rip a 2-disc album, choose how the tracks are organised:\n"
+            "  \u2022 Single folder \u2014 all tracks in one album folder, numbered\n"
+            "    continuously across the discs (Disc 1 = 1..12, Disc 2 = 13..24).\n"
+            "  \u2022 Disc folders \u2014 a \\\"Disc 1\\\"/\\\"Disc 2\\\" subfolder per disc,\n"
+            "    each numbered from 1 on that disc."),
+            justify="left", anchor="w", wraplength=470).pack(anchor="w", padx=12, pady=(0, 6))
+        md_layout = tk.StringVar(value=prefs.get("cd_multidisc_layout", "single"))
+        rd_single = ctk.CTkRadioButton(card4, text="Single folder, continuous track numbers",
+                                       variable=md_layout, value="single", corner_radius=8)
+        rd_single.pack(anchor="w", padx=12, pady=(2, 0))
+        rd_disc = ctk.CTkRadioButton(card4, text="Disc folders (Disc 1 / Disc 2 ...)",
+                                     variable=md_layout, value="disc_folders", corner_radius=8)
+        rd_disc.pack(anchor="w", padx=12, pady=(0, 2))
+
+        def on_md_change():
+            prefs.set_("cd_multidisc_layout", md_layout.get())
+
+        rd_single.configure(command=on_md_change)
+        rd_disc.configure(command=on_md_change)
+        ctk.CTkLabel(card4, text=(
+            "You can change this any time; it applies to future rips."),
+            text_color="gray", anchor="w").pack(anchor="w", padx=12, pady=(0, 10))
+
         # app version footer
         ctk.CTkLabel(sc, text=f"{_APP_NAME} v{_APP_VERSION}",
                      text_color="gray", anchor="w").pack(anchor="w", padx=8, pady=(2, 4))
@@ -2315,6 +2348,10 @@ class FizzDiskApp(ctk.CTk):
             ("Year", meta.get("year") or ""),
             ("Tracks", str(len(self.titles))),
         ]
+        if (meta.get("disc_count") or 1) > 1:
+            disc_num = meta.get("disc_number") or 1
+            disc_cnt = meta.get("disc_count") or 1
+            rows.insert(3, ("Disc", f"{disc_num} of {disc_cnt}"))
         for k, v in rows:
             if v:
                 ctk.CTkLabel(self.stream_frame, text=f"{k}: {v}", anchor="w",

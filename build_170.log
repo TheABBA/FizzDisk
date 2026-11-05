@@ -1,0 +1,1441 @@
+138 INFO: PyInstaller: 6.22.3, contrib hooks: 2026.9
+138 INFO: Python: 3.12.10
+166 INFO: Platform: Windows-11-10.0.26300-SP0
+166 INFO: Python environment: C:\Users\Abba\AppData\Local\Programs\Python\Python312
+168 INFO: Removing temporary files and cleaning cache in C:\Users\Abba\AppData\Local\pyinstaller
+966 WARNING: collect_data_files - skipping data collection for module 'pywinstyles' as it is not a package.
+966 WARNING: collect_dynamic_libs - skipping library collection for module 'pywinstyles' as it is not a package.
+1114 WARNING: collect_data_files - skipping data collection for module 'py7zr' as it is not a package.
+1118 WARNING: collect_dynamic_libs - skipping library collection for module 'py7zr' as it is not a package.
+1729 WARNING: collect_data_files - skipping data collection for module 'pyzstd' as it is not a package.
+1729 WARNING: collect_dynamic_libs - skipping library collection for module 'pyzstd' as it is not a package.
+1881 WARNING: collect_data_files - skipping data collection for module 'pybcj' as it is not a package.
+1881 WARNING: collect_dynamic_libs - skipping library collection for module 'pybcj' as it is not a package.
+2036 WARNING: collect_data_files - skipping data collection for module 'pyppmd' as it is not a package.
+2036 WARNING: collect_dynamic_libs - skipping library collection for module 'pyppmd' as it is not a package.
+2184 WARNING: collect_data_files - skipping data collection for module 'inflate64' as it is not a package.
+2184 WARNING: collect_dynamic_libs - skipping library collection for module 'inflate64' as it is not a package.
+2330 WARNING: collect_data_files - skipping data collection for module 'brotli' as it is not a package.
+2330 WARNING: collect_dynamic_libs - skipping library collection for module 'brotli' as it is not a package.
+2474 WARNING: collect_data_files - skipping data collection for module 'texttable' as it is not a package.
+2474 WARNING: collect_dynamic_libs - skipping library collection for module 'texttable' as it is not a package.
+2620 INFO: Module search paths (PYTHONPATH):
+['C:\\Users\\Abba\\Desktop\\FizzDisk',
+ 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\python312.zip',
+ 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\DLLs',
+ 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib',
+ 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312',
+ 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages',
+ 'C:\\Users\\Abba\\Desktop\\FizzDisk']
+3796 INFO: Appending 'binaries' from .spec
+3797 INFO: Appending 'datas' from .spec
+3801 INFO: checking Analysis
+3802 INFO: Building Analysis because Analysis-00.toc is non existent
+3802 INFO: Looking for Python shared library...
+3802 INFO: Using Python shared library: C:\Users\Abba\AppData\Local\Programs\Python\Python312\python312.dll
+3802 INFO: Running Analysis Analysis-00.toc
+3802 INFO: Target bytecode optimization level: 0
+3802 INFO: Initializing module dependency graph...
+3803 INFO: Initializing module graph hook caches...
+3839 INFO: Analyzing modules for base_library.zip ...
+4595 INFO: Processing standard module hook 'hook-encodings.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+5388 INFO: Processing standard module hook 'hook-math.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+6678 INFO: Processing standard module hook 'hook-pickle.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+7790 INFO: Processing standard module hook 'hook-heapq.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+8974 INFO: Caching module dependency graph...
+9000 INFO: Analyzing C:\Users\Abba\Desktop\FizzDisk\FizzDisk.pyw
+9396 INFO: Processing standard module hook 'hook-webbrowser.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+9414 INFO: Processing pre-find-module-path hook 'hook-tkinter.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks\\pre_find_module_path'
+9415 INFO: TclTkInfo: initializing cached Tcl/Tk info...
+9680 INFO: Processing standard module hook 'hook-_tkinter.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+9766 INFO: Processing standard module hook 'hook-customtkinter.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+9827 INFO: Processing standard module hook 'hook-platform.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+9851 INFO: Processing standard module hook 'hook-_ctypes.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+9863 INFO: Processing pre-safe-import-module hook 'hook-packaging.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+9865 INFO: SetuptoolsInfo: initializing cached setuptools info...
+10339 INFO: Processing pre-safe-import-module hook 'hook-typing_extensions.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+10600 INFO: Processing standard module hook 'hook-multiprocessing.util.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+10729 INFO: Processing standard module hook 'hook-xml.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+11798 INFO: Processing standard module hook 'hook-PIL.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+11875 INFO: Processing standard module hook 'hook-PIL.Image.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+12191 INFO: Processing standard module hook 'hook-numpy.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+13255 INFO: Processing standard module hook 'hook-sysconfig.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+14827 INFO: Processing standard module hook 'hook-difflib.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+15551 INFO: Processing standard module hook 'hook-charset_normalizer.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+16059 INFO: Processing standard module hook 'hook-xml.etree.cElementTree.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+16234 INFO: Processing standard module hook 'hook-PIL.ImageFilter.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+16726 INFO: Processing standard module hook 'hook-cryptography.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+17577 INFO: hook-cryptography: cryptography does not seem to be using dynamically linked OpenSSL.
+17779 INFO: Analyzing hidden import 'PIL._tkinter_finder'
+17789 INFO: Analyzing hidden import 'pyzstd'
+17790 ERROR: Hidden import 'pyzstd' not found
+17790 INFO: Analyzing hidden import 'pybcj'
+17790 ERROR: Hidden import 'pybcj' not found
+17790 INFO: Analyzing hidden import 'pyppmd'
+17790 ERROR: Hidden import 'pyppmd' not found
+17790 INFO: Analyzing hidden import 'inflate64'
+17790 ERROR: Hidden import 'inflate64' not found
+17790 INFO: Analyzing hidden import 'brotli'
+17790 ERROR: Hidden import 'brotli' not found
+17790 INFO: Analyzing hidden import 'texttable'
+17790 ERROR: Hidden import 'texttable' not found
+17790 INFO: Analyzing hidden import 'cryptography.cobblestone'
+17799 INFO: Analyzing hidden import 'cryptography.fernet'
+17849 INFO: Analyzing hidden import 'cryptography.hazmat._oid'
+17865 INFO: Analyzing hidden import 'cryptography.hazmat.asn1'
+17893 INFO: Analyzing hidden import 'cryptography.hazmat.backends'
+18015 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.asymmetric.dh'
+18026 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.asymmetric.dsa'
+18037 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.asymmetric.ed25519'
+18047 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.asymmetric.ed448'
+18057 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.asymmetric.mldsa'
+18071 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.asymmetric.mlkem'
+18082 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.asymmetric.types'
+18112 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.ciphers.aead'
+18119 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.cmac'
+18126 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.constant_time'
+18131 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.hpke'
+18139 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf'
+18148 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf.argon2'
+18156 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf.concatkdf'
+18163 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf.hkdf'
+18172 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf.kbkdf'
+18182 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf.pbkdf2'
+18190 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf.scrypt'
+18199 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf.x963kdf'
+18208 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.keywrap'
+18217 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.poly1305'
+18225 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.serialization'
+18289 INFO: Processing standard module hook 'hook-bcrypt.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+18292 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.serialization.pkcs12'
+18443 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.serialization.pkcs7'
+18477 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.twofactor'
+18484 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.twofactor.hotp'
+18497 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.twofactor.totp'
+18507 INFO: Analyzing hidden import 'cryptography.x509.ocsp'
+18520 INFO: Processing module hooks (post-graph stage)...
+18993 INFO: Processing standard module hook 'hook-PIL.SpiderImagePlugin.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+19168 INFO: Processing standard module hook 'hook-_tkinter.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks'
+19179 INFO: Performing binary vs. data reclassification (1125 entries)
+25342 INFO: Looking for ctypes DLLs
+25346 WARNING: Ignoring AppKit.framework/AppKit imported from C:\Users\Abba\AppData\Local\Programs\Python\Python312\Lib\site-packages\darkdetect\_mac_detect.py - only basenames are supported with ctypes imports!
+25386 INFO: Analyzing run-time hooks ...
+25389 INFO: Including run-time hook 'pyi_rth_inspect.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+25390 INFO: Including run-time hook 'pyi_rth_pkgutil.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+25391 INFO: Including run-time hook 'pyi_rth_multiprocessing.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+25392 INFO: Including run-time hook 'pyi_rth_cryptography_openssl.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\rthooks'
+25393 INFO: Including run-time hook 'pyi_rth__tkinter.py' from 'C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+25411 INFO: Creating base_library.zip...
+25423 INFO: Looking for dynamic libraries
+26077 INFO: Extra DLL search directories (AddDllDirectory): ['C:\\Users\\Abba\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\numpy.libs']
+26078 INFO: Extra DLL search directories (PATH): []
+26585 INFO: Warnings written to C:\Users\Abba\Desktop\FizzDisk\build\FizzDisk\warn-FizzDisk.txt
+26613 INFO: Graph cross-reference written to C:\Users\Abba\Desktop\FizzDisk\build\FizzDisk\xref-FizzDisk.html
+26641 INFO: checking PYZ
+26641 INFO: Building PYZ because PYZ-00.toc is non existent
+26641 INFO: Building PYZ (ZlibArchive) C:\Users\Abba\Desktop\FizzDisk\build\FizzDisk\PYZ-00.pyz
+27027 INFO: Building PYZ (ZlibArchive) C:\Users\Abba\Desktop\FizzDisk\build\FizzDisk\PYZ-00.pyz completed successfully.
+27044 INFO: checking PKG
+27044 INFO: Building PKG because PKG-00.toc is non existent
+27044 INFO: Building PKG (CArchive) FizzDisk.pkg
+27066 INFO: Building PKG (CArchive) FizzDisk.pkg completed successfully.
+27067 INFO: Bootloader C:\Users\Abba\AppData\Local\Programs\Python\Python312\Lib\site-packages\PyInstaller\bootloader\Windows-64bit-intel\runw.exe
+27067 INFO: checking EXE
+27067 INFO: Building EXE because EXE-00.toc is non existent
+27067 INFO: Building EXE from EXE-00.toc
+27067 INFO: Copying bootloader EXE to C:\Users\Abba\Desktop\FizzDisk\build\FizzDisk\FizzDisk.exe
+27154 INFO: Copying icon to EXE
+27201 INFO: Copying version information to EXE
+27246 INFO: Copying 0 resources to EXE
+27246 INFO: Embedding manifest in EXE
+27287 INFO: Appending PKG archive to EXE
+27352 INFO: Fixing EXE headers
+27581 INFO: Building EXE from EXE-00.toc completed successfully.
+27588 INFO: checking COLLECT
+27588 INFO: Building COLLECT because COLLECT-00.toc is non existent
+27590 INFO: Building COLLECT COLLECT-00.toc
+28706 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+28718 INFO: Build complete! The results are available in: C:\Users\Abba\Desktop\FizzDisk\dist
+Inno Setup 6 Command-Line Compiler
+Copyright (C) 1997-2026 Jordan Russell. All rights reserved.
+Portions Copyright (C) 2000-2026 Martijn Laan. All rights reserved.
+Portions Copyright (C) 2001-2004 Alex Yackimoff. All rights reserved.
+https://www.innosetup.com
+
+Compiler engine version: Inno Setup 6.7.3
+Non-commercial use only
+
+Preprocessing
+   Reading file: C:\Users\Abba\AppData\Local\Programs\Inno Setup 6\ISPPBuiltins.iss
+Parsing [Setup] section, line 15
+Parsing [Setup] section, line 16
+Parsing [Setup] section, line 17
+Parsing [Setup] section, line 18
+Parsing [Setup] section, line 19
+Parsing [Setup] section, line 20
+Parsing [Setup] section, line 21
+Parsing [Setup] section, line 22
+Parsing [Setup] section, line 24
+Parsing [Setup] section, line 25
+Parsing [Setup] section, line 26
+Parsing [Setup] section, line 27
+Parsing [Setup] section, line 28
+Parsing [Setup] section, line 29
+Parsing [Setup] section, line 30
+Parsing [Setup] section, line 31
+Parsing [Setup] section, line 32
+Parsing [Setup] section, line 33
+Parsing [Setup] section, line 37
+Parsing [Setup] section, line 38
+Parsing [Setup] section, line 39
+Parsing [Setup] section, line 40
+Parsing [Setup] section, line 41
+Parsing [Setup] section, line 42
+Reading file (WizardImageFile)
+Reading file (WizardSmallImageFile)
+Preparing Setup program executable
+   Verification successful
+   Updating icons (Setup.e32)
+   Updating version info (Setup.e32)
+Determining language code pages
+Parsing [Languages] section, line 45
+   Reading file: C:\Users\Abba\AppData\Local\Programs\Inno Setup 6\Default.isl
+   Messages in script file
+Reading default messages from Default.isl
+Parsing [Languages] section, line 45
+   Reading file: C:\Users\Abba\AppData\Local\Programs\Inno Setup 6\Default.isl
+Parsing [LangOptions], [Messages], and [CustomMessages] sections
+   Messages in script file
+Reading [Code] section
+Parsing [Tasks] section, line 48
+Parsing [Icons] section, line 54
+Parsing [Icons] section, line 55
+Parsing [Run] section, line 67
+Parsing [Run] section, line 71
+Parsing [UninstallRun] section, line 75
+Parsing [Files] section, line 51
+Compiling [Code] section
+Creating setup files
+   Verification successful
+   Updating icons (Setup.exe)
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\FizzDisk.exe
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\base_library.zip
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\libcdio-21.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\libcdio_cdda-2.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\libcdio_paranoia-2.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\libcrypto-3.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\libffi-8.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\libiconv-2.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\libssl-3.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\libwinpthread-1.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\pyexpat.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\python3.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\python312.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\select.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\tcl86t.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\tk86t.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\unicodedata.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\VCRUNTIME140.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\VCRUNTIME140_1.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\zlib1.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_asyncio.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_bz2.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_cffi_backend.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_ctypes.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_decimal.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_elementtree.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_hashlib.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_lzma.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_multiprocessing.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_overlapped.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_queue.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_socket.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_ssl.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tkinter.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_wmi.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\assets\fizzdisk.ico
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\assets\fizzdisk_icon.png
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bcrypt\_bcrypt.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bin\bluray.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bin\cd-paranoia.exe
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bin\ffmpeg.exe
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bin\ffprobe.exe
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bin\keydb.cfg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bin\libaacs.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bin\libbdplus.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bin\libcdio-21.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bin\libcdio_cdda-2.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bin\libcdio_paranoia-2.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bin\libiconv-2.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bin\libwinpthread-1.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bin\vcruntime140.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\bin\vcruntime140_1.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\charset_normalizer\cd.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\charset_normalizer\md.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\cobblestone.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\exceptions.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\fernet.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\py.typed
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\utils.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\__about__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\_oid.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\asn1\asn1.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\asn1\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\backends\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\backends\openssl\backend.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\backends\openssl\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\openssl\binding.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\openssl\_conditional.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\openssl\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\asn1.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\cobblestone.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\declarative_asn1.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\exceptions.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\ocsp.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\pkcs12.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\pkcs7.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\test_support.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\x509.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\_openssl.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\__init__.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\aead.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\ciphers.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\cmac.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\dh.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\dsa.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\ec.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\ed25519.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\ed448.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\hashes.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\hmac.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\hpke.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\kdf.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\keys.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\keywrap.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\mldsa.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\mlkem.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\poly1305.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\rsa.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\x25519.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\x448.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\bindings\_rust\openssl\__init__.pyi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\decrepit\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\decrepit\ciphers\algorithms.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\decrepit\ciphers\modes.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\decrepit\ciphers\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\cmac.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\constant_time.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\hashes.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\hmac.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\hpke.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\keywrap.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\padding.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\poly1305.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\_asymmetric.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\_cipheralgorithm.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\_modes.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\_serialization.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\asymmetric\dh.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\asymmetric\dsa.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\asymmetric\ec.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\asymmetric\ed25519.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\asymmetric\ed448.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\asymmetric\mldsa.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\asymmetric\mlkem.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\asymmetric\padding.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\asymmetric\rsa.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\asymmetric\types.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\asymmetric\utils.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\asymmetric\x25519.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\asymmetric\x448.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\asymmetric\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\ciphers\aead.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\ciphers\algorithms.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\ciphers\base.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\ciphers\modes.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\ciphers\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\kdf\argon2.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\kdf\concatkdf.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\kdf\hkdf.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\kdf\kbkdf.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\kdf\pbkdf2.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\kdf\scrypt.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\kdf\x963kdf.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\kdf\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\serialization\base.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\serialization\pkcs12.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\serialization\pkcs7.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\serialization\ssh.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\serialization\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\twofactor\hotp.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\twofactor\totp.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\hazmat\primitives\twofactor\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\x509\base.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\x509\certificate_transparency.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\x509\extensions.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\x509\general_name.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\x509\name.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\x509\ocsp.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\x509\oid.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\x509\verification.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography\x509\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography-50.0.2.dist-info\INSTALLER
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography-50.0.2.dist-info\METADATA
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography-50.0.2.dist-info\RECORD
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography-50.0.2.dist-info\WHEEL
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography-50.0.2.dist-info\licenses\LICENSE
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography-50.0.2.dist-info\licenses\LICENSE.APACHE
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography-50.0.2.dist-info\licenses\LICENSE.BSD
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography-50.0.2.dist-info\sboms\cryptography-rust.cyclonedx.json
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\cryptography-50.0.2.dist-info\sboms\sbom.json
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\assets\.DS_Store
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\assets\fonts\CustomTkinter_shapes_font.otf
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\assets\fonts\Roboto\Roboto-Medium.ttf
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\assets\fonts\Roboto\Roboto-Regular.ttf
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\assets\icons\.DS_Store
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\assets\icons\CustomTkinter_icon_Windows.ico
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\assets\themes\blue.json
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\assets\themes\dark-blue.json
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\assets\themes\gold.json
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\assets\themes\green.json
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\ctk_input_dialog.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\ctk_tk.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\ctk_toplevel.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_button.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_checkbox.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_combobox.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_entry.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_frame.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_label.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_optionmenu.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_progressbar.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_radiobutton.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_scrollable_frame.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_scrollbar.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_segmented_button.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_slider.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_switch.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_tabview.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\ctk_textbox.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\appearance_mode\appearance_mode_base_class.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\appearance_mode\appearance_mode_tracker.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\appearance_mode\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\core_rendering\ctk_canvas.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\core_rendering\draw_engine.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\core_rendering\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\core_widget_classes\ctk_base_class.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\core_widget_classes\dropdown_menu.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\core_widget_classes\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\font\ctk_font.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\font\font_manager.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\font\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\image\ctk_image.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\image\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\scaling\scaling_base_class.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\scaling\scaling_tracker.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\scaling\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\theme\theme_manager.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\theme\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\utility\utility_functions.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter\windows\widgets\utility\__init__.py
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter-6.0.0.dist-info\INSTALLER
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter-6.0.0.dist-info\METADATA
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter-6.0.0.dist-info\RECORD
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter-6.0.0.dist-info\REQUESTED
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter-6.0.0.dist-info\top_level.txt
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter-6.0.0.dist-info\WHEEL
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\customtkinter-6.0.0.dist-info\licenses\LICENSE
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy\fft\_pocketfft_umath.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy\linalg\_umath_linalg.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy\random\bit_generator.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy\random\mtrand.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy\random\_bounded_integers.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy\random\_common.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy\random\_generator.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy\random\_mt19937.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy\random\_pcg64.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy\random\_philox.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy\random\_sfc64.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy\_core\_multiarray_tests.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy\_core\_multiarray_umath.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\DELVEWHEEL
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\entry_points.txt
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\INSTALLER
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\METADATA
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\RECORD
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\WHEEL
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\LICENSE.txt
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\fft\pocketfft\LICENSE.md
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\linalg\lapack_lite\LICENSE.txt
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\ma\LICENSE
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\random\LICENSE.md
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\random\src\distributions\LICENSE.md
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\random\src\mt19937\LICENSE.md
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\random\src\pcg64\LICENSE.md
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\random\src\philox\LICENSE.md
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\random\src\sfc64\LICENSE.md
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\random\src\splitmix64\LICENSE.md
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\_core\include\numpy\libdivide\LICENSE.txt
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\_core\src\common\pythoncapi-compat\COPYING
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\_core\src\highway\LICENSE
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\_core\src\multiarray\dragon4_LICENSE.txt
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\_core\src\npysort\x86-simd-sort\LICENSE.md
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy-2.5.4.dist-info\licenses\numpy\_core\src\umath\svml\LICENSE
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy.libs\libscipy_openblas64_-ed4f167a5330424524f45258e7ca2c8d.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\numpy.libs\msvcp140-a4c2229bdc2a2a630acdc095b4d86008.dll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\PIL\_avif.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\PIL\_imaging.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\PIL\_imagingcms.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\PIL\_imagingmath.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\PIL\_imagingtk.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\PIL\_webp.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\tcl8\8.4\platform-1.0.19.tm
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\tcl8\8.4\platform\shell-1.1.4.tm
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\tcl8\8.5\msgcat-1.6.1.tm
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\tcl8\8.5\tcltest-2.5.8.tm
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\tcl8\8.6\http-2.9.8.tm
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\yaml\_yaml.cp312-win_amd64.pyd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\auto.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\clock.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\history.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\init.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\package.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\parray.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\safe.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tclIndex
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tm.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\word.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\ascii.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\big5.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cns11643.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp1250.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp1251.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp1252.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp1253.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp1254.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp1255.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp1256.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp1257.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp1258.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp437.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp737.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp775.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp850.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp852.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp855.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp857.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp860.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp861.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp862.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp863.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp864.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp865.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp866.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp869.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp874.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp932.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp936.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp949.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\cp950.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\dingbats.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\ebcdic.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\euc-cn.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\euc-jp.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\euc-kr.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\gb12345.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\gb1988.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\gb2312-raw.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\gb2312.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso2022-jp.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso2022-kr.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso2022.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-1.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-10.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-11.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-13.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-14.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-15.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-16.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-2.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-3.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-4.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-5.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-6.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-7.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-8.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\iso8859-9.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\jis0201.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\jis0208.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\jis0212.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\koi8-r.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\koi8-ru.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\koi8-t.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\koi8-u.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\ksc5601.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\macCentEuro.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\macCroatian.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\macCyrillic.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\macDingbats.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\macGreek.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\macIceland.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\macJapan.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\macRoman.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\macRomania.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\macThai.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\macTurkish.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\macUkraine.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\shiftjis.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\symbol.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\encoding\tis-620.enc
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\http1.0\http.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\http1.0\pkgIndex.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\af.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\af_za.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ar.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ar_in.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ar_jo.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ar_lb.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ar_sy.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\be.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\bg.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\bn.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\bn_in.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ca.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\cs.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\da.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\de.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\de_at.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\de_be.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\el.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\en_au.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\en_be.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\en_bw.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\en_ca.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\en_gb.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\en_hk.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\en_ie.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\en_in.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\en_nz.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\en_ph.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\en_sg.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\en_za.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\en_zw.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\eo.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_ar.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_bo.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_cl.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_co.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_cr.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_do.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_ec.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_gt.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_hn.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_mx.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_ni.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_pa.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_pe.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_pr.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_py.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_sv.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_uy.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\es_ve.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\et.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\eu.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\eu_es.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\fa.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\fa_in.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\fa_ir.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\fi.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\fo.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\fo_fo.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\fr.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\fr_be.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\fr_ca.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\fr_ch.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ga.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ga_ie.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\gl.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\gl_es.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\gv.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\gv_gb.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\he.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\hi.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\hi_in.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\hr.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\hu.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\id.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\id_id.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\is.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\it.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\it_ch.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ja.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\kl.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\kl_gl.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ko.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\kok.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\kok_in.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ko_kr.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\kw.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\kw_gb.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\lt.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\lv.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\mk.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\mr.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\mr_in.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ms.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ms_my.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\mt.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\nb.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\nl.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\nl_be.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\nn.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\pl.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\pt.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\pt_br.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ro.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ru.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ru_ua.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\sh.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\sk.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\sl.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\sq.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\sr.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\sv.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\sw.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ta.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\ta_in.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\te.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\te_in.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\th.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\tr.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\uk.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\vi.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\zh.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\zh_cn.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\zh_hk.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\zh_sg.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\msgs\zh_tw.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\opt0.4\optparse.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\opt0.4\pkgIndex.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\CET
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\CST6CDT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Cuba
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\EET
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Egypt
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Eire
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\EST
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\EST5EDT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\GB
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\GB-Eire
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\GMT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\GMT+0
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\GMT-0
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\GMT0
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Greenwich
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Hongkong
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\HST
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Iceland
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Iran
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Israel
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Jamaica
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Japan
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Kwajalein
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Libya
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\MET
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\MST
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\MST7MDT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Navajo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\NZ
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\NZ-CHAT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Poland
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Portugal
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\PRC
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\PST8PDT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\ROC
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\ROK
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Singapore
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Turkey
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\UCT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Universal
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\UTC
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\W-SU
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\WET
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Zulu
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Abidjan
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Accra
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Addis_Ababa
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Algiers
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Asmara
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Asmera
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Bamako
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Bangui
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Banjul
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Bissau
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Blantyre
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Brazzaville
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Bujumbura
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Cairo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Casablanca
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Ceuta
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Conakry
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Dakar
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Dar_es_Salaam
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Djibouti
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Douala
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\El_Aaiun
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Freetown
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Gaborone
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Harare
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Johannesburg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Juba
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Kampala
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Khartoum
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Kigali
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Kinshasa
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Lagos
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Libreville
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Lome
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Luanda
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Lubumbashi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Lusaka
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Malabo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Maputo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Maseru
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Mbabane
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Mogadishu
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Monrovia
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Nairobi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Ndjamena
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Niamey
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Nouakchott
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Ouagadougou
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Porto-Novo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Sao_Tome
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Timbuktu
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Tripoli
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Tunis
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Africa\Windhoek
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Adak
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Anchorage
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Anguilla
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Antigua
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Araguaina
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Aruba
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Asuncion
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Atikokan
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Atka
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Bahia
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Bahia_Banderas
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Barbados
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Belem
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Belize
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Blanc-Sablon
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Boa_Vista
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Bogota
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Boise
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Buenos_Aires
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Cambridge_Bay
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Campo_Grande
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Cancun
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Caracas
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Catamarca
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Cayenne
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Cayman
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Chicago
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Chihuahua
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Ciudad_Juarez
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Coral_Harbour
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Cordoba
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Costa_Rica
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Creston
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Cuiaba
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Curacao
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Danmarkshavn
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Dawson
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Dawson_Creek
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Denver
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Detroit
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Dominica
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Edmonton
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Eirunepe
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\El_Salvador
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Ensenada
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Fortaleza
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Fort_Nelson
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Fort_Wayne
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Glace_Bay
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Godthab
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Goose_Bay
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Grand_Turk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Grenada
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Guadeloupe
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Guatemala
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Guayaquil
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Guyana
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Halifax
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Havana
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Hermosillo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Indianapolis
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Inuvik
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Iqaluit
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Jamaica
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Jujuy
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Juneau
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Knox_IN
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Kralendijk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\La_Paz
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Lima
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Los_Angeles
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Louisville
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Lower_Princes
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Maceio
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Managua
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Manaus
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Marigot
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Martinique
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Matamoros
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Mazatlan
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Mendoza
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Menominee
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Merida
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Metlakatla
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Mexico_City
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Miquelon
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Moncton
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Monterrey
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Montevideo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Montreal
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Montserrat
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Nassau
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\New_York
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Nipigon
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Nome
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Noronha
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Nuuk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Ojinaga
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Panama
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Pangnirtung
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Paramaribo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Phoenix
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Port-au-Prince
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Porto_Acre
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Porto_Velho
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Port_of_Spain
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Puerto_Rico
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Punta_Arenas
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Rainy_River
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Rankin_Inlet
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Recife
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Regina
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Resolute
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Rio_Branco
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Rosario
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Santarem
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Santa_Isabel
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Santiago
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Santo_Domingo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Sao_Paulo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Scoresbysund
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Shiprock
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Sitka
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\St_Barthelemy
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\St_Johns
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\St_Kitts
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\St_Lucia
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\St_Thomas
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\St_Vincent
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Swift_Current
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Tegucigalpa
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Thule
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Thunder_Bay
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Tijuana
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Toronto
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Tortola
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Vancouver
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Virgin
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Whitehorse
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Winnipeg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Yakutat
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Yellowknife
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Argentina\Buenos_Aires
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Argentina\Catamarca
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Argentina\ComodRivadavia
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Argentina\Cordoba
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Argentina\Jujuy
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Argentina\La_Rioja
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Argentina\Mendoza
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Argentina\Rio_Gallegos
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Argentina\Salta
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Argentina\San_Juan
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Argentina\San_Luis
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Argentina\Tucuman
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Argentina\Ushuaia
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Indiana\Indianapolis
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Indiana\Knox
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Indiana\Marengo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Indiana\Petersburg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Indiana\Tell_City
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Indiana\Vevay
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Indiana\Vincennes
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Indiana\Winamac
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Kentucky\Louisville
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\Kentucky\Monticello
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\North_Dakota\Beulah
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\North_Dakota\Center
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\America\North_Dakota\New_Salem
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Antarctica\Casey
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Antarctica\Davis
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Antarctica\DumontDUrville
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Antarctica\Macquarie
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Antarctica\Mawson
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Antarctica\McMurdo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Antarctica\Palmer
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Antarctica\Rothera
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Antarctica\South_Pole
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Antarctica\Syowa
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Antarctica\Troll
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Antarctica\Vostok
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Arctic\Longyearbyen
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Aden
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Almaty
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Amman
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Anadyr
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Aqtau
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Aqtobe
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Ashgabat
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Ashkhabad
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Atyrau
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Baghdad
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Bahrain
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Baku
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Bangkok
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Barnaul
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Beirut
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Bishkek
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Brunei
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Calcutta
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Chita
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Choibalsan
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Chongqing
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Chungking
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Colombo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Dacca
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Damascus
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Dhaka
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Dili
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Dubai
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Dushanbe
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Famagusta
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Gaza
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Harbin
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Hebron
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Hong_Kong
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Hovd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Ho_Chi_Minh
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Irkutsk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Istanbul
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Jakarta
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Jayapura
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Jerusalem
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Kabul
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Kamchatka
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Karachi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Kashgar
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Kathmandu
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Katmandu
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Khandyga
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Kolkata
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Krasnoyarsk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Kuala_Lumpur
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Kuching
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Kuwait
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Macao
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Macau
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Magadan
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Makassar
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Manila
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Muscat
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Nicosia
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Novokuznetsk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Novosibirsk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Omsk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Oral
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Phnom_Penh
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Pontianak
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Pyongyang
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Qatar
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Qostanay
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Qyzylorda
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Rangoon
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Riyadh
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Saigon
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Sakhalin
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Samarkand
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Seoul
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Shanghai
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Singapore
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Srednekolymsk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Taipei
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Tashkent
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Tbilisi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Tehran
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Tel_Aviv
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Thimbu
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Thimphu
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Tokyo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Tomsk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Ujung_Pandang
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Ulaanbaatar
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Ulan_Bator
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Urumqi
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Ust-Nera
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Vientiane
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Vladivostok
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Yakutsk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Yangon
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Yekaterinburg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Asia\Yerevan
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Atlantic\Azores
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Atlantic\Bermuda
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Atlantic\Canary
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Atlantic\Cape_Verde
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Atlantic\Faeroe
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Atlantic\Faroe
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Atlantic\Jan_Mayen
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Atlantic\Madeira
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Atlantic\Reykjavik
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Atlantic\South_Georgia
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Atlantic\Stanley
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Atlantic\St_Helena
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\ACT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Adelaide
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Brisbane
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Broken_Hill
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Canberra
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Currie
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Darwin
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Eucla
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Hobart
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\LHI
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Lindeman
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Lord_Howe
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Melbourne
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\North
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\NSW
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Perth
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Queensland
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\South
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Sydney
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Tasmania
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Victoria
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\West
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Australia\Yancowinna
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Brazil\Acre
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Brazil\DeNoronha
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Brazil\East
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Brazil\West
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Canada\Atlantic
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Canada\Central
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Canada\Eastern
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Canada\Mountain
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Canada\Newfoundland
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Canada\Pacific
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Canada\Saskatchewan
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Canada\Yukon
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Chile\Continental
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Chile\EasterIsland
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT+0
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT+1
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT+10
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT+11
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT+12
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT+2
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT+3
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT+4
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT+5
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT+6
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT+7
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT+8
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT+9
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-0
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-1
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-10
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-11
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-12
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-13
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-14
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-2
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-3
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-4
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-5
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-6
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-7
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-8
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT-9
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\GMT0
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\Greenwich
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\UCT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\Universal
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\UTC
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Etc\Zulu
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Amsterdam
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Andorra
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Astrakhan
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Athens
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Belfast
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Belgrade
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Berlin
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Bratislava
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Brussels
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Bucharest
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Budapest
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Busingen
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Chisinau
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Copenhagen
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Dublin
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Gibraltar
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Guernsey
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Helsinki
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Isle_of_Man
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Istanbul
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Jersey
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Kaliningrad
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Kiev
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Kirov
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Kyiv
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Lisbon
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Ljubljana
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\London
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Luxembourg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Madrid
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Malta
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Mariehamn
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Minsk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Monaco
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Moscow
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Nicosia
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Oslo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Paris
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Podgorica
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Prague
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Riga
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Rome
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Samara
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\San_Marino
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Sarajevo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Saratov
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Simferopol
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Skopje
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Sofia
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Stockholm
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Tallinn
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Tirane
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Tiraspol
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Ulyanovsk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Uzhgorod
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Vaduz
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Vatican
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Vienna
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Vilnius
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Volgograd
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Warsaw
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Zagreb
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Zaporozhye
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Europe\Zurich
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Indian\Antananarivo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Indian\Chagos
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Indian\Christmas
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Indian\Cocos
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Indian\Comoro
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Indian\Kerguelen
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Indian\Mahe
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Indian\Maldives
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Indian\Mauritius
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Indian\Mayotte
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Indian\Reunion
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Mexico\BajaNorte
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Mexico\BajaSur
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Mexico\General
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Apia
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Auckland
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Bougainville
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Chatham
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Chuuk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Easter
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Efate
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Enderbury
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Fakaofo
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Fiji
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Funafuti
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Galapagos
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Gambier
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Guadalcanal
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Guam
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Honolulu
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Johnston
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Kanton
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Kiritimati
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Kosrae
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Kwajalein
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Majuro
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Marquesas
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Midway
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Nauru
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Niue
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Norfolk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Noumea
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Pago_Pago
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Palau
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Pitcairn
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Pohnpei
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Ponape
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Port_Moresby
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Rarotonga
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Saipan
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Samoa
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Tahiti
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Tarawa
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Tongatapu
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Truk
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Wake
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Wallis
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\Pacific\Yap
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\SystemV\AST4
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\SystemV\AST4ADT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\SystemV\CST6
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\SystemV\CST6CDT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\SystemV\EST5
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\SystemV\EST5EDT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\SystemV\HST10
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\SystemV\MST7
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\SystemV\MST7MDT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\SystemV\PST8
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\SystemV\PST8PDT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\SystemV\YST9
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\SystemV\YST9YDT
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\US\Alaska
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\US\Aleutian
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\US\Arizona
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\US\Central
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\US\East-Indiana
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\US\Eastern
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\US\Hawaii
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\US\Indiana-Starke
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\US\Michigan
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\US\Mountain
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\US\Pacific
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tcl_data\tzdata\US\Samoa
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\bgerror.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\button.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\choosedir.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\clrpick.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\comdlg.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\console.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\dialog.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\entry.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\focus.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\fontchooser.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\iconlist.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\icons.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\license.terms
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\listbox.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\megawidget.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\menu.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\mkpsenc.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgbox.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\obsolete.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\optMenu.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\palette.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\panedwindow.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\pkgIndex.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\safetk.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\scale.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\scrlbar.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\spinbox.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\tclIndex
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\tearoff.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\text.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\tk.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\tkfbox.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\unsupported.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\xmfbox.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\images\logo.eps
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\images\logo100.gif
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\images\logo64.gif
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\images\logoLarge.gif
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\images\logoMed.gif
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\images\pwrdLogo.eps
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\images\pwrdLogo100.gif
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\images\pwrdLogo150.gif
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\images\pwrdLogo175.gif
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\images\pwrdLogo200.gif
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\images\pwrdLogo75.gif
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\images\README
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\images\tai-ku.gif
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\cs.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\da.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\de.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\el.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\en.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\en_gb.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\eo.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\es.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\fi.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\fr.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\hu.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\it.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\nl.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\pl.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\pt.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\ru.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\sv.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\msgs\zh_cn.msg
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\altTheme.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\aquaTheme.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\button.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\clamTheme.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\classicTheme.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\combobox.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\cursors.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\defaults.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\entry.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\fonts.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\menubutton.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\notebook.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\panedwindow.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\progress.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\scale.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\scrollbar.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\sizegrip.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\spinbox.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\treeview.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\ttk.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\utils.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\vistaTheme.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\winTheme.tcl
+   Compressing: C:\Users\Abba\Desktop\FizzDisk\installer\..\dist\FizzDisk\_internal\_tk_data\ttk\xpTheme.tcl
+   Compressing Setup program executable
+   Updating version info (Setup.exe)
+   Updating manifest (Setup.exe)
+
+Warning: There are [UninstallRun] section entries without a RunOnceId parameter. By assigning a string to RunOnceId, you can ensure that a particular [UninstallRun] entry will only be executed once during uninstallation. See the "[UninstallRun]" topic in help file for more information.
+
+Successful compile (76.500 sec). Resulting Setup program filename is:
+C:\Users\Abba\Desktop\FizzDisk\dist\FizzDiskSetup-1.7.0.exe
+Building FizzDisk v1.7.0 (onedir + Inno installer)...
+  [sign] signtool not found — skipping signing.
+
+DONE — C:\Users\Abba\Desktop\FizzDisk\dist\FizzDiskSetup-1.7.0.exe
+  size: 111.2 MB
+  Installs FizzDisk into its own folder (Program Files) with
+  Start Menu / Desktop shortcuts and an uninstaller (one UAC prompt).

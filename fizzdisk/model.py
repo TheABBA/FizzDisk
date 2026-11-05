@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Any, List, Optional
 
 
 @dataclass
@@ -58,7 +58,7 @@ class Title:
     data: List[Stream] = field(default_factory=list)
     chapters: List[dict] = field(default_factory=list)
     raw_streams: List[dict] = field(default_factory=list)   # raw ffprobe dicts
-    info: str = ""
+    info: Any = ""                # string log info, or a dict for cd/BD titles
 
     @property
     def selected_streams(self) -> List[Stream]:

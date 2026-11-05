@@ -62,8 +62,52 @@ def _artist_credit(ac: list) -> str:
     return "".join(parts) if parts else "Unknown Artist"
 
 
-def _release_to_meta(release: dict) -> dict:
-    """Build a meta dict {artist, album, year, release_mbid, tracks, date}."""
+def _pick_medium_index(media, my_sec, disc_track_count):
+    """Choose which medium (physical disc) matches the disc we actually have.
+
+    *media* is the release's full list of media (one per disc). *my_sec* is the
+    physical disc's per-track durations (from its TOC); *disc_track_count* is the
+    number of audio tracks on the physical disc. If we can match track
+    durations to exactly one medium, that disc number is definitive. If not, we
+    fall back to a track-count match. Returns the index into *media*.
+    """
+    if not media:
+        return 0
+    if len(media) == 1:
+        return 0
+    # 1) duration match (strongest)
+    best, best_score, best_idx = None, -1, 0
+    for i, med in enumerate(media):
+        secs = [round((t.get("length") or 0) / 1000.0, 1) for t in (med.get("tracks") or [])]
+        score = _duration_match(secs, my_sec) if my_sec else -1
+        if score > best_score:
+            best, best_score, best_idx = med, score, i
+    if best_score >= 0:
+        return best_idx
+    # 2) track-count match (fallback; helps when durations differ by pressing)
+    if disc_track_count:
+        for i, med in enumerate(media):
+            cnt = med.get("track-count") or len(med.get("tracks") or [])
+            if cnt == disc_track_count:
+                return i
+    return best_idx
+
+
+def _medium_track_offset(media, idx):
+    """Return the number of album tracks before medium *idx* (for continuous
+    numbering across discs)."""
+    return sum((m.get("track-count") or len(m.get("tracks") or [])) for m in media[:idx])
+
+
+def _release_to_meta(release: dict, my_sec=None, disc_track_count=None) -> dict:
+    """Build a meta dict {artist, album, year, release_mbid, tracks, date}.
+
+    For a multi-disc release, selects the medium corresponding to the physical
+    disc (by *my_sec* durations, then track count) and reports *disc_number*,
+    *disc_count* and *track_offset*. The returned *tracks* list only describes
+    THAT disc; each track carries both its per-disc ``position`` and a
+    continuous album-wide ``number`` (position + track_offset).
+    """
     ac = release.get("artist-credit") or []
     artist = ""
     for item in ac:
@@ -78,12 +122,21 @@ def _release_to_meta(release: dict) -> dict:
     m = _re.search(r"(\d{4})", date)
     if m:
         year = int(m.group(1))
+    media = release.get("media") or []
+    idx = _pick_medium_index(media, my_sec, disc_track_count)
+    med = media[idx] if media else None
+    disc_number = (med.get("position") if med else None) or (idx + 1 if media else 1)
+    disc_count = len(media) or 1
+    track_offset = _medium_track_offset(media, idx)
     tracks = []
-    for med in release.get("media") or []:
+    if med:
         for tr in med.get("tracks") or []:
             length = tr.get("length") or 0
+            pos = tr.get("position") or 0
             tracks.append({
-                "position": tr.get("position"),
+                "position": pos,
+                "number": (track_offset + pos) if pos else None,
+                "disc": disc_number,
                 "title": tr.get("title") or "",
                 "length_ms": length,
                 "length_sec": round((length / 1000.0), 1) if length else 0.0,
@@ -96,6 +149,9 @@ def _release_to_meta(release: dict) -> dict:
         "release_group_mbid": (release.get("release-group") or {}).get("id"),
         "date": date,
         "tracks": tracks,
+        "disc_number": disc_number,
+        "disc_count": disc_count,
+        "track_offset": track_offset,
     }
 
 
@@ -124,11 +180,12 @@ def _candidates_for_toc(toc: str) -> List[dict]:
     return d.get("releases") or []
 
 
-def _best_candidate(releases: List[dict], my_sec: List[float]) -> Optional[dict]:
+def _best_candidate(releases: List[dict], my_sec: List[float],
+                    disc_track_count: Optional[int] = None) -> Optional[dict]:
     """Pick the release from candidates whose track durations match the disc."""
     best, best_score = None, -2
     for rel in releases:
-        meta = _release_to_meta(rel)
+        meta = _release_to_meta(rel, my_sec=my_sec, disc_track_count=disc_track_count)
         score = _duration_match(_track_seconds(meta["tracks"]), my_sec)
         if score > best_score:
             best, best_score = meta, score
@@ -144,11 +201,14 @@ def my_track_seconds(tracks: List[dict]) -> List[float]:
     return out
 
 
-def search_albums(artist: str, album: str, limit: int = 8) -> List[dict]:
+def search_albums(artist: str, album: str, limit: int = 8,
+                  disc_track_count: Optional[int] = None) -> List[dict]:
     """Search MusicBrainz for releases by artist + album name.
 
     Returns a list of dicts: {artist, album, year, release_mbid,
-    release_group_mbid, tracks, cover_url, date}.
+    release_group_mbid, tracks, cover_url, date}.  If *disc_track_count* is
+    given, the matching medium (disc) is selected so multi-disc results report
+    the disc number / continuous track numbers for whichever disc is loaded.
     ``cover_url`` is an iTunes artwork URL (best-effort; Cover Art Archive
     is fetched on demand by the caller via download_cover).
     """
@@ -166,7 +226,7 @@ def search_albums(artist: str, album: str, limit: int = 8) -> List[dict]:
                "&limit=%d" % (urllib.parse.quote(q), limit))
         d = _get_json(url)
         for rel in (d.get("releases") or [])[:limit]:
-            meta = _release_to_meta(rel)
+            meta = _release_to_meta(rel, disc_track_count=disc_track_count)
             # Attach a best-effort cover URL (iTunes).
             meta["cover_url"] = _itunes_artwork(
                 meta.get("artist") or "", meta.get("album") or "")
@@ -189,6 +249,7 @@ def identify_disc(tracks: List[dict]) -> dict:
         my_sec = []
 
     # 1. Exact Disc ID lookup
+    disc_count = len([t for t in tracks if t.get("track") and t.get("is_audio")])
     try:
         did = cdda.toc_to_discid(tracks)
         if did:
@@ -196,7 +257,8 @@ def identify_disc(tracks: List[dict]) -> dict:
                           % urllib.parse.quote(did))
             rels = d.get("releases") or []
             if rels:
-                return _release_to_meta(rels[0])
+                return _release_to_meta(rels[0], my_sec=my_sec,
+                                        disc_track_count=disc_count)
     except urllib.error.HTTPError as e:
         if e.code != 404:  # 404 = unknown disk; fall through
             doc["discid_error"] = str(e.code)
@@ -209,11 +271,12 @@ def identify_disc(tracks: List[dict]) -> dict:
         if toc:
             rels = _candidates_for_toc(toc)
             if rels:
-                best = _best_candidate(rels, my_sec)
+                best = _best_candidate(rels, my_sec, disc_track_count=disc_count)
                 if best:
                     return best
                 # no duration match; take the first candidate
-                return _release_to_meta(rels[0])
+                return _release_to_meta(rels[0], my_sec=my_sec,
+                                        disc_track_count=disc_count)
     except Exception as e:  # noqa: BLE001
         doc["fuzzy_error"] = str(e)
     return doc

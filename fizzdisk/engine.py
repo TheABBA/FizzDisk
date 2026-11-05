@@ -24,7 +24,7 @@ from pathlib import Path
 _NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 from typing import Callable, List, Optional
 
-from . import bdlib, bdscan, cdda, dvdscan, ffutil, musicdisc
+from . import bdlib, bdscan, cdda, dvdscan, ffutil, musicdisc, prefs
 from .model import ScanResult, Title, Stream
 
 _RIP_ENV = ("FIZZDISK_RIP", "FIZZDISK_BACKEND", "MAKEMKVCON")  # last two are legacy aliases
@@ -260,6 +260,18 @@ def scan_cd(src: str):
                       size_bytes=(t.get("sectors") or 0) * cdda.CDDA_SECTOR)
         title.is_main = (len(titles) == 0)
         title.info = {"cd_track": t, "cd_number": num, "cd_title": raw_title}
+        # Multi-disc album support: report which disc this is and the
+        # continuous (album-wide) track number so the rip can number tracks
+        # continuously across discs (or drop them in a per-disc subfolder).
+        gnum = None
+        if (meta.get("tracks") or []):
+            for mt in meta.get("tracks") or []:
+                if mt.get("position") == num:
+                    gnum = mt.get("number")
+                    break
+        title.info["cd_disc"] = meta.get("disc_number") or 1
+        title.info["cd_disc_count"] = meta.get("disc_count") or 1
+        title.info["cd_global"] = gnum if gnum is not None else num
         titles.append(title)
     return titles, meta
 
@@ -297,6 +309,10 @@ def rip_cd(letter: str, cd_titles: List[Title], out_root: str, fmt: str = "flac"
     produced: List[str] = []
     jobs = [t for t in cd_titles if selected is None or t.index in selected]
     total = max(1, len(jobs))
+    # Multi-disc album layout preference: 'single' = one flat folder with
+    # continuous track numbers across discs, 'disc_folders' = a "Disc N"
+    # subfolder per disc with per-disc track numbers.
+    layout = prefs.get("cd_multidisc_layout", "single")
 
     def _emit(i: int, f: float):
         if progress_cb:
@@ -309,16 +325,38 @@ def rip_cd(letter: str, cd_titles: List[Title], out_root: str, fmt: str = "flac"
         if not track:
             continue
         num = int(title.info.get("cd_number") or track.get("track") or 0)
+        disc = int(title.info.get("cd_disc") or 1) or 1
+        disc_count = int(title.info.get("cd_disc_count") or 1) or 1
+        # For a single-folder layout, continue album-wide numbering across
+        # discs (disc 2 -> track N+1..). For per-disc folders, restart at 1.
+        if layout == "disc_folders":
+            used_num = num
+        else:
+            used_num = int(title.info.get("cd_global") or num) or num
+        # Per-disc subfolder only when the album is genuinely multi-disc.
+        if layout == "disc_folders" and disc_count > 1:
+            disc_dir = os.path.join(album_dir, ffutil.safe_name(f"Disc {disc}"))
+            os.makedirs(disc_dir, exist_ok=True)
+        else:
+            disc_dir = album_dir
         clean = title.info.get("cd_title") or ffutil.safe_name(title.name)
         meta = {"title": clean, "artist": artist, "album": album,
-                "track": f"{num:02d}" if num else num}
+                "track": f"{used_num:02d}" if used_num else used_num}
+        if disc_count > 1:
+            meta["discnumber"] = str(disc)
+            meta["totaldiscs"] = str(disc_count)
         wav = tempfile.mktemp(suffix=".wav", prefix="fizzdisk_")
         try:
             _emit(i, 0.0)
             cdda.rip_track_to_wav(letter, track, wav, progress_cb=lambda f, i=i: _emit(i, f))
             for j, f in enumerate(fmts):
                 ext = ".flac" if f == "flac" else ".mp3"
-                out_path = os.path.join(album_dir, ffutil.safe_name(title.name) + ext)
+                # Filename number mirrors the chosen layout (continuous album
+                # number for 'single', per-disc number for 'disc_folders').
+                base = title.name
+                base = re.sub(r"^\d{2}\s*-\s*", "", base)   # strip old NN - prefix
+                fname = f"{used_num:02d} - {base}".rstrip(" -")
+                out_path = os.path.join(disc_dir, ffutil.safe_name(fname) + ext)
                 # scale per-format encode progress into this track's share
                 def cb(frac, i=i, j=j, n=len(fmts)):
                     _emit(i, (j + max(0.0, min(1.0, frac))) / n)

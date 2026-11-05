@@ -10,6 +10,10 @@ import os
 
 _DEFAULTS = {
     "auto_eject_after_rip": True,   # eject the optical drive when a rip finishes
+    # CD multi-disc album layout: 'single' = one folder, continuous track
+    # numbers 1..N across discs; 'disc_folders' = a "Disc N" subfolder per
+    # disc with per-disc track numbers.
+    "cd_multidisc_layout": "single",
 }
 
 

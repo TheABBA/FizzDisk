@@ -1977,19 +1977,30 @@ class FizzDiskApp(ctk.CTk):
             "  \u2022 Disc folders \u2014 a \\\"Disc 1\\\"/\\\"Disc 2\\\" subfolder per disc,\n"
             "    each numbered from 1 on that disc."),
             justify="left", anchor="w", wraplength=470).pack(anchor="w", padx=12, pady=(0, 6))
-        md_layout = tk.StringVar(value=prefs.get("cd_multidisc_layout", "single"))
-        rd_single = ctk.CTkRadioButton(card4, text="Single folder, continuous track numbers",
-                                       variable=md_layout, value="single", corner_radius=8)
-        rd_single.pack(anchor="w", padx=12, pady=(2, 0))
-        rd_disc = ctk.CTkRadioButton(card4, text="Disc folders (Disc 1 / Disc 2 ...)",
-                                     variable=md_layout, value="disc_folders", corner_radius=8)
-        rd_disc.pack(anchor="w", padx=12, pady=(0, 2))
+        # Match the aesthetic of the other settings checkboxes (eject_cb):
+        # same 15x15 checkbox, same corner_radius, auto-sized to the text.
+        # This is an exclusive single-choice, so drive each checkbox's state
+        # directly (sharing one StringVar across CTkCheckBox does NOT clear
+        # siblings on its own, which left the old radio answer staying checked).
+        md_boxes: list = []
 
-        def on_md_change():
-            prefs.set_("cd_multidisc_layout", md_layout.get())
+        def _sel_md(name):
+            for n, cb in md_boxes:
+                cb.set(n == name)
+            prefs.set_("cd_multidisc_layout", name)
 
-        rd_single.configure(command=on_md_change)
-        rd_disc.configure(command=on_md_change)
+        md_single = ctk.CTkCheckBox(card4, text="Single folder, continuous track numbers",
+                                    corner_radius=8, checkbox_width=15, checkbox_height=15,
+                                    width=17, command=lambda: _sel_md("single"))
+        md_single.pack(anchor="w", padx=12, pady=(2, 0))
+        md_disc = ctk.CTkCheckBox(card4, text="Disc folders (Disc 1 / Disc 2 ...)",
+                                  corner_radius=8, checkbox_width=15, checkbox_height=15,
+                                  width=17, command=lambda: _sel_md("disc_folders"))
+        md_disc.pack(anchor="w", padx=12, pady=(0, 2))
+        md_boxes.append(("single", md_single))
+        md_boxes.append(("disc_folders", md_disc))
+        # Establish the initial selection from the stored preference (single by default).
+        _sel_md(prefs.get("cd_multidisc_layout", "single") or "single")
         ctk.CTkLabel(card4, text=(
             "You can change this any time; it applies to future rips."),
             text_color="gray", anchor="w").pack(anchor="w", padx=12, pady=(0, 10))

@@ -184,14 +184,16 @@ def mount_iso(iso_path: str) -> Optional[str]:
     """Mount an ISO via PowerShell and return its drive letter (or None)."""
     cmd = ["powershell", "-NoProfile", "-Command",
            f"(Mount-DiskImage -ImagePath '{iso_path.replace(chr(39), chr(39)*2)}' -PassThru).DevicePath"]
-    r = subprocess.run(cmd, capture_output=True, text=True, creationflags=_NO_WINDOW)
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
+                       errors="replace", creationflags=_NO_WINDOW)
     dev = r.stdout.strip()
     if not dev:
         return None
     # DevicePath like "\\?\Volume{...}\" -> map to drive letter
     cmd2 = ["powershell", "-NoProfile", "-Command",
             "(Get-Volume -DiskImage (Get-DiskImage -ImagePath '%s')).DriveLetter" % iso_path.replace(chr(39), chr(39) * 2)]
-    r2 = subprocess.run(cmd2, capture_output=True, text=True, creationflags=_NO_WINDOW)
+    r2 = subprocess.run(cmd2, capture_output=True, text=True, encoding="utf-8",
+                        errors="replace", creationflags=_NO_WINDOW)
     letter = r2.stdout.strip()
     return f"{letter}:\\" if letter else None
 
@@ -199,7 +201,8 @@ def mount_iso(iso_path: str) -> Optional[str]:
 def dismount_iso(iso_path: str) -> None:
     subprocess.run(["powershell", "-NoProfile", "-Command",
                     f"(Get-DiskImage -ImagePath '{iso_path.replace(chr(39), chr(39)*2)}' | Dismount-DiskImage)"],
-                   capture_output=True, text=True, creationflags=_NO_WINDOW)
+                   capture_output=True, text=True, encoding="utf-8", errors="replace",
+                   creationflags=_NO_WINDOW)
 
 
 # ---------------------------------------------------------------------------
@@ -531,7 +534,8 @@ def _looks_like_dvd(src: str) -> bool:
 # ---------------------------------------------------------------------------
 def _run_backend(args: List[str], timeout: Optional[int] = None) -> str:
     r = subprocess.run([RIPPER, "-r", *args], capture_output=True,
-                       text=True, timeout=timeout or 7200, creationflags=_NO_WINDOW)
+                       text=True, encoding="utf-8", errors="replace",
+                       timeout=timeout or 7200, creationflags=_NO_WINDOW)
     return r.stdout + r.stderr
 
 

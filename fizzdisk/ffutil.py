@@ -156,7 +156,8 @@ def run(cmd: Sequence[str], timeout: Optional[int] = None) -> subprocess.Complet
 
 def _run_inner(cmd: Sequence[str], timeout: Optional[int] = None) -> subprocess.CompletedProcess:
     p = subprocess.Popen(list(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                         text=True, creationflags=_NO_WINDOW)
+                         text=True, encoding="utf-8", errors="replace",
+                         creationflags=_NO_WINDOW)
     try:
         out, err = p.communicate(timeout=float(timeout) if timeout is not None else None)
     except subprocess.TimeoutExpired:
@@ -716,7 +717,8 @@ def remux(title: Title, out_path: str, video: bool = True,
         cmd += [_native(out)]
 
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                text=True, creationflags=_NO_WINDOW)
+                                text=True, encoding="utf-8", errors="replace",
+                                creationflags=_NO_WINDOW)
         set_active_proc(proc)
         last_time = 0.0
         try:
@@ -922,7 +924,8 @@ def encode_audio(input_wav: str, output_path: str, fmt: str = "flac",
                 cmd += ["-metadata", f"{k}={v}"]
         cmd += [_native(output_path)]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                text=True, creationflags=_NO_WINDOW)
+                                text=True, encoding="utf-8", errors="replace",
+                                creationflags=_NO_WINDOW)
         set_active_proc(proc)
         last_time = 0.0
         try:

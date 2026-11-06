@@ -12,7 +12,11 @@ only with the disc itself.
 from __future__ import annotations
 
 import ctypes
+import os
+import re
 import struct
+import threading
+import time
 from ctypes import (POINTER, Structure, Union, byref, c_byte, c_uint, c_uint16,
                     c_uint32, c_uint8, c_void_p, c_wchar_p, c_longlong, c_int32)
 from pathlib import Path
@@ -374,31 +378,125 @@ def _cdparanoia_path() -> str:
     return ""
 
 
+class CdReadError(OSError):
+    """A single audio track could not be error-corrected by cd-paranoia.
+
+    ``complete`` is True when the WAV was essentially fully ripped despite the
+    read error (an unreadable sector was filled in) -- the caller can still keep
+    it. False means most of the track was lost, so it should be skipped.
+    """
+
+    def __init__(self, message: str, *, sector=None, written=None, expected=None,
+                 complete: bool = False):
+        super().__init__(message)
+        self.sector = sector
+        self.written = written
+        self.expected = expected
+        self.complete = complete
+
+
+def _bad_sector(err: str):
+    m = re.search(r"Unable to access sector\s+(\d+)", err or "")
+    return int(m.group(1)) if m else None
+
+
 def rip_track_to_wav(letter: str, track: dict, out_wav: str,
-                     progress_cb=None) -> str:
+                     progress_cb=None, stall_secs: float = 60.0,
+                     timeout: Optional[float] = None) -> str:
     """Rip one audio track to a 44.1k/16-bit WAV, **error-corrected**.
 
     Uses the bundled cd-paranoia (libcdio-paranoia) for parity / jitter-corrected
     reads. If that helper is unavailable it falls back to a raw IOCTL read (no
-    error correction). `track` must carry 'track' (number) and 'is_audio'.
+    error correction). `track` must carry 'track' (number), 'is_audio' and
+    'sectors'.
+
+    cd-paranoia never hangs forever: if the output WAV stops growing for
+    ``stall_secs`` (default 60s) or the whole track exceeds the ``timeout``
+    bound, the child is killed and a :class:`CdReadError` is raised so the
+    caller can skip that track and keep ripping the rest.
     """
     if not track.get("is_audio"):
         raise ValueError("Track is not an audio track")
     tool = _cdparanoia_path()
-    if tool:
-        import subprocess
-        creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-        device = f"{str(letter).strip(': ').upper()}:"
-        # cd-paranoia [-d device] [-w] track# outfile  -> error-corrected WAV
-        cmd = [tool, "-d", device, "-w", str(int(track["track"])), out_wav]
-        r = subprocess.run(cmd, capture_output=True, creationflags=creationflags)
-        if r.returncode != 0:
-            err = (r.stderr or r.stdout or "").strip()[-220:]
-            raise OSError(r.returncode, f"cd-paranoia failed: {err}")
-        if progress_cb:
-            progress_cb(1.0)
-        return out_wav
-    return _rip_track_to_wav_ioctl(letter, track, out_wav, progress_cb)
+    if not tool:
+        return _rip_track_to_wav_ioctl(letter, track, out_wav, progress_cb)
+
+    import subprocess
+    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    device = f"{str(letter).strip(': ').upper()}:"
+    sectors = int(track.get("sectors") or 0)
+    # 2352 bytes per CD-DA sector + a 44-byte canonical WAV header.
+    expected = sectors * 2352 + 44 if sectors > 0 else 0
+    dur = sectors / 75.0 if sectors > 0 else 0.0
+    # cd-paranoia [-d device] [-w] track# outfile  -> error-corrected WAV
+    cmd = [tool, "-d", device, "-w", str(int(track["track"])), out_wav]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            creationflags=creationflags)
+    lines: List[str] = []
+
+    def _drain():
+        try:
+            for ln in proc.stderr:
+                lines.append(ln)
+        except Exception:  # noqa: BLE001
+            pass
+
+    drain_t = threading.Thread(target=_drain, daemon=True)
+    drain_t.start()
+
+    total_max = timeout if timeout else max(240.0, dur * 5.0)   # wall-clock cap
+    start = time.time()
+    last_size = 0.0
+    last_grow = time.time()
+    rc = None
+    timed_out = False
+    while True:
+        rc = proc.poll()
+        try:
+            sz = float(os.path.getsize(out_wav)) if os.path.exists(out_wav) else 0.0
+        except OSError:
+            sz = 0.0
+        if sz != last_size:
+            last_size = sz
+            last_grow = time.time()
+            if progress_cb and expected > 44:
+                progress_cb(max(0.0, min(1.0, (sz - 44.0) / (expected - 44.0))))
+        if rc is not None:
+            break
+        now = time.time()
+        if (now - last_grow) > stall_secs or (now - start) > total_max:
+            timed_out = True
+            proc.kill()
+            try:
+                proc.wait(timeout=5)      # unbounded kill must never pin us
+            except Exception:  # noqa: BLE001
+                pass
+            rc = proc.returncode if proc.returncode is not None else 1
+            break
+        time.sleep(0.2)
+
+    drain_t.join(timeout=2)
+    err = "".join(lines).strip()
+    if rc != 0:
+        sector = _bad_sector(err or "")
+        written = int(last_size) if last_size > 0 else 0
+        # If cd-paranoia wrote (almost) the whole track before failing, keep it:
+        # it only had to interpolate an unreadable sector. Otherwise skip it.
+        complete = bool(expected > 44 and (last_size - 44.0) >= 0.90 * (expected - 44.0))
+        if timed_out:
+            msg = (f"cd-paranoia read timed out on track {int(track['track'])} "
+                   f"(no data written for {int(stall_secs)}s)")
+        else:
+            msg = f"cd-paranoia failed on track {int(track['track'])}"
+        if sector:
+            msg += (f" \u2014 an unreadable sector (sector {sector}) was reported, "
+                    "which usually means the disc is scratched or the drive could "
+                    "not read it")
+        raise CdReadError(msg, sector=sector, written=written,
+                          expected=int(expected), complete=complete)
+    if progress_cb:
+        progress_cb(1.0)
+    return out_wav
 
 
 def _rip_track_to_wav_ioctl(letter: str, track: dict, out_wav: str,

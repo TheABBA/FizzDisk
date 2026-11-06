@@ -285,7 +285,8 @@ def rip_cd(letter: str, cd_titles: List[Title], out_root: str, fmt: str = "flac"
            progress_cb: Optional[Callable[[float], None]] = None,
            stop_event: Optional[threading.Event] = None,
            formats: Optional[list] = None,
-           release_group_mbid: Optional[str] = None) -> List[str]:
+           release_group_mbid: Optional[str] = None,
+           log_cb: Optional[Callable[[str], None]] = None) -> List[str]:
     """Rip selected CD audio tracks to FLAC/MP3 directly into `out_root`.
 
     `out_root` is the exact album folder (e.g. <Music>/<Artist>/<Album>) -- the
@@ -321,6 +322,7 @@ def rip_cd(letter: str, cd_titles: List[Title], out_root: str, fmt: str = "flac"
         if progress_cb:
             progress_cb(max(0.0, min(1.0, (i + max(0.0, min(1.0, f))) / total)))
 
+    skipped: list = []
     for i, title in enumerate(jobs):
         if stop_event and stop_event.is_set():
             break
@@ -349,9 +351,8 @@ def rip_cd(letter: str, cd_titles: List[Title], out_root: str, fmt: str = "flac"
             meta["discnumber"] = str(disc)
             meta["totaldiscs"] = str(disc_count)
         wav = tempfile.mktemp(suffix=".wav", prefix="fizzdisk_")
-        try:
-            _emit(i, 0.0)
-            cdda.rip_track_to_wav(letter, track, wav, progress_cb=lambda f, i=i: _emit(i, f))
+
+        def _encode_track() -> None:
             for j, f in enumerate(fmts):
                 ext = ".flac" if f == "flac" else ".mp3"
                 # Filename number mirrors the chosen layout (continuous album
@@ -370,11 +371,48 @@ def rip_cd(letter: str, cd_titles: List[Title], out_root: str, fmt: str = "flac"
                 if rc != 0:
                     raise RuntimeError(f"Encoding failed (rc={rc}) for {title.name} [{f}]")
                 produced.append(out_path)
+
+        try:
+            _emit(i, 0.0)
+            cdda.rip_track_to_wav(letter, track, wav,
+                                  progress_cb=lambda f, i=i: _emit(i, f))
+            # Successful read -> encode it.
+            _encode_track()
+        except cdda.CdReadError as e:
+            if e.complete:
+                # Essentially complete despite a read error -> keep the file.
+                if log_cb:
+                    log_cb(f"Track {num}: read error on this disc "
+                           + (f"(unreadable sector {e.sector}, " if e.sector else "")
+                           + "a sector was filled in) \u2014 keeping what was "
+                           "rippped; the disc may be scratched.")
+                try:
+                    _encode_track()
+                except Exception as enc_e:  # noqa: BLE001
+                    if log_cb:
+                        log_cb(f"Track {num}: encode skipped \u2014 {enc_e}")
+                    skipped.append(num)
+            else:
+                if log_cb:
+                    log_cb(f"Track {num} could not be read \u2014 SKIPPED "
+                           + (f"(reported unreadable sector {e.sector}) " if e.sector else "")
+                           + "; continuing with the remaining tracks.")
+                skipped.append(num)
+        except Exception as e:  # noqa: BLE001
+            if log_cb:
+                log_cb(f"Track {num}: could not be read \u2014 SKIPPED ({e}); "
+                       "continuing with the remaining tracks.")
+            skipped.append(num)
         finally:
             try:
                 os.remove(wav)
             except OSError:
                 pass
+    if skipped and log_cb:
+        log_cb(f"Ripped {len(produced)} file(s); {len(skipped)} track(s) were SKIPPED "
+               f"due to a read error (tracks: {', '.join(str(x) for x in sorted(skipped))}). "
+               "This normally means the disc is scratched or the drive struggled "
+               "to read that area.")
     return produced
 
 

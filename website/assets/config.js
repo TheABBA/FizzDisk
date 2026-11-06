@@ -2,7 +2,7 @@
 //   DOWNLOAD_URL = path to the installer you upload per release.
 //   DONATE_URL = Buy Me a Coffee (or other donation) link.
 window.FIZZ_CONFIG = {
-  VERSION: "1.8.2",
+  VERSION: "1.8.3",
   DOWNLOAD_URL: "download/FizzDiskSetup.exe",
   DONATE_URL: "https://www.buymeacoffee.com/fizzdisk",
   // Set DOWNLOAD_AVAILABLE to false while a release is being finalized: the

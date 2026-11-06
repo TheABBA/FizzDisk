@@ -2477,6 +2477,7 @@ class FizzDiskApp(ctk.CTk):
                 selected={t.index for t in jobs},
                 progress_cb=self._on_title_progress,
                 stop_event=self._stopping,
+                log_cb=self.log,
             )
             if self._stopping.is_set():
                 stopped = True

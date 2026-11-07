@@ -2688,10 +2688,20 @@ class FizzDiskApp(ctk.CTk):
                     if not engine.RIPPER:
                         raise
                     self.log("That decoder didn't work \u2014 let's try another\u2026")
-                    try:
-                        mk_titles = engine.scan_titles(self.source) or []
-                    except Exception:
-                        mk_titles = []
+                    # The external scan can transiently report 0 titles while the
+                    # drive is still spinning up / the disc table isn't ready. Never
+                    # bail on a 0-title read; retry a few times before giving up.
+                    mk_titles = []
+                    for _attempt in range(4):
+                        try:
+                            mk_titles = engine.scan_titles(self.source) or []
+                        except Exception:
+                            mk_titles = []
+                        if mk_titles:
+                            break
+                        if _attempt < 3:
+                            self.log("Disc scan returned no titles (drive slow to wake?) \u2014 retrying\u2026")
+                            time.sleep(5)
                     if not mk_titles:
                         raise
                     if title.duration:

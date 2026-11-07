@@ -5,7 +5,7 @@ the Windows version resource and to name the distributable exe.
 """
 
 APP_NAME = "FizzDisk"
-__version__ = "1.8.8"
+__version__ = "1.8.9"
 
 # Product / file description used in the Windows version resource.
 FILE_DESCRIPTION = "FizzDisk - disc (Blu-ray/DVD/CD) ripper"

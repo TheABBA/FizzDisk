@@ -716,6 +716,58 @@ def _stream_from_backend(codec_type: str, fs: dict, index: int) -> Stream:
                   channels=channels, language=lang)
 
 
+def _finalize_incomplete_mkv(path: str) -> str:
+    """MakeMKV v2.0.0 sometimes leaves a rip 'not properly finalized': the file
+    starts with a placeholder ('This file was not properly finalized') instead of
+    a Matroska EBML header, so players/ffmpeg mis-read it (often as audio-only).
+    Detect that and prepend a minimal EBML header + unknown-size Segment element
+    so the file becomes a valid, playable MKV. If the file is already valid
+    (EBML header present), leave it untouched."""
+    try:
+        with open(path, "rb") as f:
+            head = f.read(4)
+        if head == b"\x1a\x45\xdf\xa3":
+            return path                       # valid Matroska already
+        # Find the first Matroska Info element (0x1549A966) which is where the
+        # real stream data begins in MakeMKV's unfinalized output.
+        marker = b"\x15\x49\xa9\x66"
+        chunk = 8 * 1024 * 1024
+        offset = 0
+        info_at = None
+        with open(path, "rb") as f:
+            while True:
+                b = f.read(chunk)
+                if not b:
+                    break
+                i = b.find(marker)
+                if i != -1:
+                    info_at = offset + i
+                    break
+                offset += len(b)
+        if info_at is None:
+            return path                       # nothing to recover
+        # Minimal Matroska EBML header.
+        doc = b"\x42\x82\x88" + b"matroska"
+        hdr = (b"\x42\x86\x81\x01" + b"\x42\xF7\x81\x01" + b"\x42\xF2\x81\x04" +
+               b"\x42\xF3\x81\x08" + doc + b"\x42\x87\x81\x04" + b"\x42\x85\x81\x02")
+        ebml = b"\x1A\x45\xDF\xA3" + bytes([0x80 | len(hdr)]) + hdr
+        seg = b"\x18\x53\x80\x67\x01" + b"\xFF" * 8        # Segment, unknown size
+        new = path + ".fix.mkv"
+        with open(new, "wb") as out, open(path, "rb") as f:
+            out.write(ebml)
+            out.write(seg)
+            f.seek(info_at)
+            while True:
+                b = f.read(chunk)
+                if not b:
+                    break
+                out.write(b)
+        os.replace(new, path)
+        return path
+    except Exception:
+        return path
+
+
 def disc_rip(src: str, title_index: int, out_dir: str,
                 progress_cb: Optional[Callable[[float], None]] = None,
                 output_path: Optional[str] = None,
@@ -790,5 +842,6 @@ def disc_rip(src: str, title_index: int, out_dir: str,
 
     dirs = [p for p in Path(out_dir).glob("*.mkv")] if Path(out_dir).exists() else []
     if dirs:
-        return str(max(dirs, key=lambda p: p.stat().st_mtime))
+        best = str(max(dirs, key=lambda p: p.stat().st_mtime))
+        return _finalize_incomplete_mkv(best)
     return None

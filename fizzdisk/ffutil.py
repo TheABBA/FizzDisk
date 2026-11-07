@@ -872,27 +872,28 @@ def remux(title: Title, out_path: str, video: bool = True,
                                  "got": out_dur, "expected": expected_dur})
                 except Exception:
                     pass
-            # The recovery = disc copy + re-rip. Show the copy as the first part
-            # of the progress (COPY_WEIGHT of the bar) and continue the re-rip
-            # monotonically from there, so the bar moves and the ETA counts down
-            # throughout instead of stalling during the copy.
-            COPY_WEIGHT = 0.30
-
+            # The recovery = disc copy + re-rip, but the user wants a TRUTHFUL
+            # reading. During the copy phase the bar shows the % of the OVERALL
+            # DISC COPY (bytes copied / disc size) -- so "1 MB copied of a
+            # 100 MB disc" reads 1%, never a faked figure. The copy % is polled
+            # by _copy_dvd_to_disk every ~5s (which also corrects the running
+            # countdown/percent indicators). The re-rip is a NEW job: its bar
+            # resets and reflects the title's own progress. No COPY_WEIGHT
+            # compression -- the bar mirrors reality.
             def _copy_prog(f: float) -> None:
-                # f is 0..1 bytes copied; map onto the first COPY_WEIGHT portion.
+                # f is 0..1 = bytes copied / total disc bytes (real copy %).
                 if progress_cb:
                     try:
-                        progress_cb({"fraction": COPY_WEIGHT * min(1.0, f)})
+                        progress_cb({"fraction": min(1.0, f)})
                     except Exception:
                         pass
 
             def _fb_prog(d: dict) -> None:
-                # d has time/duration from ffmpeg; map onto the remaining portion
-                # so the overall progress is continuous with the copy phase.
+                # Re-rip is a NEW rip: report the title's own real time fraction.
                 frac = min(1.0, (d.get("time") or 0.0) / max(1.0, d.get("duration") or 1.0))
                 if progress_cb:
                     try:
-                        progress_cb({"fraction": COPY_WEIGHT + (1.0 - COPY_WEIGHT) * frac})
+                        progress_cb({"fraction": frac})
                     except Exception:
                         pass
 

@@ -275,11 +275,29 @@ def _dvd_copy_complete(dst: str, expected: dict) -> bool:
         return False
     if not expected:
         return True
+    # Only the .IFO/.BUP files are needed for libdvdread to open the disc
+    # structure (they describe every title set). A .VOB can legitimately read a
+    # few bytes short on a slightly-scratched disc; libdvdread still opens the
+    # title and just loses a couple of frames at the end of that segment.
+    # Requiring every VOB byte-for-byte rejects the whole recovery on a disc
+    # that would otherwise rip fine -- so VOBs only need to be present, non-error
+    # in size, and within a tolerance of what the source reported.
+    VOB_TOL = 0.90
     try:
         for name, size in expected.items():
             p = os.path.join(dst, name)
-            if not os.path.isfile(p) or os.path.getsize(p) != size:
+            if not os.path.isfile(p):
                 return False
+            actual = os.path.getsize(p)
+            low = name.lower()
+            if low.endswith((".ifo", ".bup")):
+                # Structure files must be exact or libdvdread cannot open the VTS.
+                if actual != size:
+                    return False
+            else:
+                # Data files (VOBs): tolerate a short read on a bad sector.
+                if actual < size * VOB_TOL or actual > size * 1.02:
+                    return False
     except OSError:
         return False
     return True
@@ -305,6 +323,11 @@ def _copy_dvd_to_disk(drive_dir: str,
     """
     if not drive_dir:
         return None
+    # A previous (killed/crashed) copy may have left fizzdisk_dvfolder_* dirs in
+    # the temp folder. Sweep them now -- none are in use by this copy yet, and
+    # a fresh mkdtemp below will not collide. The startup sweep in gui.main()
+    # covers the relaunch case; this covers a long-lived running session.
+    cleanup_orphaned_dfolder()
     src = os.path.join(drive_dir, "VIDEO_TS")
     if not os.path.isdir(src):
         return None
@@ -379,6 +402,32 @@ def _copy_dvd_to_disk(drive_dir: str,
         shutil.rmtree(base, ignore_errors=True)
         return None
     return base
+
+
+def cleanup_orphaned_dfolder() -> int:
+    """Delete abandoned ``fizzdisk_dvfolder_*`` temp dirs left behind by a kill.
+
+    These dirs are only ever created by :func:`_copy_dvd_to_disk` and removed in
+    its ``finally`` / on failure. If FizzDisk is closed or killed mid-copy the
+    dir is orphaned in the temp folder -- exactly the stale ``fizzdisk_dvfolder_*``
+    folders users see piling up. Because the app has just started (no rip in
+    progress), every such dir is an orphan and is safe to remove. Returns the
+    number of dirs removed.
+    """
+    try:
+        tmp = tempfile.gettempdir()
+    except Exception:
+        return 0
+    removed = 0
+    for entry in os.scandir(tmp):
+        try:
+            if not entry.name.startswith("fizzdisk_dvfolder_"):
+                continue
+            shutil.rmtree(entry.path, ignore_errors=True)
+            removed += 1
+        except OSError:
+            continue
+    return removed
 
 
 

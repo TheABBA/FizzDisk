@@ -3280,6 +3280,16 @@ def _safe_name(s: str) -> str:
 def main():
     import sys
     app = FizzDiskApp()
+    # Disc-copy recovery leaves a fizzdisk_dvfolder_* temp dir behind if FizzDisk
+    # was closed/killed mid-copy. No rip is running right after startup, so every
+    # such dir is an orphan -- sweep them before the first rip creates a new one.
+    try:
+        from . import ffutil as _ff
+        n = _ff.cleanup_orphaned_dfolder()
+        if n:
+            app.log_warn(f"cleaned up {n} abandoned disc-copy temp folder(s)")
+    except Exception:
+        pass
     # Bundled-tool integrity: AV (Defender) false-positives the unsigned
     # binaries and can DELETE ffprobe.exe after install, leaving ffmpeg in
     # place. Rips then succeed but cannot be verified, which used to look

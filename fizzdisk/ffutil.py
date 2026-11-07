@@ -275,29 +275,28 @@ def _dvd_copy_complete(dst: str, expected: dict) -> bool:
         return False
     if not expected:
         return True
-    # Only the .IFO/.BUP files are needed for libdvdread to open the disc
-    # structure (they describe every title set). A .VOB can legitimately read a
-    # few bytes short on a slightly-scratched disc; libdvdread still opens the
-    # title and just loses a couple of frames at the end of that segment.
-    # Requiring every VOB byte-for-byte rejects the whole recovery on a disc
-    # that would otherwise rip fine -- so VOBs only need to be present, non-error
-    # in size, and within a tolerance of what the source reported.
+    # Structure files (.IFO/.BUP) must be present and exact -- libdvdread needs
+    # them to open the disc. VOB data may be ABSENT or short on a scratched /
+    # slow drive (a read that stalled); libdvdread skips the missing segment and
+    # the re-rip still yields a usable (if slightly short) movie -- infinitely
+    # better than the 896-byte file that used to remain when the whole recovery
+    # was rejected.
     VOB_TOL = 0.90
     try:
         for name, size in expected.items():
             p = os.path.join(dst, name)
-            if not os.path.isfile(p):
-                return False
-            actual = os.path.getsize(p)
             low = name.lower()
             if low.endswith((".ifo", ".bup")):
                 # Structure files must be exact or libdvdread cannot open the VTS.
-                if actual != size:
+                if not os.path.isfile(p) or os.path.getsize(p) != size:
                     return False
             else:
-                # Data files (VOBs): tolerate a short read on a bad sector.
-                if actual < size * VOB_TOL or actual > size * 1.02:
-                    return False
+                # Data files (VOBs): present only if it copied OK (within tol).
+                if os.path.isfile(p):
+                    actual = os.path.getsize(p)
+                    if actual < size * VOB_TOL or actual > size * 1.02:
+                        return False
+                # absent VOB -> allowed (libdvdread skips that segment)
     except OSError:
         return False
     return True
@@ -343,6 +342,28 @@ def _copy_dvd_to_disk(drive_dir: str,
     total = _dir_size(src) or 1
     base = tempfile.mkdtemp(prefix="fizzdisk_dvfolder_")
     dst = os.path.join(base, "VIDEO_TS")
+    os.makedirs(dst, exist_ok=True)
+
+    def _is_struct(name: str) -> bool:
+        low = name.lower()
+        return low.endswith((".ifo", ".bup"))
+
+    # Copy structure files (.IFO/.BUP) FIRST so libdvdread can always open the
+    # disc even if a large VOB stalls; then data files by name for stability.
+    entries = [f for f in os.scandir(src) if f.is_file()]
+    entries.sort(key=lambda f: (not _is_struct(f.name), f.name.lower()))
+
+    # A scratched/slow drive can HANG a single read indefinitely. robocopy has no
+    # per-read timeout, so it froze at one bad sector for minutes (0 bytes copied
+    # -> the progress bar appeared dead and the copy never completed). Instead do
+    # a file-by-file copy in a DAEMON THREAD guarded by a growth watchdog: a file
+    # that stops growing for STALL_S seconds is abandoned, so the copy ALWAYS
+    # moves on and finishes. A slow-but-achieving read is never cut short. The
+    # leftover .part of a dead read is tolerated by _dvd_copy_complete (VOB data
+    # may be absent), and the caller rmtree's the whole dir when done.
+    STALL_S = 40
+    REPORT_EVERY = 5.0
+    threads: list = []
 
     def _report():
         if on_progress and total:
@@ -351,54 +372,61 @@ def _copy_dvd_to_disk(drive_dir: str,
             except Exception:
                 pass
 
-    def _run_copy(retries: str) -> bool:
-        # Bounded retries (NOT robocopy's default /R:1000000 /W:30, which hangs
-        # forever on a bad sector and gets killed by the timeout half-way,
-        # leaving a partial tree). /Z enables restartable copy for the rare
-        # re-try pass. We do NOT trust the exit code alone -- we verify the tree.
+    def _copy_one(name: str) -> None:
+        sp = os.path.join(src, name)
+        part = os.path.join(dst, name + ".part")
+        final = os.path.join(dst, name)
         try:
-            proc = subprocess.Popen(
-                ["robocopy", src, dst, "/E", "/R:" + retries, "/W:2", "/Z",
-                 "/NFL", "/NDL", "/NJH", "/NJS"],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                creationflags=_NO_WINDOW)
-            start = time.time()
-            while True:
-                try:
-                    proc.wait(timeout=0.6)
-                    break
-                except subprocess.TimeoutExpired:
-                    if stop_event and stop_event.is_set():
-                        proc.terminate()
-                        try:
-                            proc.wait(timeout=5)
-                        except Exception:
-                            proc.kill()
-                        break
-                    if time.time() - start > 1800:
-                        proc.terminate()
-                        proc.wait()
-                        break
-                    _report()
+            with open(sp, "rb") as fi, open(part, "wb") as fo:
+                shutil.copyfileobj(fi, fo, 256 * 1024)
+            os.replace(part, final)
         except Exception:
-            return False
-        _report()   # report final state after the copy finishes
-        return _dvd_copy_complete(dst, expected)
+            try:
+                os.unlink(part)
+            except OSError:
+                pass
 
-    # Try the copy, then a second pass if the first came up short.
-    ok = _run_copy("8")
-    if not ok:
-        shutil.rmtree(dst, ignore_errors=True)   # clear partials before retry
-        ok = _run_copy("16")
-    if not ok:
-        # Last resort: plain shutil copy (honors no retries, but a clean copy).
-        try:
-            shutil.rmtree(dst, ignore_errors=True)
-            shutil.copytree(src, dst)
-            ok = _dvd_copy_complete(dst, expected)
-        except Exception:
-            ok = False
-    if not ok:
+    for f in entries:
+        if stop_event and stop_event.is_set():
+            break
+        name = f.name
+        part = os.path.join(dst, name + ".part")
+        t = threading.Thread(target=_copy_one, args=(name,), daemon=True)
+        threads.append(t)
+        t.start()
+        last_size = 0
+        last_move = time.time()
+        last_report = last_move
+        while t.is_alive():
+            if stop_event and stop_event.is_set():
+                break
+            try:
+                cur = os.path.getsize(part)
+            except OSError:
+                cur = last_size
+            now = time.time()
+            if cur != last_size:
+                last_size = cur
+                last_move = now
+            elif now - last_move > STALL_S:
+                # Dead read: abandon this thread (it may still recover and finish
+                # its .part later); a .part is not a final name, so the segment is
+                # simply treated as unavailable and the copy moves on.
+                break
+            if now - last_report >= REPORT_EVERY:
+                last_report = now
+                _report()
+            time.sleep(1.0)
+        _report()
+
+    # Give recovering threads a short grace window to finish + rename (.part ->
+    # final) before we judge the tree. A thread that never recovers leaves a
+    # .part that _dvd_copy_complete ignores (it checks the final name only).
+    deadline = time.time() + 12
+    while time.time() < deadline and any(tt.is_alive() for tt in threads):
+        time.sleep(0.5)
+
+    if not _dvd_copy_complete(dst, expected):
         shutil.rmtree(base, ignore_errors=True)
         return None
     return base

@@ -579,7 +579,7 @@ def _run_backend(args: List[str], timeout: Optional[int] = None) -> str:
 
 def scan_titles(src: str, min_seconds: float = 120.0) -> List[Title]:
     """Use the external console ripper (-r info) to enumerate titles on a disc/ISO."""
-    arg = f"disc:0" if detect_source(src) in ("disc", "bd") and _drive_arg(src) else _source_arg(src)
+    arg = _backend_arg(src)
     out = _run_backend(["info", arg])
     titles: List[Title] = []
     # -r info emits TCOUNT + per-title TINFO lines; _parse_backend_info handles
@@ -598,9 +598,33 @@ def _source_arg(src: str) -> str:
 
 def _drive_arg(src: str) -> Optional[str]:
     m = re.match(r"^([A-Za-z]):", src)
+    if not m:
+        # bdlib rewrites a bare drive (E:) to a raw device (\\.\E:) internally;
+        # the external ripper source may come through in that form too.
+        m = re.match(r"^\\\\.\\([A-Za-z]):", src)
     if m:
         return m.group(1).upper()
     return None
+
+
+def _backend_arg(src: str) -> str:
+    """Source argument for the external ripper (makemkvcon).
+
+    For a physical disc/BD drive, use ``dev:<letter>:`` -- this targets the
+    drive that actually holds the disc. A hardcoded ``disc:0`` would point at
+    the FIRST optical drive, which may be a different, empty drive (e.g. the
+    disc is in E: but disc:0 is an empty D:), so MakeMKV opens nothing.
+    ISO and folder sources keep their iso:/file: specs.
+    """
+    kind = detect_source(src)
+    drive = _drive_arg(src)
+    # a raw device path (\\.\E:) is unambiguous — always a physical optical
+    # device, never a folder/ISO, so force the dev: form.
+    if re.match(r"^\\\\.\\([A-Za-z]):", src) and drive:
+        return f"dev:{drive}:"
+    if kind in ("disc", "bd") and drive:
+        return f"dev:{drive}:"
+    return _source_arg(src)
 
 
 def _parse_backend_info(out: str, min_seconds: float) -> List[Title]:
@@ -706,7 +730,7 @@ def disc_rip(src: str, title_index: int, out_dir: str,
     """
     if not RIPPER:
         return None
-    arg = f"disc:0" if detect_source(src) in ("disc", "bd") and _drive_arg(src) else _source_arg(src)
+    arg = _backend_arg(src)
     cmd = [RIPPER, "-r", "mkv", arg, str(title_index), out_dir]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             text=True, encoding="utf-8", errors="replace",

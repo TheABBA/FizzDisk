@@ -430,8 +430,13 @@ def rip_track_to_wav(letter: str, track: dict, out_wav: str,
     dur = sectors / 75.0 if sectors > 0 else 0.0
     # cd-paranoia [-d device] [-w] track# outfile  -> error-corrected WAV
     cmd = [tool, "-d", device, "-w", str(int(track["track"])), out_wav]
+    # text=True (UTF-8, errors=replace): without it proc.stderr yields BYTES,
+    # so the `"".join(lines)` below raises
+    # "TypeError: sequence item 0: expected str instance, bytes found" and every
+    # track is reported SKIPPED even though cd-paranoia ripped it fine.
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            creationflags=creationflags)
+                            creationflags=creationflags, text=True,
+                            encoding="utf-8", errors="replace")
     lines: List[str] = []
 
     def _drain():

@@ -41,3 +41,10 @@ aacs_videolan.c
 aacs_vl.c
 fm_*
 signing_config.json
+
+# public website source (deployed to fizzdisk.com separately; not part of the app)
+website/
+
+# per-user metadata API key — the installed app reads %LOCALAPPDATA%\FizzDisk\tmdb_api_key.txt,
+# NOT this repo sidecar, so don't commit the live key
+fizzdisk/tmdb_api_key.txt

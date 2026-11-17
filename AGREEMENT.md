@@ -2,7 +2,7 @@
 
 **Copyright (C) 2026 FizzDisk. All rights reserved.**
 
-**Effective date:** October 11, 2026
+**Effective date:** November 9, 2026
 
 ## IMPORTANT NOTE
 
@@ -39,12 +39,15 @@ you do not agree to these terms, you may not use or install the Software.
 
 ### 1. License
 
-You are entitled to use the Software on the device on which it is installed and
-activated. The license is **personal, non-exclusive and non-transferable**, and
-may be **active on one (1) device at a time**. You may release the license from
-one device (Settings → "Move to another machine?") and activate it on another
-device, at no cost and without contacting us. "Use" means loaded in temporary
-memory or permanent storage on the computer.
+FizzDisk is **free software**. There is no purchase, no product key and no
+activation. You may:
+
+- use the Software on **any number of computers** that you own or control, for
+  any lawful purpose, **free of charge**;
+- copy, share and **redistribute** the Software freely (it is open source),
+  provided you do not charge anyone for it.
+
+"Use" means loaded in temporary memory or permanent storage on the computer.
 
 ### 2. Backing up discs you own
 
@@ -90,16 +93,12 @@ reach the internet to identify the disc and produce richer output:
   and read by those public metadata services**. Your audio/video **files
   themselves are never uploaded** — only the identifiers and titles used to
   look up metadata.
-- **Activation & updates.** When you activate the Software or check for
-  updates, FizzDisk contacts its own server with your product key, the current
-  app version, and a hardware fingerprint, to enforce the one-key/one-device
-  rule. No account, login, or email is required.
 - **No ads, no tracking, no sale of data.** We do not run ad services, sell
   your data, or store your media. Only the identifiers described above leave
-  your machine.
+  your machine. No account, login, or email is required.
 
-If you are offline the Software continues to work; only the metadata lookup and
-online activation are skipped until you reconnect.
+If you are offline the Software continues to work; only the metadata lookup is
+skipped until you reconnect.
 
 ### 6. Provided "AS IS" — your own risk
 
@@ -127,10 +126,9 @@ WHATSOEVER) ARISING OUT OF THE USE OF OR THE INABILITY TO USE THE SOFTWARE, EVEN
 IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 
 REGARDLESS OF THE FORM OF ACTION, FIZZDISK'S **AGGREGATE LIABILITY** ARISING
-OUT OF OR RELATED TO THIS AGREEMENT SHALL NOT EXCEED THE **TOTAL AMOUNT PAYABLE
-BY YOU UNDER THIS AGREEMENT** (that is, the purchase price you paid for the
-license). THE FOREGOING LIMITATIONS, EXCLUSIONS AND DISCLAIMERS SHALL APPLY TO
-THE MAXIMUM EXTENT ALLOWED BY APPLICABLE LAW.
+OUT OF OR RELATED TO THIS AGREEMENT SHALL NOT EXCEED **ONE UNITED STATES DOLLAR
+(US$1.00)**. THE FOREGOING LIMITATIONS, EXCLUSIONS AND DISCLAIMERS SHALL APPLY
+TO THE MAXIMUM EXTENT ALLOWED BY APPLICABLE LAW.
 
 ### 8. Open-source components
 

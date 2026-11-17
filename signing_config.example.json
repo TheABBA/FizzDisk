@@ -1,5 +1,0 @@
-{
-  "endpoint": "https://<region>.codesigning.azure.net",
-  "account": "<YourTrustedSigningAccountName>",
-  "profile": "<YourCertificateProfileName>"
-}

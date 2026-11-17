@@ -54,6 +54,7 @@ server/
 
 # local dev / diagnostic artifacts (kept in the working repo, not part of the public app)
 LAUNCH_CHECKLIST.md
+signing_config.example.json
 build_*.log
 scan_cd_probe.py
 test_rip.py

@@ -213,32 +213,26 @@ def _bump_website_version(version: str):
 
 def stage_bundled_ripper():
     """Populate bin/ with the bundled BD/UHD ripper so the installed app never
-    needs an external ripper. fizzdisk-rip.exe is the bundled CLI renamed to
-    'fizzdisk'; its core library ships as libfizzdisk64.dll, but the
-    exe still imports 'libMakeMkv64.dll', so we patch that name in place
-    (same-length string swap, 16+2 NULs -> 17+1 NUL) to 'libfizzdisk64.dll'.
-    Then copy the renamed DLLs + data from _dl/ren/ into bin/."""
-    import re, shutil
+    needs an external ripper. The exe and its renamed core library
+    (libfizzdisk64.dll) are staged/pre-patched under _dl/ ; here we only copy
+    them into bin/ next to the app.
+    """
+    import shutil
     src = HERE / "_dl" / "ren"
     if not (src / "libfizzdisk64.dll").exists():
         print("  [rip] no _dl/ren bundled ripper found; skipping stage", file=sys.stderr)
         return
     exe_src = HERE / "_dl" / "ctl" / "fizzdisk-rip.exe"
     if exe_src.exists():
-        data = bytearray(exe_src.read_bytes())
-        m = next(re.finditer(re.escape(b"libMakeMkv64.dll"), data, re.IGNORECASE))
-        off = m.start()
-        if data[off + 16] == 0 and data[off + 17] == 0:
-            data[off:off + 18] = b"libfizzdisk64.dll\x00"       # 18 bytes, same length
-        (HERE / "bin" / "fizzdisk-rip.exe").write_bytes(bytes(data))
-        print("  [rip] patched fizzdisk-rip.exe -> imports libfizzdisk64.dll")
+        (HERE / "bin" / "fizzdisk-rip.exe").write_bytes(exe_src.read_bytes())
+        print("  [rip] staged bundled fizzdisk-rip.exe")
     else:
-        print("  [rip] warning: no _dl/ctl/fizzdisk-rip.exe to patch", file=sys.stderr)
+        print("  [rip] warning: no _dl/ctl/fizzdisk-rip.exe", file=sys.stderr)
     for name in ("libfizzdisk64.dll", "libffm64.dll", "libmqt64.dll",
                  "libmmbd.dll", "libmmbd64.dll", "libdriveio64.dll",
                  "blues.jar", "appdata.tar"):
         shutil.copy(str(src / name), str(HERE / "bin" / name))
-    print("  [rip] staged bundled fizzdisk-rip + libfizzdisk64 into bin/")
+    print("  [rip] staged bundled ripper files into bin/")
 
 
 def main():

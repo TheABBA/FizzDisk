@@ -6,11 +6,12 @@ and its audio/subtitle tracks, and remuxes the selected titles into a single
 Matroska (`.mkv`) file — losslessly (stream copy) by default. It also detects
 an **audio CD** and rips it to FLAC/MP3 with MusicBrainz metadata and cover art.
 
-FizzDisk is built entirely with free, open-source components and is **fully
-self-contained**: it does **not** require any other ripper, Python, or a VC++
-runtime on the target machine. A bundled console ripper (and, as a last
-resort, a user-installed one on PATH) may be used *optionally* as a decryption
-fallback for a disc the bundled decoder cannot open, but it is never required.
+FizzDisk is **free software** — no trial period, no product key and no
+activation. It is built entirely with free, open-source components and is
+**fully self-contained**: it needs no other ripper, no Python, and no VC++
+runtime on the target machine. A bundled console ripper is used *only* as a
+last-resort decryption fallback for a disc the bundled decoder cannot open, and
+is never required.
 
 ---
 
@@ -29,28 +30,46 @@ fallback for a disc the bundled decoder cannot open, but it is never required.
   default, or re-encode if you prefer.
 - **AACS decryption** — protected Blu-ray discs are decrypted in-house by the
   bundled open-source decoder (libbluray + libaacs + libbdplus + keydb.cfg).
-  Only if that fails does FizzDisk fall back to an external ripper.
+  Only if that fails does FizzDisk fall back to the bundled console ripper.
+- **Movie & TV metadata** — when you scan a movie or TV disc, FizzDisk
+  identifies the title and year and fetches a poster. Identification uses
+  **TheMovieDB** when an API key is configured (most accurate — title, year and
+  an HD poster), and falls back to **Wikipedia** when no key is set (no account
+  required). See [Getting movie metadata & a TMDb key](#getting-movie-metadata--a-tmdb-key)
+  below.
 - **Audio CD ripping** — a music CD is detected automatically (via the drive's
   audio tracks), identified by **MusicBrainz Disc-ID** (with a fuzzy TOC +
   duration fallback), and its cover art is fetched from the **Cover Art
   Archive** (saved as `cover.jpg`). Tracks are ripped with **paranoia error
   correction** using the bundled `cd-paranoia` (libcdio-paranoia), encoded with
-  the bundled `ffmpeg.exe` to **FLAC** (default) or **MP3** (radio-button
-  choice), tagged (title/artist/album/track) with the **cover art embedded**,
-  and saved as `<Output>/<Artist>/<Album>/NN - Track Title.<ext>`; an existing
-  artist folder is reused and the album merged into it. No online account or
-  API key required.
-- **Trial & licensing** — the app offers **50 trial backups**; once they're
-  used a **product key** is required for unlimited backups and lifetime
-  updates. The key is self-validating (offline, HMAC-signed), and it's
-  server-enforced on a **one-user-one-device** basis: activating binds it to
-  your machine's fingerprint, so the same key can't be shared across PCs. Open
-  **Settings** via the **gear icon** (left of the light/dark toggle) to see
-  trial status, activate a key, release it ("Move to another machine?") and set
-  a TheMovieDB API key. Generate a key with `python -m fizzdisk.license gen`.
+  the bundled `ffmpeg.exe` to **FLAC** (default) or **MP3**, tagged
+  (title/artist/album/track) with the **cover art embedded**, and saved as
+  `<Output>/<Artist>/<Album>/NN - Track Title.<ext>`; an existing artist folder
+  is reused and the album merged into it. No online account or API key required.
 
 The whole thing is driven by a **GUI** (tkinter/CustomTkinter). A small **CLI**
 is also provided for scripting.
+
+---
+
+## Getting movie metadata & a TMDb key
+
+Movie and TV-show metadata (title, year, poster) is entirely **optional** —
+FizzDisk works fine without it, and it gently nudges you to set it up on first
+launch. The more accurate path uses TheMovieDB:
+
+- **Set a key (optional, recommended).** Create a free account at
+  [themoviedb.org](https://www.themoviedb.org) → **Settings → API** → request a
+  *plugin / API key* (it's free). Copy the key, then in FizzDisk open
+  **Settings** via the **gear icon** to the left of the light/dark toggle,
+  paste the key into **TheMovieDB API key**, and click **Save**. FizzDisk stores
+  the key per-user in `%LOCALAPPDATA%\FizzDisk\tmdb_api_key.txt` (no admin rights
+  needed, even though the app installs under Program Files).
+- **Without a key** FizzDisk falls back to **Wikipedia**, which needs no
+  account.
+- The key is never required — it only improves the *quality* of identification.
+  With a key you get the correct title/year and an HD poster; without it you get
+  a best-effort match. CD ripping never needs a key at all.
 
 ---
 
@@ -61,10 +80,7 @@ is also provided for scripting.
   require Python to be installed)
 - **ffmpeg** — bundled in `bin\` (ffmpeg + ffprobe). The app finds its own
   bundled copy first, then the system PATH.
-- *(optional)* an external ripper — the app ships its own
-  `bin\fizzdisk-rip.exe`, so none is required. A previously-installed
-  console ripper is still detected and used as a last resort for discs the
-  bundled decoder cannot open.
+- *(optional)* more metadata accuracy — a key from TheMovieDB (see above).
 
 ---
 
@@ -123,10 +139,12 @@ FizzDisk/
 │  ├─ bdlib.py      # self-contained AACS decoder (libbluray + libaacs + libbdplus)
 │  ├─ ffutil.py     # ffprobe/ffmpeg wrappers, remux, validation, path helpers
 │  ├─ model.py      # data model (Stream, Clip, Title, ScanResult)
-│  ├─ movie.py      # movie-title/year/poster metadata lookup
+│  ├─ movie.py      # movie/TV title+year+poster lookup (TMDb + Wikipedia fallback)
+│  ├─ musicdisc.py  # MusicBrainz Disc-ID identification + cover art
+│  ├─ cdda.py       # audio-CD scan + error-corrected rip (cd-paranoia)
 │  ├─ cli.py        # scan / mux command-line interface
 │  └─ __main__.py
-├─ bin/             # bundled ffmpeg.exe, ffprobe.exe, the ripper, AACS libs
+├─ bin/             # bundled ffmpeg.exe, ffprobe.exe, cd-paranoia, the ripper, AACS libs
 ├─ FizzDisk.pyw    # double-click GUI launcher (no console)
 └─ FizzDisk.bat    # console-free launch helper
 ```
@@ -141,99 +159,35 @@ FizzDisk/
   project's parser code.
 - **Self-contained engine.** The default engine is ffmpeg/ffprobe; AACS-protected
   Blu-rays are decrypted in-house by the bundled open-source stack
-  (libbluray + libaacs + libbdplus + keydb.cfg). The external ripper is a
+  (libbluray + libaacs + libbdplus + keydb.cfg). The bundled console ripper is a
   decryption **fallback only**, never required.
 - **Lossless by default.** Tracks are stream-copied (no re-encode) so rips are
   fast and quality is preserved. Uncheck the box to re-encode.
 - **Native paths.** All media paths passed to ffmpeg/ffprobe are Windows native.
 
-## Website & payments
+## Website & development
 
 The live site is deployed at **https://fizzdisk.philspad.com** (also `fizzdisk.com`) —
-a static, fully serverless site based on the existing themed landing page. Source
-lives in `website/`; the deployed copy is on the server at
-`/volume1/Server/srv/dir-local/fizzdisk` (mounted as `/srv/dir/fizzdisk` in the
-Caddy container). It is pure static HTML/CSS/JS — no backend or database.
+a static, fully serverless landing page (the source is in `website/`; the
+deployed copy lives on the server at `/volume1/Server/srv/dir-local/fizzdisk`,
+mounted as `/srv/dir/fizzdisk` in the Caddy container). It is pure static
+HTML/CSS/JS — no backend or database.
 
-Files (mirror the deployed layout):
-- `website/index.html` — the themed landing page: free 50-backup trial, the
-  original feature / how-it-works sections, a new "Buy a license" section, and a
-  "Download for Windows" button pointing at the real installer. Brand mark and
-  favicon use the app's two-tone disc (blue ring / amber center).
-- `website/success.html` — shown after checkout. It **mints the buyer's product
-  key client-side** (no server) with a Copy button + activation instructions;
-  refreshing keeps the same key (URL hash) and a `mailto:` link lets them email
-  it to themselves.
-- `website/assets/app.css`, `website/assets/app.js` — the original theme and
-  section behavior; unchanged.
-- `website/assets/config.js` — **edit before go-live:** `BUY_URL` (paste your
-  2Checkout checkout link), `PRICE`, `VERSION`, `DOWNLOAD_URL`, `SUCCESS_URL`.
-- `website/assets/keygen.js` — cross-context key generator (WebCrypto with a
-  pure-JS SHA-256/HMAC fallback), mirroring `fizzdisk/license.py` so every key
-  it issues validates in the app. Verify: `node website/assets/keygen.js`.
-- `website/assets/fizzdisk_icon.png`, `fizzdisk.ico` — brand icon / favicon.
-- `website/download/FizzDiskSetup.exe` — the installer to upload each release
-  (git-ignored; it's a large build artifact).
+Because FizzDisk is free software, the site has **no Buy button and no license
+page** — instead it has a **"Support us"** section with a **donation** link
+("Help me pay for my DGX Sparks!") pointing to **Buy Me a Coffee**. There is also
+an **"Opening it for the first time?"** block explaining the SmartScreen
+"unknown publisher" step, because FizzDisk isn't code-signed.
 
-> **Keep the secret in sync.** The HMAC key in `website/assets/keygen.js`
-> (`FIZZ_SECRET`) MUST equal `_SECRET` in `fizzdisk/license.py`. Change both or
-> every key the site issues will be rejected by the app.
-
-### Deployment (server .35)
-The site is served by Caddy's `file_server` — no reload is needed after pushing
-files. The `fizzdisk` directory is root-owned, so writes need sudo (the scratch
-helpers `ssh35.py` / `upload35.py` in the Hermes cache handle this via
-`sudo -A tee` with an askpass helper). To update: edit `website/`, then run the
-upload script. To access the box: SSH as `Philspad@192.168.0.35`.
-
-### Activation API (one user, one device)
-
-`server/license_api.py` is a dependency-free stdlib HTTP service that enforces
-**one product key = one device at a time**. Endpoints (POST JSON, `{key,
-fingerprint}`):
-
-- `/activate` — bind a key to a machine fingerprint (fresh → `activated`; other
-  device → `active_elsewhere`; same device → `active`).
-- `/deactivate` — free the key (only the current owner's fingerprint can free it).
-- `/status` — report `{bound_to, activated_at}` or unbound.
-- `/health` — 200 if alive.
-
-Keys are validated with the same HMAC as `fizzdisk/license.py`; the store is a
-JSON map at `FIZZDISK_DATA` (default `./data/licenses.json`). It runs as the
-`fizzdisk-lic` container on server `.35` (Docker, host network, PORT 8130), and
-Caddy proxies `/api/license/*` → `127.0.0.1:8130`. The app computes a stable
-fingerprint (`machine_id()`), calls `/activate` on activation and `/deactivate`
-from **Settings → "Move to another machine?"**, and degrades gracefully to
-offline (the local key is accepted; the binding syncs when back online).
-
-### Accepting payment
-
-No processor cares that this rips video/audio — that's not a restricted
-category. Stripe, PayPal, 2Checkout, Paddle and Lemon Squeezy will all approve
-you. Pick based on geography, fees and who handles tax:
-
-- **2Checkout (chosen)** — broadest international reach (200+ countries /
-  territories, localized checkout, 100+ currencies), and the sign-up flow has
-  an explicit *digital products / software* category. Important nuance:
-  **2Sell** (3.5% + $0.35) means **you** handle sales tax & compliance;
-  **2Monetize** is their merchant-of-record tier where 2Checkout handles global
-  VAT, invoicing and refunds for you (higher fee, but zero tax bookkeeping). If
-  you sell internationally, 2Monetize is usually the better value despite the
-  fee.
-- **Stripe** — cheaper on domestic sales (2.9% + 30¢) and the most
-  developer-friendly, but you handle VAT yourself (unless Stripe Tax) and need
-  an account in a supported country with a bank/ACH payout. Use a *Payment
-  Link* and set its success URL to your `success.html`.
-- **Paddle / Lemon Squeezy** — merchant of record (like 2Monetize) but with
-  simpler onboarding.
-
-Whichever you choose, the flow is the same: create a product → copy its hosted
-checkout/buy URL → paste into `BUY_URL` in `config.js` → set the
-**post-payment (success / Approved) URL** to your `success.html`. The key is
-minted on that page in the buyer's browser; nothing else is required on your
-side.
+The only hosted service is a small stdlib HTTP container (`server/license_api.py`,
+`fizzdisk-lic`) that **counts installer downloads per version** and serves a
+private Basic-auth **/stats** page. The old `/activate`, `/deactivate` and
+`/status` endpoints still run but are no longer called by the app, since
+licensing was removed in v1.4.0 when FizzDisk became free software. Deployment
+lives on server `.35`, served by Caddy's `file_server`; edits go through the
+`website/` tree and an SSH/sudo upload script.
 
 ## License
 Open source. Uses ffmpeg (LGPL/GPL); AACS decryption is handled by the bundled
-libbluray/libaacs/libbdplus stack, with a bundled console ripper as a last
+libbluray/libaacs/libbdplus stack, with the bundled console ripper as a last
 resort.

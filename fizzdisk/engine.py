@@ -27,20 +27,18 @@ from typing import Callable, List, Optional
 from . import bdlib, bdscan, cdda, dvdscan, ffutil, musicdisc, prefs
 from .model import ScanResult, Title, Stream
 
-_RIP_ENV = ("FIZZDISK_RIP", "FIZZDISK_BACKEND", "MAKEMKVCON")  # last two are legacy aliases
+_RIP_ENV = ("FIZZDISK_RIP", "FIZZDISK_BACKEND")  # last one is a legacy alias
 
 
 def _find_backend() -> Optional[str]:
-    r"""Locate the external console ripper, or return None.
+    r"""Locate the bundled console ripper, or return None.
 
     The app is fully self-contained (bundled ffmpeg + libbluray/libaacs +
     libdvdcss + the bundled console ripper), so the ripper is never required.
     Priority:
-      1. the bundled copy shipped with the app (``binizzdisk-rip.exe``);
-      2. FIZZDISK_RIP / FIZZDISK_BACKEND / MAKEMKVCON env var (explicit path);
-      3. ``fizzdisk-rip`` on PATH;
-      4. a previously-installed ``makemkvcon64`` (legacy) on PATH;
-      5. the legacy install location (Program Files\MakeMKV).
+      1. the bundled copy shipped with the app (``bin\fizzdisk-rip.exe``);
+      2. FIZZDISK_RIP / FIZZDISK_BACKEND env var (explicit path);
+      3. ``fizzdisk-rip`` on PATH.
     Returns None ("no external backend") when none is found.
     """
     bundled = ffutil.find_tool("fizzdisk-rip")
@@ -50,15 +48,9 @@ def _find_backend() -> Optional[str]:
         loc = os.environ.get(var)
         if loc and os.path.exists(loc):
             return loc
-    w = shutil.which("fizzdisk-rip") or shutil.which("makemkvcon64")
+    w = shutil.which("fizzdisk-rip")
     if w:
         return w
-    for var in ("ProgramFiles(x86)", "ProgramFiles", "PROGRAMFILES", "PROGRAMFILES(X86)"):
-        root = os.environ.get(var)
-        if root:
-            p = os.path.join(root, "MakeMKV", "makemkvcon64.exe")
-            if os.path.exists(p):
-                return p
     return None
 
 
@@ -608,12 +600,12 @@ def _drive_arg(src: str) -> Optional[str]:
 
 
 def _backend_arg(src: str) -> str:
-    """Source argument for the external ripper (makemkvcon).
+    """Source argument for the external ripper.
 
     For a physical disc/BD drive, use ``dev:<letter>:`` -- this targets the
     drive that actually holds the disc. A hardcoded ``disc:0`` would point at
     the FIRST optical drive, which may be a different, empty drive (e.g. the
-    disc is in E: but disc:0 is an empty D:), so MakeMKV opens nothing.
+    disc is in E: but disc:0 is an empty D:), so the ripper opens nothing.
     ISO and folder sources keep their iso:/file: specs.
     """
     kind = detect_source(src)
@@ -717,19 +709,19 @@ def _stream_from_backend(codec_type: str, fs: dict, index: int) -> Stream:
 
 
 def _finalize_incomplete_mkv(path: str) -> str:
-    """MakeMKV v2.0.0 sometimes leaves a rip 'not properly finalized': the file
-    starts with a placeholder ('This file was not properly finalized') instead of
-    a Matroska EBML header, so players/ffmpeg mis-read it (often as audio-only).
-    Detect that and prepend a minimal EBML header + unknown-size Segment element
-    so the file becomes a valid, playable MKV. If the file is already valid
-    (EBML header present), leave it untouched."""
+    """The bundled ripper's MKV output is sometimes left 'not properly finalized':
+    the file starts with a placeholder ('This file was not properly finalized')
+    instead of a Matroska EBML header, so players/ffmpeg mis-read it (often as
+    audio-only). Detect that and prepend a minimal EBML header + unknown-size
+    Segment element so the file becomes a valid, playable MKV. If the file is
+    already valid (EBML header present), leave it untouched."""
     try:
         with open(path, "rb") as f:
             head = f.read(4)
         if head == b"\x1a\x45\xdf\xa3":
             return path                       # valid Matroska already
         # Find the first Matroska Info element (0x1549A966) which is where the
-        # real stream data begins in MakeMKV's unfinalized output.
+        # real stream data begins in the ripper's unfinalized output.
         marker = b"\x15\x49\xa9\x66"
         chunk = 8 * 1024 * 1024
         offset = 0

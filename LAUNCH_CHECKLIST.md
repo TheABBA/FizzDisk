@@ -56,5 +56,5 @@ fallback via `signing_config.json` + the `sign` tool.)
 - [ ] Pre-install messaging in place (while the cert is pending): a note on the
       website download page AND pinned on the Inno Welcome page covering the
       SmartScreen "unknown publisher" → More info → Run anyway, and the
-      downloaded-file "Unblock" step. MakeMKV was verified as fully unsigned, so
-      this is already better than the tool FizzDisk replaces.
+      downloaded-file "Unblock" step. The bundled ripper was verified as fully
+      unsigned, so this is already better than the tools FizzDisk replaces.

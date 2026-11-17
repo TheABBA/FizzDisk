@@ -165,27 +165,7 @@ FizzDisk/
   fast and quality is preserved. Uncheck the box to re-encode.
 - **Native paths.** All media paths passed to ffmpeg/ffprobe are Windows native.
 
-## Website & development
 
-The live site is deployed at **https://fizzdisk.philspad.com** (also `fizzdisk.com`) —
-a static, fully serverless landing page (the source is in `website/`; the
-deployed copy lives on the server at `/volume1/Server/srv/dir-local/fizzdisk`,
-mounted as `/srv/dir/fizzdisk` in the Caddy container). It is pure static
-HTML/CSS/JS — no backend or database.
-
-Because FizzDisk is free software, the site has **no Buy button and no license
-page** — instead it has a **"Support us"** section with a **donation** link
-("Help me pay for my DGX Sparks!") pointing to **Buy Me a Coffee**. There is also
-an **"Opening it for the first time?"** block explaining the SmartScreen
-"unknown publisher" step, because FizzDisk isn't code-signed.
-
-The only hosted service is a small stdlib HTTP container (`server/license_api.py`,
-`fizzdisk-lic`) that **counts installer downloads per version** and serves a
-private Basic-auth **/stats** page. The old `/activate`, `/deactivate` and
-`/status` endpoints still run but are no longer called by the app, since
-licensing was removed in v1.4.0 when FizzDisk became free software. Deployment
-lives on server `.35`, served by Caddy's `file_server`; edits go through the
-`website/` tree and an SSH/sudo upload script.
 
 ## License
 Open source. Uses ffmpeg (LGPL/GPL); AACS decryption is handled by the bundled

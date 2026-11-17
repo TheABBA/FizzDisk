@@ -53,6 +53,7 @@ fizzdisk/tmdb_api_key.txt
 server/
 
 # local dev / diagnostic artifacts (kept in the working repo, not part of the public app)
+LAUNCH_CHECKLIST.md
 build_*.log
 scan_cd_probe.py
 test_rip.py

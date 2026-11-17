@@ -213,8 +213,8 @@ def _bump_website_version(version: str):
 
 def stage_bundled_ripper():
     """Populate bin/ with the bundled BD/UHD ripper so the installed app never
-    needs a system MakeMKV. fizzdisk-rip.exe is the decompiled-MakeMKV CLI
-    renamed to 'fizzdisk'; its core library ships as libfizzdisk64.dll, but the
+    needs an external ripper. fizzdisk-rip.exe is the bundled CLI renamed to
+    'fizzdisk'; its core library ships as libfizzdisk64.dll, but the
     exe still imports 'libMakeMkv64.dll', so we patch that name in place
     (same-length string swap, 16+2 NULs -> 17+1 NUL) to 'libfizzdisk64.dll'.
     Then copy the renamed DLLs + data from _dl/ren/ into bin/."""

@@ -3242,7 +3242,7 @@ class FizzDiskApp(ctk.CTk):
             # ffprobe children are not tracked, so sweep them by name too.
             import subprocess
             for name in ("ffprobe.exe", "ffmpeg.exe", "cd-paranoia.exe",
-                         "makemkvcon64.exe", "fizzdisk-rip.exe"):
+                         "fizzdisk-rip.exe"):
                 try:
                     subprocess.run(["taskkill", "/F", "/IM", name],
                                    capture_output=True, timeout=5,

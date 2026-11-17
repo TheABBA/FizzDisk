@@ -211,7 +211,7 @@ def update_keydb(force: bool = False) -> Optional[str]:
     a user copy under LOCALAPPDATA (writable, never Program Files) and refresh
     it at most once per 24h. libaacs uses VUK entries from here, so an updated
     db keeps new discs decryptable WITHOUT any online lookup at rip time (so
-    ISP/DNS blocks of MakeMKV-style online key services don't matter to us).
+    ISP/DNS blocks of online key services don't matter to us).
 
     Returns the path to the keydb to use, or None. Never raises.
     """

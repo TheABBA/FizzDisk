@@ -29,8 +29,8 @@ a = Analysis(
  ('bin/libcdio-21.dll', 'bin'), ('bin/libcdio_cdda-2.dll', 'bin'),
  ('bin/libcdio_paranoia-2.dll', 'bin'), ('bin/libiconv-2.dll', 'bin'),
  ('bin/libwinpthread-1.dll', 'bin')]
-# bundled BD/UHD ripper (decompiled MakeMKV CLI, renamed to fizzdisk-rip +
-# libfizzdisk64.dll so it is fully self-contained; no system MakeMKV needed)
+# bundled BD/UHD ripper (fizzdisk-rip.exe is fully self-contained; no external
+# ripper needed)
             + [('bin/fizzdisk-rip.exe', 'bin'),
                ('bin/libfizzdisk64.dll', 'bin'), ('bin/libffm64.dll', 'bin'),
                ('bin/libmqt64.dll', 'bin'), ('bin/libmmbd.dll', 'bin'),

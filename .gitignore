@@ -48,3 +48,20 @@ website/
 # per-user metadata API key — the installed app reads %LOCALAPPDATA%\FizzDisk\tmdb_api_key.txt,
 # NOT this repo sidecar, so don't commit the live key
 fizzdisk/tmdb_api_key.txt
+
+# private server/deployment service (download counter + /stats page; hosted on .35)
+server/
+
+# local dev / diagnostic artifacts (kept in the working repo, not part of the public app)
+build_*.log
+scan_cd_probe.py
+test_rip.py
+make_icon.py
+ui-reference.html
+fizzdisk/_diag.py
+fizzdisk/_rip_full.py
+# leftover pre-rename vendor DLL (the stager uses _dl/ren/libfizzdisk64.dll instead)
+_dl/ctl/libmakemkv64.dll
+_dl/ctl/fizzdisk-rip.patched.exe
+_dl/ctl/out.txt
+_dl/ren/out.txt

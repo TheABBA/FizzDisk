@@ -4,15 +4,15 @@ Tracked here so nothing blocks a release. Update the boxes as each step is verif
 
 ## Code signing (commercial certificate, not Azure — no monthly fee)
 
-Decision: **Ice Monger, LLC** (>3 yrs) owns `fizzdisk.com`. Get a cheap one-off
+Decision: **FizzDisk, LLC** (>3 yrs) owns `fizzdisk.com`. Get a cheap one-off
 **commercial OV code-signing cert** (e.g. **Certum** ~$30–50/yr) issued to
-**Ice Monger, LLC** — publisher is a company name, NOT the user's personal name.
+**FizzDisk, LLC** — publisher is a company name, NOT the user's personal name.
 (Skip Azure Artifact Signing at $9.99/mo ≈ $120/yr; it remains an optional
 fallback via `signing_config.json` + the `sign` tool.)
 
 - [ ] **Buy the OV code-signing cert** — order from Certum (or Sectigo/SSL.com)
-      as **Ice Monger, LLC**. Provide business registration details + control of
-      `fizzdisk.com` + a matching email. (Optional: a DBA "Ice Monger, LLC d/b/a
+      as **FizzDisk, LLC**. Provide business registration details + control of
+      `fizzdisk.com` + a matching email. (Optional: a DBA "FizzDisk, LLC d/b/a
       FizzDisk" makes the publisher print "FizzDisk" if desired.)
 - [ ] **Place the `.pfx`** in the repo root as `signing_cert.pfx`; set its password
       via `FIZZDISK_CERT_PASS` (or `FIZZDISK_CERT` env var to a custom path).
@@ -21,7 +21,7 @@ fallback via `signing_config.json` + the `sign` tool.)
       .NET `sign` tool for `code` signing with the pfx. `build.py` falls through
       to the signtool path when no Azure `signing_config.json` is present.
 - [ ] **Build signed** — `python build.py` must sign the app exe AND the Inno
-      installer (log shows `[sign]` for both), publisher = **Ice Monger, LLC**.
+      installer (log shows `[sign]` for both), publisher = **FizzDisk, LLC**.
 - [ ] **Verify the signature** — right-click both the installer and the installed
       `FizzDisk.exe` → Properties → Digital Signatures shows a trusted signature;
       SmartScreen no longer says "unknown publisher".
